@@ -151,6 +151,14 @@ namespace crm_api.Services
                         StatusCodes.Status404NotFound);
                 }
 
+                if (entity.IsSystemAdmin)
+                {
+                    return ApiResponse<PermissionGroupDto>.ErrorResult(
+                        _localizationService.GetLocalizedString("General.ValidationError"),
+                        "System Admin permission group cannot be modified.",
+                        StatusCodes.Status403Forbidden);
+                }
+
                 if (!string.IsNullOrWhiteSpace(dto.Name) && !dto.Name.Equals(entity.Name, StringComparison.OrdinalIgnoreCase))
                 {
                     var duplicate = await _unitOfWork.PermissionGroups.Query()
@@ -199,6 +207,15 @@ namespace crm_api.Services
 
         public async Task<ApiResponse<PermissionGroupDto>> SetPermissionsAsync(long id, SetPermissionGroupPermissionsDto dto)
         {
+            var group = await _unitOfWork.PermissionGroups.GetByIdAsync(id);
+            if (group != null && group.IsSystemAdmin)
+            {
+                return ApiResponse<PermissionGroupDto>.ErrorResult(
+                    _localizationService.GetLocalizedString("General.ValidationError"),
+                    "System Admin permission group cannot be modified.",
+                    StatusCodes.Status403Forbidden);
+            }
+
             var result = await SetPermissionsInternalAsync(id, dto.PermissionDefinitionIds);
             if (!result.Success)
             {
@@ -212,13 +229,21 @@ namespace crm_api.Services
         {
             try
             {
-                var exists = await _unitOfWork.PermissionGroups.ExistsAsync(id);
-                if (!exists)
+                var entity = await _unitOfWork.PermissionGroups.GetByIdAsync(id);
+                if (entity == null)
                 {
                     return ApiResponse<bool>.ErrorResult(
                         _localizationService.GetLocalizedString("General.ValidationError"),
                         _localizationService.GetLocalizedString("General.ValidationError"),
                         StatusCodes.Status404NotFound);
+                }
+
+                if (entity.IsSystemAdmin)
+                {
+                    return ApiResponse<bool>.ErrorResult(
+                        _localizationService.GetLocalizedString("General.ValidationError"),
+                        "System Admin permission group cannot be deleted.",
+                        StatusCodes.Status403Forbidden);
                 }
 
                 await _unitOfWork.PermissionGroups.SoftDeleteAsync(id);
