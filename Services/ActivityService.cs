@@ -13,12 +13,24 @@ namespace crm_api.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly ILocalizationService _localizationService;
+        private readonly IGoogleCalendarService _googleCalendarService;
+        private readonly ITenantGoogleOAuthSettingsService _tenantGoogleOAuthSettingsService;
+        private readonly IUserContextService _userContextService;
 
-        public ActivityService(IUnitOfWork unitOfWork, IMapper mapper, ILocalizationService localizationService)
+        public ActivityService(
+            IUnitOfWork unitOfWork,
+            IMapper mapper,
+            ILocalizationService localizationService,
+            IGoogleCalendarService googleCalendarService,
+            ITenantGoogleOAuthSettingsService tenantGoogleOAuthSettingsService,
+            IUserContextService userContextService)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _localizationService = localizationService;
+            _googleCalendarService = googleCalendarService;
+            _tenantGoogleOAuthSettingsService = tenantGoogleOAuthSettingsService;
+            _userContextService = userContextService;
         }
 
         public async Task<ApiResponse<PagedResponse<ActivityDto>>> GetAllActivitiesAsync(PagedRequest request)
@@ -116,6 +128,8 @@ namespace crm_api.Services
         {
             try
             {
+                await _unitOfWork.BeginTransactionAsync();
+
                 var validationError = await ValidateForeignKeysAsync(
                     createActivityDto.ActivityTypeId,
                     createActivityDto.AssignedUserId,
@@ -123,11 +137,13 @@ namespace crm_api.Services
                     createActivityDto.PotentialCustomerId);
                 if (validationError != null)
                 {
+                    await _unitOfWork.RollbackTransactionAsync();
                     return validationError;
                 }
 
                 if (createActivityDto.EndDateTime.HasValue && createActivityDto.EndDateTime < createActivityDto.StartDateTime)
                 {
+                    await _unitOfWork.RollbackTransactionAsync();
                     return ApiResponse<ActivityDto>.ErrorResult(
                         _localizationService.GetLocalizedString("General.ValidationError"),
                         _localizationService.GetLocalizedString("General.ValidationError"),
@@ -138,6 +154,24 @@ namespace crm_api.Services
                 var createdActivity = await _unitOfWork.Activities.AddAsync(activity);
                 await _unitOfWork.SaveChangesAsync();
 
+                var oauthSettings = await _tenantGoogleOAuthSettingsService.GetRuntimeSettingsAsync(Guid.Empty);
+                if (oauthSettings?.IsEnabled == true)
+                {
+                    var currentUserId = _userContextService.GetCurrentUserId();
+                    if (!currentUserId.HasValue || currentUserId.Value <= 0)
+                    {
+                        await _unitOfWork.RollbackTransactionAsync();
+                        return ApiResponse<ActivityDto>.ErrorResult(
+                            "Aktivite kaydı oluşturulamadı.",
+                            "Kullanıcı oturumu bulunamadı. Lütfen tekrar giriş yapın.",
+                            StatusCodes.Status400BadRequest);
+                    }
+
+                    await _googleCalendarService.CreateActivityEventAsync(currentUserId.Value, createdActivity);
+                }
+
+                await _unitOfWork.CommitTransactionAsync();
+
                 var createdWithNav = await LoadActivityWithRelationsAsync(createdActivity.Id, asNoTracking: true);
                 var dto = _mapper.Map<ActivityDto>(createdWithNav ?? createdActivity);
 
@@ -145,8 +179,18 @@ namespace crm_api.Services
                     dto,
                     _localizationService.GetLocalizedString("ActivityService.ActivityCreated"));
             }
+            catch (InvalidOperationException ex)
+            {
+                await _unitOfWork.RollbackTransactionAsync();
+
+                return ApiResponse<ActivityDto>.ErrorResult(
+                    "Aktivite kaydı oluşturulamadı.",
+                    ex.Message,
+                    StatusCodes.Status400BadRequest);
+            }
             catch (Exception ex)
             {
+                await _unitOfWork.RollbackTransactionAsync();
                 return ApiResponse<ActivityDto>.ErrorResult(
                     _localizationService.GetLocalizedString("ActivityService.InternalServerError"),
                     _localizationService.GetLocalizedString("ActivityService.CreateActivityExceptionMessage", ex.Message),
