@@ -7,7 +7,6 @@ using crm_api.Infrastructure;
 using crm_api.Interfaces;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Options;
 
 namespace crm_api.Services
 {
@@ -18,9 +17,10 @@ namespace crm_api.Services
         private const string UserInfoEndpoint = "https://openidconnect.googleapis.com/v1/userinfo";
         private const string RevokeEndpoint = "https://oauth2.googleapis.com/revoke";
 
-        private readonly GoogleOptions _options;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IMemoryCache _memoryCache;
+        private readonly IUserContextService _userContextService;
+        private readonly ITenantGoogleOAuthSettingsService _tenantGoogleOAuthSettingsService;
         private readonly ILogger<GoogleOAuthService> _logger;
 
         private static readonly JsonSerializerOptions JsonOptions = new()
@@ -29,37 +29,36 @@ namespace crm_api.Services
         };
 
         public GoogleOAuthService(
-            IOptions<GoogleOptions> options,
             IHttpClientFactory httpClientFactory,
             IMemoryCache memoryCache,
+            IUserContextService userContextService,
+            ITenantGoogleOAuthSettingsService tenantGoogleOAuthSettingsService,
             ILogger<GoogleOAuthService> logger)
         {
-            _options = options.Value;
             _httpClientFactory = httpClientFactory;
             _memoryCache = memoryCache;
+            _userContextService = userContextService;
+            _tenantGoogleOAuthSettingsService = tenantGoogleOAuthSettingsService;
             _logger = logger;
         }
 
-        public Task<string> CreateAuthorizeUrlAsync(long userId, CancellationToken cancellationToken = default)
+        public async Task<string> CreateAuthorizeUrlAsync(long userId, CancellationToken cancellationToken = default)
         {
-            ValidateConfiguration();
+            var tenantId = _userContextService.GetCurrentTenantId() ?? Guid.Empty;
+            var settings = await GetValidatedSettingsAsync(tenantId, cancellationToken);
 
             var randomState = WebEncoders.Base64UrlEncode(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
-            var state = $"{userId}.{randomState}";
+            var state = $"{userId}.{tenantId:D}.{randomState}";
             var stateKey = BuildStateCacheKey(userId, state);
 
             _memoryCache.Set(stateKey, true, TimeSpan.FromMinutes(10));
 
-            var scopes = string.IsNullOrWhiteSpace(_options.Scopes)
-                ? "https://www.googleapis.com/auth/calendar.events"
-                : _options.Scopes;
-
             var query = new Dictionary<string, string?>
             {
-                ["client_id"] = _options.ClientId,
-                ["redirect_uri"] = _options.RedirectUri,
+                ["client_id"] = settings.ClientId,
+                ["redirect_uri"] = settings.RedirectUri,
                 ["response_type"] = "code",
-                ["scope"] = scopes,
+                ["scope"] = settings.Scopes,
                 ["access_type"] = "offline",
                 ["prompt"] = "consent",
                 ["include_granted_scopes"] = "true",
@@ -67,7 +66,7 @@ namespace crm_api.Services
             };
 
             var url = QueryHelpers.AddQueryString(AuthorizationEndpoint, query!);
-            return Task.FromResult(url);
+            return url;
         }
 
         public Task<bool> ValidateAndConsumeStateAsync(long userId, string state)
@@ -82,53 +81,57 @@ namespace crm_api.Services
             return Task.FromResult(isValid);
         }
 
-        public bool TryExtractUserIdFromState(string state, out long userId)
+        public bool TryExtractStateContext(string state, out long userId, out Guid tenantId)
         {
             userId = 0;
+            tenantId = Guid.Empty;
+
             if (string.IsNullOrWhiteSpace(state))
             {
                 return false;
             }
 
-            var separatorIndex = state.IndexOf('.');
-            if (separatorIndex <= 0)
+            var parts = state.Split('.', 3, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 3)
             {
                 return false;
             }
 
-            var userIdPart = state[..separatorIndex];
-            return long.TryParse(userIdPart, out userId) && userId > 0;
+            return long.TryParse(parts[0], out userId)
+                   && userId > 0
+                   && Guid.TryParse(parts[1], out tenantId)
+                   && tenantId != Guid.Empty;
         }
 
-        public Task<GoogleOAuthTokenResult> ExchangeCodeForTokensAsync(string code, CancellationToken cancellationToken = default)
+        public async Task<GoogleOAuthTokenResult> ExchangeCodeForTokensAsync(string code, Guid tenantId, CancellationToken cancellationToken = default)
         {
-            ValidateConfiguration();
+            var settings = await GetValidatedSettingsAsync(tenantId, cancellationToken);
 
             var formData = new Dictionary<string, string>
             {
                 ["grant_type"] = "authorization_code",
                 ["code"] = code,
-                ["client_id"] = _options.ClientId,
-                ["client_secret"] = _options.ClientSecret,
-                ["redirect_uri"] = _options.RedirectUri,
+                ["client_id"] = settings.ClientId,
+                ["client_secret"] = settings.ClientSecret,
+                ["redirect_uri"] = settings.RedirectUri,
             };
 
-            return SendTokenRequestAsync(formData, cancellationToken);
+            return await SendTokenRequestAsync(formData, cancellationToken);
         }
 
-        public Task<GoogleOAuthTokenResult> RefreshAccessTokenAsync(string refreshToken, CancellationToken cancellationToken = default)
+        public async Task<GoogleOAuthTokenResult> RefreshAccessTokenAsync(string refreshToken, Guid tenantId, CancellationToken cancellationToken = default)
         {
-            ValidateConfiguration();
+            var settings = await GetValidatedSettingsAsync(tenantId, cancellationToken);
 
             var formData = new Dictionary<string, string>
             {
                 ["grant_type"] = "refresh_token",
                 ["refresh_token"] = refreshToken,
-                ["client_id"] = _options.ClientId,
-                ["client_secret"] = _options.ClientSecret,
+                ["client_id"] = settings.ClientId,
+                ["client_secret"] = settings.ClientSecret,
             };
 
-            return SendTokenRequestAsync(formData, cancellationToken);
+            return await SendTokenRequestAsync(formData, cancellationToken);
         }
 
         public async Task<string?> GetGoogleEmailAsync(string accessToken, string? idToken, CancellationToken cancellationToken = default)
@@ -246,6 +249,38 @@ namespace crm_api.Services
             };
         }
 
+        private async Task<TenantGoogleOAuthRuntimeSettings> GetValidatedSettingsAsync(Guid tenantId, CancellationToken cancellationToken)
+        {
+            var settings = await _tenantGoogleOAuthSettingsService.GetRuntimeSettingsAsync(tenantId, cancellationToken);
+            if (settings == null || !settings.IsEnabled)
+            {
+                throw new InvalidOperationException("Google OAuth ayarları yapılandırılmamış.");
+            }
+
+            var missing = new List<string>();
+            if (string.IsNullOrWhiteSpace(settings.ClientId))
+            {
+                missing.Add("ClientId");
+            }
+
+            if (string.IsNullOrWhiteSpace(settings.ClientSecret))
+            {
+                missing.Add("ClientSecret");
+            }
+
+            if (string.IsNullOrWhiteSpace(settings.RedirectUri))
+            {
+                missing.Add("RedirectUri");
+            }
+
+            if (missing.Count > 0)
+            {
+                throw new InvalidOperationException($"Google OAuth ayarları yapılandırılmamış: {string.Join(", ", missing)}");
+            }
+
+            return settings;
+        }
+
         private static string BuildStateCacheKey(long userId, string state)
         {
             return $"google_oauth_state:{userId}:{state}";
@@ -267,30 +302,6 @@ namespace crm_api.Services
             var jwt = handler.ReadJwtToken(idToken);
             var emailClaim = jwt.Claims.FirstOrDefault(c => string.Equals(c.Type, "email", StringComparison.OrdinalIgnoreCase));
             return emailClaim?.Value;
-        }
-
-        private void ValidateConfiguration()
-        {
-            var missing = new List<string>();
-            if (string.IsNullOrWhiteSpace(_options.ClientId))
-            {
-                missing.Add("Google:ClientId");
-            }
-
-            if (string.IsNullOrWhiteSpace(_options.ClientSecret))
-            {
-                missing.Add("Google:ClientSecret");
-            }
-
-            if (string.IsNullOrWhiteSpace(_options.RedirectUri))
-            {
-                missing.Add("Google:RedirectUri");
-            }
-
-            if (missing.Count > 0)
-            {
-                throw new InvalidOperationException($"Google OAuth configuration is missing: {string.Join(", ", missing)}");
-            }
         }
 
         private sealed class GoogleTokenResponse

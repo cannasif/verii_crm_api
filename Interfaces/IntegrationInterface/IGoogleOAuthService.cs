@@ -6,9 +6,9 @@ namespace crm_api.Interfaces
     {
         Task<string> CreateAuthorizeUrlAsync(long userId, CancellationToken cancellationToken = default);
         Task<bool> ValidateAndConsumeStateAsync(long userId, string state);
-        bool TryExtractUserIdFromState(string state, out long userId);
-        Task<GoogleOAuthTokenResult> ExchangeCodeForTokensAsync(string code, CancellationToken cancellationToken = default);
-        Task<GoogleOAuthTokenResult> RefreshAccessTokenAsync(string refreshToken, CancellationToken cancellationToken = default);
+        bool TryExtractStateContext(string state, out long userId, out Guid tenantId);
+        Task<GoogleOAuthTokenResult> ExchangeCodeForTokensAsync(string code, Guid tenantId, CancellationToken cancellationToken = default);
+        Task<GoogleOAuthTokenResult> RefreshAccessTokenAsync(string refreshToken, Guid tenantId, CancellationToken cancellationToken = default);
         Task<string?> GetGoogleEmailAsync(string accessToken, string? idToken, CancellationToken cancellationToken = default);
         Task RevokeTokenAsync(string token, CancellationToken cancellationToken = default);
     }
