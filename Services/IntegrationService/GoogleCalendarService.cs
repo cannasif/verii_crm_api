@@ -98,15 +98,15 @@ namespace crm_api.Services
                     $"Oncelik: {activity.Priority}\n" +
                     $"CustomerId: {activity.PotentialCustomerId?.ToString() ?? "-"}\n" +
                     $"ContactId: {activity.ContactId?.ToString() ?? "-"}\n\n" +
-                    $"{activity.Description ?? string.Empty}",
+                $"{activity.Description ?? string.Empty}",
                 start = new
                 {
-                    dateTime = new DateTimeOffset(start, TimeSpan.FromHours(3)).ToString("yyyy-MM-dd'T'HH:mm:sszzz"),
+                    dateTime = ToIstanbulDateTimeString(start),
                     timeZone = "Europe/Istanbul",
                 },
                 end = new
                 {
-                    dateTime = new DateTimeOffset(end, TimeSpan.FromHours(3)).ToString("yyyy-MM-dd'T'HH:mm:sszzz"),
+                    dateTime = ToIstanbulDateTimeString(end),
                     timeZone = "Europe/Istanbul",
                 },
                 extendedProperties = new
@@ -177,6 +177,21 @@ namespace crm_api.Services
             }
 
             return accessToken;
+        }
+
+        private static string ToIstanbulDateTimeString(DateTime value)
+        {
+            var istanbulOffset = TimeSpan.FromHours(3);
+
+            var offsetDateTime = value.Kind switch
+            {
+                DateTimeKind.Utc => new DateTimeOffset(value, TimeSpan.Zero),
+                DateTimeKind.Local => new DateTimeOffset(value),
+                DateTimeKind.Unspecified => new DateTimeOffset(DateTime.SpecifyKind(value, DateTimeKind.Utc), TimeSpan.Zero),
+                _ => new DateTimeOffset(DateTime.SpecifyKind(value, DateTimeKind.Utc), TimeSpan.Zero),
+            };
+
+            return offsetDateTime.ToOffset(istanbulOffset).ToString("yyyy-MM-dd'T'HH:mm:sszzz");
         }
     }
 }
