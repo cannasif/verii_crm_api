@@ -358,6 +358,27 @@ namespace crm_api.Services
                     return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
                 }
 
+                string normalizeTitleDisplay(string? value)
+                {
+                    if (string.IsNullOrWhiteSpace(value))
+                        return string.Empty;
+
+                    var parts = value
+                        .Trim()
+                        .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+                    return string.Join(" ", parts);
+                }
+
+                string normalizeTitleKey(string? value)
+                {
+                    if (string.IsNullOrWhiteSpace(value))
+                        return string.Empty;
+
+                    return normalizeTitleDisplay(value)
+                        .ToUpperInvariant();
+                }
+
                 bool isMobile(string? value)
                 {
                     var digits = NormalizeDigits(value);
@@ -570,31 +591,52 @@ namespace crm_api.Services
                         }
                     }
 
+                    const string fallbackUnknownTitleName = "Bilinmeyen";
                     long? titleId = null;
                     var titleCreated = false;
                     var (contactFirstName, contactMiddleName, contactLastName) = resolveContactNames(request);
                     var hasContact = !string.IsNullOrWhiteSpace(contactFirstName) && !string.IsNullOrWhiteSpace(contactLastName);
-                    var normalizedTitle = normalizeNullable(request.Title);
+                    var requestedTitle = normalizeTitleDisplay(request.Title);
+                    var resolvedTitleName = string.IsNullOrWhiteSpace(requestedTitle)
+                        ? fallbackUnknownTitleName
+                        : requestedTitle;
+                    var resolvedTitleKey = normalizeTitleKey(resolvedTitleName);
 
-                    if (!string.IsNullOrWhiteSpace(normalizedTitle))
+                    var existingTitle = await _unitOfWork.Titles
+                        .Query(tracking: true, ignoreQueryFilters: true)
+                        .ToListAsync();
+
+                    var matchedTitle = existingTitle.FirstOrDefault(t => normalizeTitleKey(t.TitleName) == resolvedTitleKey);
+
+                    if (matchedTitle == null)
                     {
-                        var existingTitle = await _unitOfWork.Titles
-                            .Query(tracking: true)
-                            .FirstOrDefaultAsync(t => !t.IsDeleted && t.TitleName.Trim().ToUpper() == normalizedTitle.Trim().ToUpper());
-
-                        if (existingTitle == null)
+                        matchedTitle = new Title
                         {
-                            existingTitle = new Title
-                            {
-                                TitleName = normalizedTitle
-                            };
-                            await _unitOfWork.Titles.AddAsync(existingTitle);
-                            await _unitOfWork.SaveChangesAsync();
-                            titleCreated = true;
+                            TitleName = resolvedTitleName
+                        };
+                        await _unitOfWork.Titles.AddAsync(matchedTitle);
+                        await _unitOfWork.SaveChangesAsync();
+                        titleCreated = true;
+                    }
+                    else
+                    {
+                        if (matchedTitle.IsDeleted)
+                        {
+                            matchedTitle.IsDeleted = false;
+                            matchedTitle.DeletedDate = null;
+                            matchedTitle.DeletedBy = null;
                         }
 
-                        titleId = existingTitle.Id;
+                        if (!string.Equals(normalizeTitleDisplay(matchedTitle.TitleName), resolvedTitleName, StringComparison.Ordinal))
+                        {
+                            matchedTitle.TitleName = resolvedTitleName;
+                        }
+
+                        await _unitOfWork.Titles.UpdateAsync(matchedTitle);
+                        await _unitOfWork.SaveChangesAsync();
                     }
+
+                    titleId = matchedTitle.Id;
 
                     long? contactId = null;
                     var contactCreated = false;
