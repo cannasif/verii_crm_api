@@ -676,6 +676,60 @@
   <data name="ActivityService.UpdateActivityExceptionMessage" xml:space="preserve">
     <value>Activity güncellenirken bir hata oluştu: {0}</value>
   </data>
+  <data name="ActivityService.EndDateRequired" xml:space="preserve">
+    <value>Bitiş tarihi zorunludur.</value>
+  </data>
+  <data name="ActivityService.UserSessionNotFound" xml:space="preserve">
+    <value>Kullanıcı oturumu bulunamadı. Lütfen tekrar giriş yapın.</value>
+  </data>
+  <data name="ActivityService.ActivityCreateFailed" xml:space="preserve">
+    <value>Aktivite kaydı oluşturulamadı.</value>
+  </data>
+  <data name="ActivityService.ActivityUpdateFailed" xml:space="preserve">
+    <value>Aktivite kaydı güncellenemedi.</value>
+  </data>
+  <data name="ActivityService.ActivityDeleteFailed" xml:space="preserve">
+    <value>Aktivite silinemedi.</value>
+  </data>
+  <data name="GoogleCalendarService.TestEventRequestFailed" xml:space="preserve">
+    <value>Google takvim test etkinliği isteği başarısız oldu.</value>
+  </data>
+  <data name="GoogleCalendarService.TestEventSummary" xml:space="preserve">
+    <value>CRM Test Etkinliği</value>
+  </data>
+  <data name="GoogleCalendarService.TestEventDescription" xml:space="preserve">
+    <value>CRM tarafından otomatik oluşturulan test etkinliği.</value>
+  </data>
+  <data name="GoogleCalendarService.EventIdMissing" xml:space="preserve">
+    <value>Google takvim yanıtında etkinlik kimliği bulunamadı.</value>
+  </data>
+  <data name="GoogleCalendarService.EventIdEmpty" xml:space="preserve">
+    <value>Google takvim etkinlik kimliği boş döndü.</value>
+  </data>
+  <data name="GoogleCalendarService.ActivityCreateRequestFailed" xml:space="preserve">
+    <value>Google takvim aktivite oluşturma isteği başarısız oldu.</value>
+  </data>
+  <data name="GoogleCalendarService.ActivityEventIdMissing" xml:space="preserve">
+    <value>Google takvim aktivite yanıtında etkinlik kimliği bulunamadı.</value>
+  </data>
+  <data name="GoogleCalendarService.ActivityEventIdEmpty" xml:space="preserve">
+    <value>Google takvim aktivite etkinlik kimliği boş döndü.</value>
+  </data>
+  <data name="GoogleCalendarService.ActivitySyncRequestFailed" xml:space="preserve">
+    <value>Google takvim aktivite güncelleme isteği başarısız oldu.</value>
+  </data>
+  <data name="GoogleCalendarService.ActivityDeleteRequestFailed" xml:space="preserve">
+    <value>Google takvim aktivite silme isteği başarısız oldu.</value>
+  </data>
+  <data name="GoogleCalendarService.OAuthDisabled" xml:space="preserve">
+    <value>Google OAuth etkin değil. Önce Google OAuth'u etkinleştirin.</value>
+  </data>
+  <data name="GoogleCalendarService.AccountNotConnected" xml:space="preserve">
+    <value>Google hesabı bağlı değil. Önce Google ile giriş yapın.</value>
+  </data>
+  <data name="GoogleCalendarService.TokenInvalidOrExpired" xml:space="preserve">
+    <value>Google oturumu geçersiz veya süresi dolmuş. Lütfen tekrar Google ile bağlanın.</value>
+  </data>
   
   
   

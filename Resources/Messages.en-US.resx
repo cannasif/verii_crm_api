@@ -637,6 +637,60 @@
   <data name="ActivityService.UpdateActivityExceptionMessage" xml:space="preserve">
     <value>An error occurred while updating the Activity: {0}</value>
   </data>
+  <data name="ActivityService.EndDateRequired" xml:space="preserve">
+    <value>End date is required.</value>
+  </data>
+  <data name="ActivityService.UserSessionNotFound" xml:space="preserve">
+    <value>User session not found. Please sign in again.</value>
+  </data>
+  <data name="ActivityService.ActivityCreateFailed" xml:space="preserve">
+    <value>Activity record could not be created.</value>
+  </data>
+  <data name="ActivityService.ActivityUpdateFailed" xml:space="preserve">
+    <value>Activity record could not be updated.</value>
+  </data>
+  <data name="ActivityService.ActivityDeleteFailed" xml:space="preserve">
+    <value>Activity could not be deleted.</value>
+  </data>
+  <data name="GoogleCalendarService.TestEventRequestFailed" xml:space="preserve">
+    <value>Google Calendar test event request failed.</value>
+  </data>
+  <data name="GoogleCalendarService.TestEventSummary" xml:space="preserve">
+    <value>CRM Test Event</value>
+  </data>
+  <data name="GoogleCalendarService.TestEventDescription" xml:space="preserve">
+    <value>Test event automatically created by CRM.</value>
+  </data>
+  <data name="GoogleCalendarService.EventIdMissing" xml:space="preserve">
+    <value>Google Calendar response does not contain an event id.</value>
+  </data>
+  <data name="GoogleCalendarService.EventIdEmpty" xml:space="preserve">
+    <value>Google Calendar event id is empty.</value>
+  </data>
+  <data name="GoogleCalendarService.ActivityCreateRequestFailed" xml:space="preserve">
+    <value>Google Calendar activity create request failed.</value>
+  </data>
+  <data name="GoogleCalendarService.ActivityEventIdMissing" xml:space="preserve">
+    <value>Google Calendar activity response does not contain an event id.</value>
+  </data>
+  <data name="GoogleCalendarService.ActivityEventIdEmpty" xml:space="preserve">
+    <value>Google Calendar activity event id is empty.</value>
+  </data>
+  <data name="GoogleCalendarService.ActivitySyncRequestFailed" xml:space="preserve">
+    <value>Google Calendar activity sync request failed.</value>
+  </data>
+  <data name="GoogleCalendarService.ActivityDeleteRequestFailed" xml:space="preserve">
+    <value>Google Calendar activity delete request failed.</value>
+  </data>
+  <data name="GoogleCalendarService.OAuthDisabled" xml:space="preserve">
+    <value>Google OAuth is disabled. Enable Google OAuth first.</value>
+  </data>
+  <data name="GoogleCalendarService.AccountNotConnected" xml:space="preserve">
+    <value>Google account is not connected. Connect with Google first.</value>
+  </data>
+  <data name="GoogleCalendarService.TokenInvalidOrExpired" xml:space="preserve">
+    <value>Google session is invalid or expired. Please reconnect Google.</value>
+  </data>
   
   
   
