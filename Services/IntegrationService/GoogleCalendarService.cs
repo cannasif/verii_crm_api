@@ -250,11 +250,14 @@ namespace crm_api.Services
             var overrides = activity.Reminders
                 .Where(r => !r.IsDeleted)
                 .Where(r => r.Channel != ReminderChannel.Sms)
-                .Select(r => Math.Clamp(r.OffsetMinutes, 0, 40320))
+                .Select(r => new
+                {
+                    minutes = Math.Clamp(r.OffsetMinutes, 0, 40320),
+                    method = r.Channel == ReminderChannel.Email ? "email" : "popup"
+                })
                 .Distinct()
-                .OrderBy(v => v)
+                .OrderBy(v => v.minutes)
                 .Take(5)
-                .Select(minutes => new { method = "popup", minutes })
                 .ToList();
 
             return new
