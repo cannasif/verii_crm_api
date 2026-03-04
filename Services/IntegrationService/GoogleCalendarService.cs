@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using crm_api.DTOs;
 using crm_api.Interfaces;
 using crm_api.Models;
 namespace crm_api.Services
@@ -12,6 +13,7 @@ namespace crm_api.Services
         private readonly IGoogleTokenService _googleTokenService;
         private readonly ITenantGoogleOAuthSettingsService _tenantGoogleOAuthSettingsService;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IGoogleIntegrationLogService _googleIntegrationLogService;
         private readonly ILocalizationService _localizationService;
         private readonly ILogger<GoogleCalendarService> _logger;
 
@@ -19,12 +21,14 @@ namespace crm_api.Services
             IGoogleTokenService googleTokenService,
             ITenantGoogleOAuthSettingsService tenantGoogleOAuthSettingsService,
             IHttpClientFactory httpClientFactory,
+            IGoogleIntegrationLogService googleIntegrationLogService,
             ILocalizationService localizationService,
             ILogger<GoogleCalendarService> logger)
         {
             _googleTokenService = googleTokenService;
             _tenantGoogleOAuthSettingsService = tenantGoogleOAuthSettingsService;
             _httpClientFactory = httpClientFactory;
+            _googleIntegrationLogService = googleIntegrationLogService;
             _localizationService = localizationService;
             _logger = logger;
         }
@@ -83,8 +87,19 @@ namespace crm_api.Services
                     _localizationService.GetLocalizedString("GoogleCalendarService.EventIdMissing"));
             }
 
-            return idElement.GetString()
+            var createdEventId = idElement.GetString()
                 ?? throw new InvalidOperationException(_localizationService.GetLocalizedString("GoogleCalendarService.EventIdEmpty"));
+
+            await _googleIntegrationLogService.WriteAsync(new GoogleIntegrationLogWriteDto
+            {
+                UserId = userId,
+                Operation = "google.calendar.test-event.create",
+                IsSuccess = true,
+                Message = "Google test event created.",
+                GoogleCalendarEventId = createdEventId,
+            }, cancellationToken);
+
+            return createdEventId;
         }
 
         public async Task<string> CreateActivityEventAsync(long userId, Activity activity, CancellationToken cancellationToken = default)
@@ -112,6 +127,18 @@ namespace crm_api.Services
                     response.StatusCode,
                     responseBody);
 
+                await _googleIntegrationLogService.WriteAsync(new GoogleIntegrationLogWriteDto
+                {
+                    UserId = userId,
+                    Operation = "google.calendar.activity.create",
+                    IsSuccess = false,
+                    Severity = "Error",
+                    Message = "Google activity event create request failed.",
+                    ErrorCode = response.StatusCode.ToString(),
+                    ActivityId = activity.Id,
+                    Metadata = responseBody,
+                }, cancellationToken);
+
                 throw new InvalidOperationException(
                     _localizationService.GetLocalizedString("GoogleCalendarService.ActivityCreateRequestFailed"));
             }
@@ -123,8 +150,20 @@ namespace crm_api.Services
                     _localizationService.GetLocalizedString("GoogleCalendarService.ActivityEventIdMissing"));
             }
 
-            return idElement.GetString()
+            var createdEventId = idElement.GetString()
                 ?? throw new InvalidOperationException(_localizationService.GetLocalizedString("GoogleCalendarService.ActivityEventIdEmpty"));
+
+            await _googleIntegrationLogService.WriteAsync(new GoogleIntegrationLogWriteDto
+            {
+                UserId = userId,
+                Operation = "google.calendar.activity.create",
+                IsSuccess = true,
+                Message = "Google activity event created.",
+                ActivityId = activity.Id,
+                GoogleCalendarEventId = createdEventId,
+            }, cancellationToken);
+
+            return createdEventId;
         }
 
         public async Task<string> SyncActivityEventAsync(long userId, Activity activity, CancellationToken cancellationToken = default)
@@ -158,9 +197,32 @@ namespace crm_api.Services
                     response.StatusCode,
                     responseBody);
 
+                await _googleIntegrationLogService.WriteAsync(new GoogleIntegrationLogWriteDto
+                {
+                    UserId = userId,
+                    Operation = "google.calendar.activity.update",
+                    IsSuccess = false,
+                    Severity = "Error",
+                    Message = "Google activity event update request failed.",
+                    ErrorCode = response.StatusCode.ToString(),
+                    ActivityId = activity.Id,
+                    GoogleCalendarEventId = existingEventId,
+                    Metadata = responseBody,
+                }, cancellationToken);
+
                 throw new InvalidOperationException(
                     _localizationService.GetLocalizedString("GoogleCalendarService.ActivitySyncRequestFailed"));
             }
+
+            await _googleIntegrationLogService.WriteAsync(new GoogleIntegrationLogWriteDto
+            {
+                UserId = userId,
+                Operation = "google.calendar.activity.update",
+                IsSuccess = true,
+                Message = "Google activity event updated.",
+                ActivityId = activity.Id,
+                GoogleCalendarEventId = existingEventId,
+            }, cancellationToken);
 
             return existingEventId;
         }
@@ -180,6 +242,17 @@ namespace crm_api.Services
             using var response = await client.SendAsync(request, cancellationToken);
             if (response.IsSuccessStatusCode || response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
+                await _googleIntegrationLogService.WriteAsync(new GoogleIntegrationLogWriteDto
+                {
+                    UserId = userId,
+                    Operation = "google.calendar.activity.delete",
+                    IsSuccess = true,
+                    Message = response.StatusCode == System.Net.HttpStatusCode.NotFound
+                        ? "Google activity event already deleted."
+                        : "Google activity event deleted.",
+                    GoogleCalendarEventId = calendarEventId,
+                }, cancellationToken);
+
                 return;
             }
 
@@ -190,6 +263,18 @@ namespace crm_api.Services
                 calendarEventId,
                 response.StatusCode,
                 responseBody);
+
+            await _googleIntegrationLogService.WriteAsync(new GoogleIntegrationLogWriteDto
+            {
+                UserId = userId,
+                Operation = "google.calendar.activity.delete",
+                IsSuccess = false,
+                Severity = "Error",
+                Message = "Google activity event delete request failed.",
+                ErrorCode = response.StatusCode.ToString(),
+                GoogleCalendarEventId = calendarEventId,
+                Metadata = responseBody,
+            }, cancellationToken);
 
             throw new InvalidOperationException(
                 _localizationService.GetLocalizedString("GoogleCalendarService.ActivityDeleteRequestFailed"));
