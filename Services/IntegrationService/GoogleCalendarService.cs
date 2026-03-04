@@ -3,7 +3,6 @@ using System.Text;
 using System.Text.Json;
 using crm_api.Interfaces;
 using crm_api.Models;
-
 namespace crm_api.Services
 {
     public class GoogleCalendarService : IGoogleCalendarService
@@ -13,17 +12,20 @@ namespace crm_api.Services
         private readonly IGoogleTokenService _googleTokenService;
         private readonly ITenantGoogleOAuthSettingsService _tenantGoogleOAuthSettingsService;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly ILocalizationService _localizationService;
         private readonly ILogger<GoogleCalendarService> _logger;
 
         public GoogleCalendarService(
             IGoogleTokenService googleTokenService,
             ITenantGoogleOAuthSettingsService tenantGoogleOAuthSettingsService,
             IHttpClientFactory httpClientFactory,
+            ILocalizationService localizationService,
             ILogger<GoogleCalendarService> logger)
         {
             _googleTokenService = googleTokenService;
             _tenantGoogleOAuthSettingsService = tenantGoogleOAuthSettingsService;
             _httpClientFactory = httpClientFactory;
+            _localizationService = localizationService;
             _logger = logger;
         }
 
@@ -37,8 +39,8 @@ namespace crm_api.Services
 
             var requestBody = new
             {
-                summary = "CRM Test Etkinliği",
-                description = "CRM tarafından otomatik oluşturulan test etkinliği.",
+                summary = _localizationService.GetLocalizedString("GoogleCalendarService.TestEventSummary"),
+                description = _localizationService.GetLocalizedString("GoogleCalendarService.TestEventDescription"),
                 start = new
                 {
                     dateTime = startUtc.ToOffset(istanbulOffset).ToString("yyyy-MM-dd'T'HH:mm:sszzz"),
@@ -70,59 +72,25 @@ namespace crm_api.Services
                     response.StatusCode,
                     responseBody);
 
-                throw new InvalidOperationException("Google calendar test event request failed.");
+                throw new InvalidOperationException(
+                    _localizationService.GetLocalizedString("GoogleCalendarService.TestEventRequestFailed"));
             }
 
             using var doc = JsonDocument.Parse(responseBody);
             if (!doc.RootElement.TryGetProperty("id", out var idElement))
             {
-                throw new InvalidOperationException("Google calendar event response does not contain event id.");
+                throw new InvalidOperationException(
+                    _localizationService.GetLocalizedString("GoogleCalendarService.EventIdMissing"));
             }
 
-            return idElement.GetString() ?? throw new InvalidOperationException("Google calendar event id is empty.");
+            return idElement.GetString()
+                ?? throw new InvalidOperationException(_localizationService.GetLocalizedString("GoogleCalendarService.EventIdEmpty"));
         }
 
         public async Task<string> CreateActivityEventAsync(long userId, Activity activity, CancellationToken cancellationToken = default)
         {
             var accessToken = await EnsureSyncReadyAndGetAccessTokenAsync(userId, cancellationToken);
-            var start = activity.StartDateTime;
-            var end = activity.EndDateTime ?? activity.StartDateTime.AddMinutes(30);
-            var now = DateTimeOffset.UtcNow;
-
-            var requestBody = new
-            {
-                summary = $"[CRM] {activity.Subject}",
-                description =
-                    $"ActivityId: {activity.Id}\n" +
-                    $"Durum: {activity.Status}\n" +
-                    $"Oncelik: {activity.Priority}\n" +
-                    $"CustomerId: {activity.PotentialCustomerId?.ToString() ?? "-"}\n" +
-                    $"ContactId: {activity.ContactId?.ToString() ?? "-"}\n\n" +
-                $"{activity.Description ?? string.Empty}",
-                start = new
-                {
-                    dateTime = ToIstanbulDateTimeString(start),
-                    timeZone = "Europe/Istanbul",
-                },
-                end = new
-                {
-                    dateTime = ToIstanbulDateTimeString(end),
-                    timeZone = "Europe/Istanbul",
-                },
-                extendedProperties = new
-                {
-                    @private = new Dictionary<string, string>
-                    {
-                        ["crmActivityId"] = activity.Id.ToString(),
-                        ["crmType"] = "Activity",
-                        ["crmStatus"] = activity.Status.ToString(),
-                        ["crmPriority"] = activity.Priority.ToString(),
-                        ["crmCustomerId"] = activity.PotentialCustomerId?.ToString() ?? string.Empty,
-                        ["crmContactId"] = activity.ContactId?.ToString() ?? string.Empty,
-                        ["crmVersion"] = now.ToUnixTimeMilliseconds().ToString(),
-                    }
-                }
-            };
+            var requestBody = BuildActivityEventRequestBody(activity);
 
             var json = JsonSerializer.Serialize(requestBody);
             var client = _httpClientFactory.CreateClient();
@@ -144,16 +112,156 @@ namespace crm_api.Services
                     response.StatusCode,
                     responseBody);
 
-                throw new InvalidOperationException("Google calendar activity event request failed.");
+                throw new InvalidOperationException(
+                    _localizationService.GetLocalizedString("GoogleCalendarService.ActivityCreateRequestFailed"));
             }
 
             using var doc = JsonDocument.Parse(responseBody);
             if (!doc.RootElement.TryGetProperty("id", out var idElement))
             {
-                throw new InvalidOperationException("Google calendar activity event response does not contain event id.");
+                throw new InvalidOperationException(
+                    _localizationService.GetLocalizedString("GoogleCalendarService.ActivityEventIdMissing"));
             }
 
-            return idElement.GetString() ?? throw new InvalidOperationException("Google calendar activity event id is empty.");
+            return idElement.GetString()
+                ?? throw new InvalidOperationException(_localizationService.GetLocalizedString("GoogleCalendarService.ActivityEventIdEmpty"));
+        }
+
+        public async Task<string> SyncActivityEventAsync(long userId, Activity activity, CancellationToken cancellationToken = default)
+        {
+            var accessToken = await EnsureSyncReadyAndGetAccessTokenAsync(userId, cancellationToken);
+            if (string.IsNullOrWhiteSpace(activity.GoogleCalendarEventId))
+            {
+                return await CreateActivityEventAsync(userId, activity, cancellationToken);
+            }
+
+            var existingEventId = activity.GoogleCalendarEventId.Trim();
+            var client = _httpClientFactory.CreateClient();
+            var requestBody = BuildActivityEventRequestBody(activity);
+            var json = JsonSerializer.Serialize(requestBody);
+            using var request = new HttpRequestMessage(HttpMethod.Patch, $"{CalendarEventsEndpoint}/{Uri.EscapeDataString(existingEventId)}")
+            {
+                Content = new StringContent(json, Encoding.UTF8, "application/json"),
+            };
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            using var response = await client.SendAsync(request, cancellationToken);
+            var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning(
+                    "Google calendar activity event sync failed for user {UserId}, activity {ActivityId}, event {EventId}. StatusCode: {StatusCode}, Body: {Body}",
+                    userId,
+                    activity.Id,
+                    existingEventId,
+                    response.StatusCode,
+                    responseBody);
+
+                throw new InvalidOperationException(
+                    _localizationService.GetLocalizedString("GoogleCalendarService.ActivitySyncRequestFailed"));
+            }
+
+            return existingEventId;
+        }
+
+        public async Task DeleteActivityEventAsync(long userId, string calendarEventId, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(calendarEventId))
+            {
+                return;
+            }
+
+            var accessToken = await EnsureSyncReadyAndGetAccessTokenAsync(userId, cancellationToken);
+            var client = _httpClientFactory.CreateClient();
+            using var request = new HttpRequestMessage(HttpMethod.Delete, $"{CalendarEventsEndpoint}/{Uri.EscapeDataString(calendarEventId.Trim())}");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            using var response = await client.SendAsync(request, cancellationToken);
+            if (response.IsSuccessStatusCode || response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return;
+            }
+
+            var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+            _logger.LogWarning(
+                "Google calendar activity event delete failed for user {UserId}, event {EventId}. StatusCode: {StatusCode}, Body: {Body}",
+                userId,
+                calendarEventId,
+                response.StatusCode,
+                responseBody);
+
+            throw new InvalidOperationException(
+                _localizationService.GetLocalizedString("GoogleCalendarService.ActivityDeleteRequestFailed"));
+        }
+
+        private static object BuildActivityEventRequestBody(Activity activity)
+        {
+            var start = activity.StartDateTime;
+            var end = activity.EndDateTime ?? activity.StartDateTime.AddMinutes(30);
+            var now = DateTimeOffset.UtcNow;
+            var activityTypeName = activity.ActivityType?.Name;
+            var customerName = activity.PotentialCustomer?.CustomerName;
+            var contactName = activity.Contact?.FullName;
+
+            return new
+            {
+                summary = $"[CRM] {activity.Subject}",
+                description =
+                    $"ActivityId: {activity.Id}\n" +
+                    $"Durum: {activity.Status}\n" +
+                    $"Oncelik: {activity.Priority}\n" +
+                    $"ActivityTypeId: {activity.ActivityTypeId}\n" +
+                    $"ActivityTypeName: {activityTypeName ?? "-"}\n" +
+                    $"CustomerId: {activity.PotentialCustomerId?.ToString() ?? "-"}\n" +
+                    $"CustomerName: {customerName ?? "-"}\n" +
+                    $"ContactId: {activity.ContactId?.ToString() ?? "-"}\n" +
+                    $"ContactName: {contactName ?? "-"}\n\n" +
+                    $"{activity.Description ?? string.Empty}",
+                start = new
+                {
+                    dateTime = ToIstanbulDateTimeString(start),
+                    timeZone = "Europe/Istanbul",
+                },
+                end = new
+                {
+                    dateTime = ToIstanbulDateTimeString(end),
+                    timeZone = "Europe/Istanbul",
+                },
+                reminders = BuildRemindersPayload(activity),
+                extendedProperties = new
+                {
+                    @private = new Dictionary<string, string>
+                    {
+                        ["crmActivityId"] = activity.Id.ToString(),
+                        ["crmType"] = "Activity",
+                        ["crmStatus"] = activity.Status.ToString(),
+                        ["crmPriority"] = activity.Priority.ToString(),
+                        ["crmCustomerId"] = activity.PotentialCustomerId?.ToString() ?? string.Empty,
+                        ["crmContactId"] = activity.ContactId?.ToString() ?? string.Empty,
+                        ["crmVersion"] = now.ToUnixTimeMilliseconds().ToString(),
+                    }
+                }
+            };
+        }
+
+        private static object BuildRemindersPayload(Activity activity)
+        {
+            var overrides = activity.Reminders
+                .Where(r => !r.IsDeleted)
+                .Where(r => r.Channel != ReminderChannel.Sms)
+                .Select(r => Math.Clamp(r.OffsetMinutes, 0, 40320))
+                .Distinct()
+                .OrderBy(v => v)
+                .Take(5)
+                .Select(minutes => new { method = "popup", minutes })
+                .ToList();
+
+            return new
+            {
+                useDefault = overrides.Count == 0,
+                overrides
+            };
         }
 
         private async Task<string> EnsureSyncReadyAndGetAccessTokenAsync(long userId, CancellationToken cancellationToken)
@@ -161,19 +269,22 @@ namespace crm_api.Services
             var oauthSettings = await _tenantGoogleOAuthSettingsService.GetRuntimeSettingsAsync(Guid.Empty, cancellationToken);
             if (oauthSettings == null || !oauthSettings.IsEnabled)
             {
-                throw new InvalidOperationException("Google OAuth etkin değil. Önce Google OAuth'u etkinleştirin.");
+                throw new InvalidOperationException(
+                    _localizationService.GetLocalizedString("GoogleCalendarService.OAuthDisabled"));
             }
 
             var account = await _googleTokenService.GetAccountAsync(userId, cancellationToken);
             if (account == null || !account.IsConnected)
             {
-                throw new InvalidOperationException("Google hesabı bağlı değil. Önce Google ile giriş yapın.");
+                throw new InvalidOperationException(
+                    _localizationService.GetLocalizedString("GoogleCalendarService.AccountNotConnected"));
             }
 
             var accessToken = await _googleTokenService.GetValidAccessTokenAsync(userId, cancellationToken);
             if (string.IsNullOrWhiteSpace(accessToken))
             {
-                throw new InvalidOperationException("Google oturumu geçersiz veya süresi dolmuş. Lütfen tekrar Google ile bağlanın.");
+                throw new InvalidOperationException(
+                    _localizationService.GetLocalizedString("GoogleCalendarService.TokenInvalidOrExpired"));
             }
 
             return accessToken;
