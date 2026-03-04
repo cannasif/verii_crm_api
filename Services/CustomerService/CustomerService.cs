@@ -459,8 +459,7 @@ namespace crm_api.Services
                 var requestPhone2 = request.Phone2;
 
                 var customerQuery = _unitOfWork.Customers
-                    .Query(tracking: false)
-                    .Where(c => !c.IsDeleted);
+                    .Query(tracking: false, ignoreQueryFilters: true);
 
                 if (request.BranchCode.HasValue)
                 {
@@ -520,13 +519,25 @@ namespace crm_api.Services
 
                     if (existingCustomerId > 0)
                     {
-                        var existingCustomer = await _unitOfWork.Customers.GetByIdForUpdateAsync(existingCustomerId);
-                        if (existingCustomer == null || existingCustomer.IsDeleted)
+                        var existingCustomer = await _unitOfWork.Customers
+                            .Query(tracking: true, ignoreQueryFilters: true)
+                            .FirstOrDefaultAsync(c => c.Id == existingCustomerId);
+
+                        if (existingCustomer == null)
                         {
                             return ApiResponse<CustomerCreateFromMobileResultDto>.ErrorResult(
                                 _localizationService.GetLocalizedString("CustomerService.CustomerNotFound"),
                                 _localizationService.GetLocalizedString("CustomerService.CustomerNotFound"),
                                 StatusCodes.Status404NotFound);
+                        }
+
+                        if (existingCustomer.IsDeleted)
+                        {
+                            existingCustomer.IsDeleted = false;
+                            existingCustomer.DeletedDate = null;
+                            existingCustomer.DeletedBy = null;
+                            await _unitOfWork.Customers.UpdateAsync(existingCustomer);
+                            await _unitOfWork.SaveChangesAsync();
                         }
 
                         customer = existingCustomer;
@@ -718,6 +729,7 @@ namespace crm_api.Services
                             matchedDeletedContact.Phone = normalizeNullable(contactPhone);
                             matchedDeletedContact.Mobile = normalizeNullable(contactMobile);
                             matchedDeletedContact.Notes = normalizeNullable(request.Notes);
+                            matchedDeletedContact.CustomerId = customer.Id;
                             matchedDeletedContact.TitleId = titleId;
 
                             await _unitOfWork.Contacts.UpdateAsync(matchedDeletedContact);
