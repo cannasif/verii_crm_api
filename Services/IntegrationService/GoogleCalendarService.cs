@@ -368,7 +368,7 @@ namespace crm_api.Services
                     _localizationService.GetLocalizedString("GoogleCalendarService.AccountNotConnected"));
             }
 
-            var accessToken = await _googleTokenService.GetValidAccessTokenAsync(userId, cancellationToken);
+            var accessToken = await _googleTokenService.GetValidAccessTokenAsync(userId, cancellationToken: cancellationToken);
             if (string.IsNullOrWhiteSpace(accessToken))
             {
                 throw new InvalidOperationException(

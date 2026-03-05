@@ -13,7 +13,7 @@ namespace crm_api.Interfaces
             string? googleEmail,
             string configuredScopes,
             CancellationToken cancellationToken = default);
-        Task<string?> GetValidAccessTokenAsync(long userId, CancellationToken cancellationToken = default);
+        Task<string?> GetValidAccessTokenAsync(long userId, bool forceRefresh = false, CancellationToken cancellationToken = default);
         Task<bool> DisconnectAsync(long userId, CancellationToken cancellationToken = default);
     }
 }

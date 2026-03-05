@@ -76,7 +76,7 @@ namespace crm_api.Services
             return account;
         }
 
-        public async Task<string?> GetValidAccessTokenAsync(long userId, CancellationToken cancellationToken = default)
+        public async Task<string?> GetValidAccessTokenAsync(long userId, bool forceRefresh = false, CancellationToken cancellationToken = default)
         {
             var account = await _dbContext.UserGoogleAccounts.FirstOrDefaultAsync(x => x.UserId == userId, cancellationToken);
             if (account == null || !account.IsConnected)
@@ -86,7 +86,8 @@ namespace crm_api.Services
 
             var now = DateTimeOffset.UtcNow;
             var accessToken = SafeDecrypt(account.AccessTokenEncrypted);
-            var shouldRefresh = string.IsNullOrWhiteSpace(accessToken)
+            var shouldRefresh = forceRefresh
+                || string.IsNullOrWhiteSpace(accessToken)
                 || !account.ExpiresAt.HasValue
                 || account.ExpiresAt.Value <= now.AddMinutes(1);
 
