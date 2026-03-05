@@ -235,6 +235,7 @@ builder.Services.AddScoped<IGoogleOAuthService, GoogleOAuthService>();
 builder.Services.AddScoped<IGoogleTokenService, GoogleTokenService>();
 builder.Services.AddScoped<IGoogleCalendarService, GoogleCalendarService>();
 builder.Services.AddScoped<IGoogleIntegrationLogService, GoogleIntegrationLogService>();
+builder.Services.AddScoped<IGoogleGmailApiService, GoogleGmailApiService>();
 
 // ✅ SMTP Settings Service kaydı
 builder.Services.AddScoped<ISmtpSettingsService, SmtpSettingsService>();
