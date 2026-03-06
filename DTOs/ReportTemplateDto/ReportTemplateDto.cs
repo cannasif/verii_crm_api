@@ -67,6 +67,9 @@ namespace crm_api.DTOs
     /// </summary>
     public class ReportTemplateData
     {
+        [JsonPropertyName("schemaVersion")]
+        public int SchemaVersion { get; set; } = 1;
+
         [JsonPropertyName("page")]
         public PageConfig Page { get; set; } = new PageConfig();
 

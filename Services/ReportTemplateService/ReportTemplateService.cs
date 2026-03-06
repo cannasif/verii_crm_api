@@ -20,19 +20,22 @@ namespace crm_api.Services
         private readonly ILogger<ReportTemplateService> _logger;
         private readonly ILocalizationService _localizationService;
         private readonly IReportPdfGeneratorService _pdfGenerator;
+        private readonly IPdfReportTemplateValidator _validator;
 
         public ReportTemplateService(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             ILogger<ReportTemplateService> logger,
             ILocalizationService localizationService,
-            IReportPdfGeneratorService pdfGenerator)
+            IReportPdfGeneratorService pdfGenerator,
+            IPdfReportTemplateValidator validator)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _logger = logger;
             _localizationService = localizationService;
             _pdfGenerator = pdfGenerator;
+            _validator = validator;
         }
 
         public async Task<ApiResponse<PagedResponse<ReportTemplateDto>>> GetAllAsync(
@@ -150,6 +153,21 @@ namespace crm_api.Services
 
         public async Task<ApiResponse<ReportTemplateDto>> CreateAsync(CreateReportTemplateDto dto, long userId)
         {
+            dto.TemplateData ??= new ReportTemplateData();
+            if (dto.TemplateData.SchemaVersion <= 0)
+                dto.TemplateData.SchemaVersion = 1;
+
+            var validationErrors = _validator.ValidateTemplateData(dto.TemplateData, dto.RuleType);
+            if (validationErrors.Count > 0)
+            {
+                var response = ApiResponse<ReportTemplateDto>.ErrorResult(
+                    _localizationService.GetLocalizedString("General.ValidationError"),
+                    string.Join("; ", validationErrors),
+                    400);
+                response.Errors = validationErrors.ToList();
+                return response;
+            }
+
             try
             {
                 // Serialize template data to JSON
@@ -218,6 +236,21 @@ namespace crm_api.Services
 
         public async Task<ApiResponse<ReportTemplateDto>> UpdateAsync(long id, UpdateReportTemplateDto dto, long userId)
         {
+            dto.TemplateData ??= new ReportTemplateData();
+            if (dto.TemplateData.SchemaVersion <= 0)
+                dto.TemplateData.SchemaVersion = 1;
+
+            var validationErrors = _validator.ValidateTemplateData(dto.TemplateData, dto.RuleType);
+            if (validationErrors.Count > 0)
+            {
+                var response = ApiResponse<ReportTemplateDto>.ErrorResult(
+                    _localizationService.GetLocalizedString("General.ValidationError"),
+                    string.Join("; ", validationErrors),
+                    400);
+                response.Errors = validationErrors.ToList();
+                return response;
+            }
+
             try
             {
                 var template = await _unitOfWork.Repository<ReportTemplate>().Query()

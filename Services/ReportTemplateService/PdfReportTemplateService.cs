@@ -118,6 +118,10 @@ namespace crm_api.Services
 
         public async Task<ApiResponse<PdfReportTemplateDto>> CreateAsync(CreatePdfReportTemplateDto dto, long userId)
         {
+            dto.TemplateData ??= new ReportTemplateData();
+            if (dto.TemplateData.SchemaVersion <= 0)
+                dto.TemplateData.SchemaVersion = 1;
+
             var validationErrors = _validator.ValidateTemplateData(dto.TemplateData, dto.RuleType);
             if (validationErrors.Count > 0)
             {
@@ -191,6 +195,10 @@ namespace crm_api.Services
 
         public async Task<ApiResponse<PdfReportTemplateDto>> UpdateAsync(long id, UpdatePdfReportTemplateDto dto, long userId)
         {
+            dto.TemplateData ??= new ReportTemplateData();
+            if (dto.TemplateData.SchemaVersion <= 0)
+                dto.TemplateData.SchemaVersion = 1;
+
             var validationErrors = _validator.ValidateTemplateData(dto.TemplateData, dto.RuleType);
             if (validationErrors.Count > 0)
             {

@@ -33,6 +33,9 @@ namespace crm_api.Services
                 return errors;
             }
 
+            if (data.SchemaVersion < 1)
+                errors.Add("TemplateData.SchemaVersion must be greater than or equal to 1.");
+
             // Page
             if (data.Page == null)
                 errors.Add("TemplateData.Page is required.");
