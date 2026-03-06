@@ -35,7 +35,15 @@ namespace Infrastructure.BackgroundJobs
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, _localizationService.GetLocalizedString("CustomerSyncJob.Failed"));
+                var inner = ex.InnerException != null
+                    ? $" | Inner: {ex.InnerException.GetType().Name}: {ex.InnerException.Message}"
+                    : "";
+                _logger.LogError(ex,
+                    "CustomerSyncJob failed. {ExceptionType}: {Message}{Inner} | {StackTrace}",
+                    ex.GetType().FullName,
+                    ex.Message,
+                    inner,
+                    ex.StackTrace);
                 throw;
             }
         }

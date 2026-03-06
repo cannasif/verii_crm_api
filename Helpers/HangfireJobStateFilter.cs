@@ -3,8 +3,11 @@ using Hangfire.Storage;
 using Hangfire;
 using Infrastructure.BackgroundJobs;
 using Infrastructure.BackgroundJobs.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using crm_api.Data;
+using crm_api.Models;
 
 namespace crm_api.Helpers
 {
@@ -13,15 +16,18 @@ namespace crm_api.Helpers
         private readonly ILogger<HangfireJobStateFilter> _logger;
         private readonly IBackgroundJobClient _backgroundJobClient;
         private readonly HangfireMonitoringOptions _options;
+        private readonly IServiceScopeFactory _scopeFactory;
 
         public HangfireJobStateFilter(
             ILogger<HangfireJobStateFilter> logger,
             IBackgroundJobClient backgroundJobClient,
-            IOptions<HangfireMonitoringOptions> options)
+            IOptions<HangfireMonitoringOptions> options,
+            IServiceScopeFactory scopeFactory)
         {
             _logger = logger;
             _backgroundJobClient = backgroundJobClient;
             _options = options.Value;
+            _scopeFactory = scopeFactory;
         }
 
         public void OnStateApplied(ApplyStateContext context, IWriteOnlyTransaction transaction)
@@ -41,6 +47,39 @@ namespace crm_api.Helpers
                     jobName,
                     retryCount,
                     failedState.Reason);
+
+                // SQL'e sadece Hangfire failed-state olayları yazılır.
+                // Genel ILogger.LogError akışı bu tabloya yönlendirilmez.
+                if (_options.EnableFailureSqlLog)
+                {
+                    try
+                    {
+                        using var scope = _scopeFactory.CreateScope();
+                        var db = scope.ServiceProvider.GetRequiredService<CmsDbContext>();
+                        var log = new JobFailureLog
+                        {
+                            JobId = jobId,
+                            JobName = jobName,
+                            FailedAt = DateTime.UtcNow,
+                            Reason = failedState.Reason,
+                            ExceptionType = failedState.Exception?.GetType().FullName,
+                            ExceptionMessage = failedState.Exception?.Message,
+                            StackTrace = failedState.Exception?.StackTrace?.Length > 8000
+                                ? failedState.Exception.StackTrace[..8000]
+                                : failedState.Exception?.StackTrace,
+                            Queue = queue,
+                            RetryCount = retryCount,
+                            CreatedDate = DateTime.UtcNow,
+                            IsDeleted = false
+                        };
+                        db.JobFailureLogs.Add(log);
+                        db.SaveChanges();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "JobFailureLog SQL kaydı başarısız. JobId: {JobId}", jobId);
+                    }
+                }
 
                 // Dead-letter strategy:
                 // for critical jobs, when retries are exhausted, enqueue a separate dead-letter job.

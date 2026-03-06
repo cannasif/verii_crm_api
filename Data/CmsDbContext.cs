@@ -86,6 +86,7 @@ namespace crm_api.Data
         public DbSet<TenantGoogleOAuthSettings> TenantGoogleOAuthSettings { get; set; }
         public DbSet<GoogleIntegrationLog> GoogleIntegrationLogs { get; set; }
         public DbSet<GoogleCustomerMailLog> GoogleCustomerMailLogs { get; set; }
+        public DbSet<JobFailureLog> JobFailureLogs { get; set; }
 
 
 

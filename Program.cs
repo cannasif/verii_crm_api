@@ -528,7 +528,8 @@ GlobalJobFilters.Filters.Add(
     new HangfireJobStateFilter(
         app.Services.GetRequiredService<ILogger<HangfireJobStateFilter>>(),
         app.Services.GetRequiredService<IBackgroundJobClient>(),
-        app.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<HangfireMonitoringOptions>>()));
+        app.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<HangfireMonitoringOptions>>(),
+        app.Services.GetRequiredService<Microsoft.Extensions.DependencyInjection.IServiceScopeFactory>()));
 
 // Migrations are intentionally run out-of-band (e.g., dotnet ef database update)
 

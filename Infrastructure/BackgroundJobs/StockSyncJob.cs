@@ -35,7 +35,15 @@ namespace Infrastructure.BackgroundJobs
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, _localizationService.GetLocalizedString("StockSyncJob.Failed"));
+                var inner = ex.InnerException != null
+                    ? $" | Inner: {ex.InnerException.GetType().Name}: {ex.InnerException.Message}"
+                    : "";
+                _logger.LogError(ex,
+                    "StockSyncJob failed. {ExceptionType}: {Message}{Inner} | {StackTrace}",
+                    ex.GetType().FullName,
+                    ex.Message,
+                    inner,
+                    ex.StackTrace);
                 throw;
             }
         }

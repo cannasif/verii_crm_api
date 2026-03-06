@@ -3,6 +3,9 @@ using Hangfire;
 using Hangfire.Storage;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using crm_api.Data;
+using System.Globalization;
 
 namespace crm_api.Controllers
 {
@@ -12,10 +15,12 @@ namespace crm_api.Controllers
     public class HangfireController : ControllerBase
     {
         private readonly IMonitoringApi _monitoringApi;
+        private readonly CmsDbContext _db;
 
-        public HangfireController()
+        public HangfireController(CmsDbContext db)
         {
             _monitoringApi = JobStorage.Current.GetMonitoringApi();
+            _db = db;
         }
 
         [HttpGet("stats")]
@@ -52,6 +57,42 @@ namespace crm_api.Controllers
             {
                 Items = failed,
                 Total = _monitoringApi.FailedCount(),
+                Timestamp = DateTime.UtcNow
+            });
+        }
+
+        [HttpGet("failures-from-db")]
+        public async Task<IActionResult> GetFailuresFromDb([FromQuery] int from = 0, [FromQuery] int count = 50)
+        {
+            if (from < 0) from = 0;
+            if (count <= 0) count = 50;
+            if (count > 200) count = 200;
+
+            var items = await _db.JobFailureLogs
+                .AsNoTracking()
+                .OrderByDescending(x => x.FailedAt)
+                .Skip(from)
+                .Take(count)
+                .Select(x => new
+                {
+                    x.JobId,
+                    x.JobName,
+                    FailedAt = x.FailedAt,
+                    Zaman = x.FailedAt.ToString("o"),
+                    Reason = x.ExceptionMessage ?? x.Reason,
+                    Neden = x.ExceptionMessage ?? x.Reason,
+                    x.ExceptionType,
+                    x.RetryCount,
+                    x.Queue
+                })
+                .ToListAsync();
+
+            var total = await _db.JobFailureLogs.CountAsync();
+
+            return Ok(new
+            {
+                Items = items,
+                Total = total,
                 Timestamp = DateTime.UtcNow
             });
         }
@@ -100,7 +141,7 @@ namespace crm_api.Controllers
                         ? details.ExceptionDetails
                         : null;
 
-            // State bilgisi eksikse (eski job veya state tablosunda kayıt yok) JobDetails.History'den dene
+            // State bilgisi eksikse JobDetails.History'den dene
             if (string.IsNullOrEmpty(zaman) || string.IsNullOrEmpty(neden))
             {
                 try
@@ -124,22 +165,61 @@ namespace crm_api.Controllers
                         }
                     }
                 }
-                catch
+                catch { /* JobDetails alınamazsa devam */ }
+            }
+
+            // Hâlâ boşsa SQL RII_JOB_FAILURE_LOG'dan al (müşteri için kaydedilen)
+            if (string.IsNullOrEmpty(zaman) || string.IsNullOrEmpty(neden))
+            {
+                try
                 {
-                    // JobDetails veya History alınamazsa mevcut (null) değerlerle devam et
+                    var dbLog = _db.JobFailureLogs
+                        .AsNoTracking()
+                        .Where(x => x.JobId == jobId)
+                        .OrderByDescending(x => x.FailedAt)
+                        .FirstOrDefault();
+
+                    if (dbLog != null)
+                    {
+                        if (string.IsNullOrEmpty(zaman))
+                            zaman = dbLog.FailedAt.ToString("o");
+                        if (string.IsNullOrEmpty(neden))
+                            neden = dbLog.ExceptionMessage ?? dbLog.Reason;
+                    }
                 }
+                catch { /* DB okuma hatası - devam */ }
             }
 
             return new
             {
                 JobId = jobId,
                 JobName = job == null ? "unknown" : $"{job.Type.Name}.{job.Method.Name}",
-                FailedAt = failedAt,
+                FailedAt = ResolveFailedAtValue(failedAt, zaman),
                 State = "Failed",
                 Reason = neden ?? details.ExceptionMessage,
                 Zaman = zaman,
                 Neden = neden
             };
+        }
+
+        private static object? ResolveFailedAtValue(DateTime? failedAt, string? zaman)
+        {
+            if (failedAt.HasValue)
+            {
+                return failedAt.Value;
+            }
+
+            if (!string.IsNullOrWhiteSpace(zaman) &&
+                DateTime.TryParse(
+                    zaman,
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.RoundtripKind,
+                    out var parsed))
+            {
+                return parsed;
+            }
+
+            return null;
         }
 
         private static object MapEnqueuedJob(KeyValuePair<string, EnqueuedJobDto> kvp)
