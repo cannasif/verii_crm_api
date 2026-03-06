@@ -362,31 +362,50 @@ namespace crm_api.Services
 
             foreach (var erpStock in erpResponse.Data)
             {
-                if (string.IsNullOrWhiteSpace(erpStock.StokKodu))
+                var code = erpStock.StokKodu?.Trim();
+                if (string.IsNullOrWhiteSpace(code))
                     continue;
 
+                // RII_STOCK için null dönmemesi gereken alanlar: ERP null gelirse '' veya 0 atanır (customer ile aynı mantık)
+                var stockName = erpStock.StokAdi ?? string.Empty;
+                var unit = erpStock.OlcuBr1 ?? string.Empty;
+                var ureticiKodu = erpStock.UreticiKodu ?? string.Empty;
+                var grupKodu = erpStock.GrupKodu ?? string.Empty;
+                var grupAdi = erpStock.GrupIsim ?? string.Empty;
+                var kod1 = erpStock.Kod1 ?? string.Empty;
+                var kod1Adi = erpStock.Kod1Adi ?? string.Empty;
+                var kod2 = erpStock.Kod2 ?? string.Empty;
+                var kod2Adi = erpStock.Kod2Adi ?? string.Empty;
+                var kod3 = erpStock.Kod3 ?? string.Empty;
+                var kod3Adi = erpStock.Kod3Adi ?? string.Empty;
+                var kod4 = erpStock.Kod4 ?? string.Empty;
+                var kod4Adi = erpStock.Kod4Adi ?? string.Empty;
+                var kod5 = erpStock.Kod5 ?? string.Empty;
+                var kod5Adi = erpStock.Kod5Adi ?? string.Empty;
+                var branchCode = (int)erpStock.SubeKodu;
+
                 // 🔹 INSERT
-                if (!existingStocks.TryGetValue(erpStock.StokKodu, out var stock))
+                if (!existingStocks.TryGetValue(code, out var stock))
                 {
                     newStocks.Add(new Stock
                     {
-                        ErpStockCode = erpStock.StokKodu,
-                        StockName = erpStock.StokAdi ?? string.Empty,
-                        Unit = erpStock.OlcuBr1,
-                        UreticiKodu = erpStock.UreticiKodu,
-                        GrupKodu = erpStock.GrupKodu,
-                        GrupAdi = erpStock.GrupIsim,
-                        Kod1 = erpStock.Kod1,
-                        Kod1Adi = erpStock.Kod1Adi,
-                        Kod2 = erpStock.Kod2,
-                        Kod2Adi = erpStock.Kod2Adi,
-                        Kod3 = erpStock.Kod3,
-                        Kod3Adi = erpStock.Kod3Adi,
-                        Kod4 = erpStock.Kod4,
-                        Kod4Adi = erpStock.Kod4Adi,
-                        Kod5 = erpStock.Kod5,
-                        Kod5Adi = erpStock.Kod5Adi,
-                        BranchCode = erpStock.SubeKodu,
+                        ErpStockCode = code,
+                        StockName = string.IsNullOrWhiteSpace(stockName) ? code : stockName,
+                        Unit = unit,
+                        UreticiKodu = ureticiKodu,
+                        GrupKodu = grupKodu,
+                        GrupAdi = grupAdi,
+                        Kod1 = kod1,
+                        Kod1Adi = kod1Adi,
+                        Kod2 = kod2,
+                        Kod2Adi = kod2Adi,
+                        Kod3 = kod3,
+                        Kod3Adi = kod3Adi,
+                        Kod4 = kod4,
+                        Kod4Adi = kod4Adi,
+                        Kod5 = kod5,
+                        Kod5Adi = kod5Adi,
+                        BranchCode = branchCode,
                         IsDeleted = false
                     });
 
@@ -395,41 +414,44 @@ namespace crm_api.Services
                 }
 
                 // 🔹 UPDATE (ANY FIELD CHANGED)
+                var newStockName = string.IsNullOrWhiteSpace(stockName) ? code : stockName;
                 if (
-                    stock.StockName != erpStock.StokAdi ||
-                    stock.Unit != erpStock.OlcuBr1 ||
-                    stock.UreticiKodu != erpStock.UreticiKodu ||
-                    stock.GrupKodu != erpStock.GrupKodu ||
-                    stock.GrupAdi != erpStock.GrupIsim ||
-                    stock.Kod1 != erpStock.Kod1 ||
-                    stock.Kod1Adi != erpStock.Kod1Adi ||
-                    stock.Kod2 != erpStock.Kod2 ||
-                    stock.Kod2Adi != erpStock.Kod2Adi ||
-                    stock.Kod3 != erpStock.Kod3 ||
-                    stock.Kod3Adi != erpStock.Kod3Adi ||
-                    stock.Kod4 != erpStock.Kod4 ||
-                    stock.Kod4Adi != erpStock.Kod4Adi ||
-                    stock.Kod5 != erpStock.Kod5 ||
-                    stock.Kod5Adi != erpStock.Kod5Adi ||
-                    stock.BranchCode != erpStock.SubeKodu
+                    stock.StockName != newStockName ||
+                    stock.Unit != unit ||
+                    stock.UreticiKodu != ureticiKodu ||
+                    stock.GrupKodu != grupKodu ||
+                    stock.GrupAdi != grupAdi ||
+                    stock.Kod1 != kod1 ||
+                    stock.Kod1Adi != kod1Adi ||
+                    stock.Kod2 != kod2 ||
+                    stock.Kod2Adi != kod2Adi ||
+                    stock.Kod3 != kod3 ||
+                    stock.Kod3Adi != kod3Adi ||
+                    stock.Kod4 != kod4 ||
+                    stock.Kod4Adi != kod4Adi ||
+                    stock.Kod5 != kod5 ||
+                    stock.Kod5Adi != kod5Adi ||
+                    stock.BranchCode != branchCode
                 )
                 {
-                    stock.StockName = erpStock.StokAdi ?? string.Empty;
-                    stock.Unit = erpStock.OlcuBr1;
-                    stock.UreticiKodu = erpStock.UreticiKodu;
-                    stock.GrupKodu = erpStock.GrupKodu;
-                    stock.GrupAdi = erpStock.GrupIsim;
-                    stock.Kod1 = erpStock.Kod1;
-                    stock.Kod1Adi = erpStock.Kod1Adi;
-                    stock.Kod2 = erpStock.Kod2;
-                    stock.Kod2Adi = erpStock.Kod2Adi;
-                    stock.Kod3 = erpStock.Kod3;
-                    stock.Kod3Adi = erpStock.Kod3Adi;
-                    stock.Kod4 = erpStock.Kod4;
-                    stock.Kod4Adi = erpStock.Kod4Adi;
-                    stock.Kod5 = erpStock.Kod5;
-                    stock.Kod5Adi = erpStock.Kod5Adi;
-                    stock.BranchCode = erpStock.SubeKodu;
+                    stock.StockName = newStockName;
+                    stock.Unit = unit;
+                    stock.UreticiKodu = ureticiKodu;
+                    stock.GrupKodu = grupKodu;
+                    stock.GrupAdi = grupAdi;
+                    stock.Kod1 = kod1;
+                    stock.Kod1Adi = kod1Adi;
+                    stock.Kod2 = kod2;
+                    stock.Kod2Adi = kod2Adi;
+                    stock.Kod3 = kod3;
+                    stock.Kod3Adi = kod3Adi;
+                    stock.Kod4 = kod4;
+                    stock.Kod4Adi = kod4Adi;
+                    stock.Kod5 = kod5;
+                    stock.Kod5Adi = kod5Adi;
+                    stock.BranchCode = branchCode;
+                    stock.UpdatedDate = DateTime.UtcNow;
+                    stock.UpdatedBy = null; // ERP sync: background job
 
                     hasAnyChange = true;
                 }
