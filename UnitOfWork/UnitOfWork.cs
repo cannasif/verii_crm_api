@@ -19,6 +19,7 @@ namespace crm_api.UnitOfWork
         private readonly CmsDbContext _context;
         private readonly ConcurrentDictionary<Type, object> _repositories;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ILocalizationService _localizationService;
         private IDbContextTransaction? _transaction;
         private bool _disposed = false;
 
@@ -85,10 +86,14 @@ namespace crm_api.UnitOfWork
         private IGenericRepository<PermissionGroup>? _permissionGroups;
         private IGenericRepository<PermissionGroupPermission>? _permissionGroupPermissions;
         private IGenericRepository<UserPermissionGroup>? _userPermissionGroups;
-        public UnitOfWork(CmsDbContext context, IHttpContextAccessor httpContextAccessor)
+        public UnitOfWork(
+            CmsDbContext context,
+            IHttpContextAccessor httpContextAccessor,
+            ILocalizationService localizationService)
         {
             _context = context;
             _httpContextAccessor = httpContextAccessor;
+            _localizationService = localizationService;
             _repositories = new ConcurrentDictionary<Type, object>();
         }
 
@@ -198,7 +203,8 @@ namespace crm_api.UnitOfWork
         {
             if (_transaction != null)
             {
-                throw new InvalidOperationException("A transaction is already in progress.");
+                throw new InvalidOperationException(
+                    _localizationService.GetLocalizedString("UnitOfWork.TransactionAlreadyInProgress"));
             }
 
             _transaction = await _context.Database.BeginTransactionAsync();
@@ -211,7 +217,8 @@ namespace crm_api.UnitOfWork
         {
             if (_transaction == null)
             {
-                throw new InvalidOperationException("No transaction is in progress.");
+                throw new InvalidOperationException(
+                    _localizationService.GetLocalizedString("UnitOfWork.NoTransactionInProgress"));
             }
 
             try
