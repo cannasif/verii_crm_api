@@ -37,7 +37,6 @@ namespace crm_api.Services
 
                 var query = _unitOfWork.QuotationExchangeRates
                     .Query()
-                    .Where(e => !e.IsDeleted)
                     .Include(e => e.Quotation)
                     .Include(e => e.CreatedByUser)
                     .Include(e => e.UpdatedByUser)

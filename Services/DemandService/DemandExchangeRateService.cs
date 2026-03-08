@@ -42,7 +42,6 @@ namespace crm_api.Services
 
                 var query = _unitOfWork.DemandExchangeRates
                     .Query()
-                    .Where(e => !e.IsDeleted)
                     .Include(e => e.Demand)
                     .Include(e => e.CreatedByUser)
                     .Include(e => e.UpdatedByUser)
