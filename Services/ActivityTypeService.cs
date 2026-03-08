@@ -50,11 +50,11 @@ namespace crm_api.Services
 
                 query = query.ApplySorting(sortBy, request.SortDirection);
 
-                var totalCount = await query.CountAsync();
+                var totalCount = await query.CountAsync().ConfigureAwait(false);
 
                 var items = await query
                     .ApplyPagination(request.PageNumber, request.PageSize)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 var dtos = items.Select(x => _mapper.Map<ActivityTypeGetDto>(x)).ToList();
 
@@ -81,7 +81,7 @@ namespace crm_api.Services
         {
             try
             {
-                var activityType = await _unitOfWork.ActivityTypes.GetByIdAsync(id);
+                var activityType = await _unitOfWork.ActivityTypes.GetByIdAsync(id).ConfigureAwait(false);
                 if (activityType == null)
                 {
                     return ApiResponse<ActivityTypeGetDto>.ErrorResult(
@@ -96,7 +96,7 @@ namespace crm_api.Services
                     .Include(at => at.CreatedByUser)
                     .Include(at => at.UpdatedByUser)
                     .Include(at => at.DeletedByUser)
-                    .FirstOrDefaultAsync(at => at.Id == id && !at.IsDeleted);
+                    .FirstOrDefaultAsync(at => at.Id == id && !at.IsDeleted).ConfigureAwait(false);
 
                 var activityTypeDto = _mapper.Map<ActivityTypeGetDto>(activityTypeWithNav ?? activityType);
 
@@ -118,8 +118,8 @@ namespace crm_api.Services
                 var activityType = _mapper.Map<ActivityType>(createActivityTypeDto);
                 activityType.CreatedDate = DateTime.UtcNow;
 
-                await _unitOfWork.ActivityTypes.AddAsync(activityType);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.ActivityTypes.AddAsync(activityType).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 // Reload with navigation properties for mapping
                 var activityTypeWithNav = await _unitOfWork.ActivityTypes.Query()
@@ -127,7 +127,7 @@ namespace crm_api.Services
                     .Include(at => at.CreatedByUser)
                     .Include(at => at.UpdatedByUser)
                     .Include(at => at.DeletedByUser)
-                    .FirstOrDefaultAsync(at => at.Id == activityType.Id && !at.IsDeleted);
+                    .FirstOrDefaultAsync(at => at.Id == activityType.Id && !at.IsDeleted).ConfigureAwait(false);
 
                 var activityTypeDto = _mapper.Map<ActivityTypeGetDto>(activityTypeWithNav ?? activityType);
 
@@ -146,7 +146,7 @@ namespace crm_api.Services
         {
             try
             {
-                var existingActivityType = await _unitOfWork.ActivityTypes.GetByIdAsync(id);
+                var existingActivityType = await _unitOfWork.ActivityTypes.GetByIdAsync(id).ConfigureAwait(false);
                 if (existingActivityType == null)
                 {
                     return ApiResponse<ActivityTypeGetDto>.ErrorResult(
@@ -158,8 +158,8 @@ namespace crm_api.Services
                 _mapper.Map(updateActivityTypeDto, existingActivityType);
                 existingActivityType.UpdatedDate = DateTime.UtcNow;
 
-                await _unitOfWork.ActivityTypes.UpdateAsync(existingActivityType);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.ActivityTypes.UpdateAsync(existingActivityType).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 // Reload with navigation properties for mapping
                 var activityTypeWithNav = await _unitOfWork.ActivityTypes.Query()
@@ -167,7 +167,7 @@ namespace crm_api.Services
                     .Include(at => at.CreatedByUser)
                     .Include(at => at.UpdatedByUser)
                     .Include(at => at.DeletedByUser)
-                    .FirstOrDefaultAsync(at => at.Id == existingActivityType.Id && !at.IsDeleted);
+                    .FirstOrDefaultAsync(at => at.Id == existingActivityType.Id && !at.IsDeleted).ConfigureAwait(false);
 
                 var activityTypeDto = _mapper.Map<ActivityTypeGetDto>(activityTypeWithNav ?? existingActivityType);
 
@@ -186,7 +186,7 @@ namespace crm_api.Services
         {
             try
             {
-                var activityType = await _unitOfWork.ActivityTypes.GetByIdAsync(id);
+                var activityType = await _unitOfWork.ActivityTypes.GetByIdAsync(id).ConfigureAwait(false);
                 if (activityType == null)
                 {
                     return ApiResponse<object>.ErrorResult(
@@ -195,8 +195,8 @@ namespace crm_api.Services
                         StatusCodes.Status404NotFound);
                 }
 
-                await _unitOfWork.ActivityTypes.SoftDeleteAsync(id);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.ActivityTypes.SoftDeleteAsync(id).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 return ApiResponse<object>.SuccessResult(null, _localizationService.GetLocalizedString("ActivityTypeService.ActivityTypeDeleted"));
             }

@@ -57,10 +57,10 @@ namespace crm_api.Services
                 var sortBy = request.SortBy ?? nameof(Activity.Id);
                 query = query.ApplySorting(sortBy, request.SortDirection);
 
-                var totalCount = await query.CountAsync();
+                var totalCount = await query.CountAsync().ConfigureAwait(false);
                 var items = await query
                     .ApplyPagination(request.PageNumber, request.PageSize)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 var dtos = items.Select(x => _mapper.Map<ActivityDto>(x)).ToList();
 
@@ -100,7 +100,7 @@ namespace crm_api.Services
                     .Include(a => a.CreatedByUser)
                     .Include(a => a.UpdatedByUser)
                     .Include(a => a.DeletedByUser)
-                    .FirstOrDefaultAsync(a => a.Id == id && !a.IsDeleted);
+                    .FirstOrDefaultAsync(a => a.Id == id && !a.IsDeleted).ConfigureAwait(false);
 
                 if (activity == null)
                 {
@@ -128,11 +128,11 @@ namespace crm_api.Services
         {
             try
             {
-                await _unitOfWork.BeginTransactionAsync();
+                await _unitOfWork.BeginTransactionAsync().ConfigureAwait(false);
 
                 if (createActivityDto.EndDateTime == default)
                 {
-                    await _unitOfWork.RollbackTransactionAsync();
+                    await _unitOfWork.RollbackTransactionAsync().ConfigureAwait(false);
                     return ApiResponse<ActivityDto>.ErrorResult(
                         _localizationService.GetLocalizedString("General.ValidationError"),
                         _localizationService.GetLocalizedString("ActivityService.EndDateRequired"),
@@ -143,16 +143,16 @@ namespace crm_api.Services
                     createActivityDto.ActivityTypeId,
                     createActivityDto.AssignedUserId,
                     createActivityDto.ContactId,
-                    createActivityDto.PotentialCustomerId);
+                    createActivityDto.PotentialCustomerId).ConfigureAwait(false);
                 if (validationError != null)
                 {
-                    await _unitOfWork.RollbackTransactionAsync();
+                    await _unitOfWork.RollbackTransactionAsync().ConfigureAwait(false);
                     return validationError;
                 }
 
                 if (createActivityDto.EndDateTime < createActivityDto.StartDateTime)
                 {
-                    await _unitOfWork.RollbackTransactionAsync();
+                    await _unitOfWork.RollbackTransactionAsync().ConfigureAwait(false);
                     return ApiResponse<ActivityDto>.ErrorResult(
                         _localizationService.GetLocalizedString("General.ValidationError"),
                         _localizationService.GetLocalizedString("General.ValidationError"),
@@ -160,31 +160,31 @@ namespace crm_api.Services
                 }
 
                 var activity = _mapper.Map<Activity>(createActivityDto);
-                var createdActivity = await _unitOfWork.Activities.AddAsync(activity);
-                await _unitOfWork.SaveChangesAsync();
-                var activityWithRelations = await LoadActivityWithRelationsAsync(createdActivity.Id, asNoTracking: true);
+                var createdActivity = await _unitOfWork.Activities.AddAsync(activity).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
+                var activityWithRelations = await LoadActivityWithRelationsAsync(createdActivity.Id, asNoTracking: true).ConfigureAwait(false);
 
-                var oauthSettings = await _tenantGoogleOAuthSettingsService.GetRuntimeSettingsAsync(Guid.Empty);
+                var oauthSettings = await _tenantGoogleOAuthSettingsService.GetRuntimeSettingsAsync(Guid.Empty).ConfigureAwait(false);
                 if (oauthSettings?.IsEnabled == true)
                 {
                     var currentUserId = _userContextService.GetCurrentUserId();
                     if (!currentUserId.HasValue || currentUserId.Value <= 0)
                     {
-                        await _unitOfWork.RollbackTransactionAsync();
+                        await _unitOfWork.RollbackTransactionAsync().ConfigureAwait(false);
                         return ApiResponse<ActivityDto>.ErrorResult(
                             _localizationService.GetLocalizedString("ActivityService.ActivityCreateFailed"),
                             _localizationService.GetLocalizedString("ActivityService.UserSessionNotFound"),
                             StatusCodes.Status400BadRequest);
                     }
 
-                    var calendarEventId = await _googleCalendarService.CreateActivityEventAsync(currentUserId.Value, activityWithRelations ?? createdActivity);
+                    var calendarEventId = await _googleCalendarService.CreateActivityEventAsync(currentUserId.Value, activityWithRelations ?? createdActivity).ConfigureAwait(false);
                     createdActivity.GoogleCalendarEventId = calendarEventId;
-                    await _unitOfWork.Activities.UpdateAsync(createdActivity);
-                    await _unitOfWork.SaveChangesAsync();
-                    activityWithRelations = await LoadActivityWithRelationsAsync(createdActivity.Id, asNoTracking: true);
+                    await _unitOfWork.Activities.UpdateAsync(createdActivity).ConfigureAwait(false);
+                    await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
+                    activityWithRelations = await LoadActivityWithRelationsAsync(createdActivity.Id, asNoTracking: true).ConfigureAwait(false);
                 }
 
-                await _unitOfWork.CommitTransactionAsync();
+                await _unitOfWork.CommitTransactionAsync().ConfigureAwait(false);
 
                 var dto = _mapper.Map<ActivityDto>(activityWithRelations ?? createdActivity);
 
@@ -194,7 +194,7 @@ namespace crm_api.Services
             }
             catch (InvalidOperationException ex)
             {
-                await _unitOfWork.RollbackTransactionAsync();
+                await _unitOfWork.RollbackTransactionAsync().ConfigureAwait(false);
 
                 return ApiResponse<ActivityDto>.ErrorResult(
                     _localizationService.GetLocalizedString("ActivityService.ActivityCreateFailed"),
@@ -203,7 +203,7 @@ namespace crm_api.Services
             }
             catch (Exception ex)
             {
-                await _unitOfWork.RollbackTransactionAsync();
+                await _unitOfWork.RollbackTransactionAsync().ConfigureAwait(false);
                 return ApiResponse<ActivityDto>.ErrorResult(
                     _localizationService.GetLocalizedString("ActivityService.InternalServerError"),
                     _localizationService.GetLocalizedString("ActivityService.CreateActivityExceptionMessage", ex.Message),
@@ -215,15 +215,15 @@ namespace crm_api.Services
         {
             try
             {
-                await _unitOfWork.BeginTransactionAsync();
+                await _unitOfWork.BeginTransactionAsync().ConfigureAwait(false);
 
                 var activity = await _unitOfWork.Activities.Query()
                     .Include(a => a.Reminders)
-                    .FirstOrDefaultAsync(a => a.Id == id && !a.IsDeleted);
+                    .FirstOrDefaultAsync(a => a.Id == id && !a.IsDeleted).ConfigureAwait(false);
 
                 if (activity == null)
                 {
-                    await _unitOfWork.RollbackTransactionAsync();
+                    await _unitOfWork.RollbackTransactionAsync().ConfigureAwait(false);
                     return ApiResponse<ActivityDto>.ErrorResult(
                         _localizationService.GetLocalizedString("ActivityService.ActivityNotFound"),
                         _localizationService.GetLocalizedString("ActivityService.ActivityNotFound"),
@@ -232,7 +232,7 @@ namespace crm_api.Services
 
                 if (updateActivityDto.EndDateTime == default)
                 {
-                    await _unitOfWork.RollbackTransactionAsync();
+                    await _unitOfWork.RollbackTransactionAsync().ConfigureAwait(false);
                     return ApiResponse<ActivityDto>.ErrorResult(
                         _localizationService.GetLocalizedString("General.ValidationError"),
                         _localizationService.GetLocalizedString("ActivityService.EndDateRequired"),
@@ -243,16 +243,16 @@ namespace crm_api.Services
                     updateActivityDto.ActivityTypeId,
                     updateActivityDto.AssignedUserId,
                     updateActivityDto.ContactId,
-                    updateActivityDto.PotentialCustomerId);
+                    updateActivityDto.PotentialCustomerId).ConfigureAwait(false);
                 if (validationError != null)
                 {
-                    await _unitOfWork.RollbackTransactionAsync();
+                    await _unitOfWork.RollbackTransactionAsync().ConfigureAwait(false);
                     return validationError;
                 }
 
                 if (updateActivityDto.EndDateTime < updateActivityDto.StartDateTime)
                 {
-                    await _unitOfWork.RollbackTransactionAsync();
+                    await _unitOfWork.RollbackTransactionAsync().ConfigureAwait(false);
                     return ApiResponse<ActivityDto>.ErrorResult(
                         _localizationService.GetLocalizedString("General.ValidationError"),
                         _localizationService.GetLocalizedString("General.ValidationError"),
@@ -275,32 +275,32 @@ namespace crm_api.Services
                     activity.Reminders.Add(newReminder);
                 }
 
-                await _unitOfWork.Activities.UpdateAsync(activity);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.Activities.UpdateAsync(activity).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
-                var updatedWithNav = await LoadActivityWithRelationsAsync(activity.Id, asNoTracking: true);
+                var updatedWithNav = await LoadActivityWithRelationsAsync(activity.Id, asNoTracking: true).ConfigureAwait(false);
 
-                var oauthSettings = await _tenantGoogleOAuthSettingsService.GetRuntimeSettingsAsync(Guid.Empty);
+                var oauthSettings = await _tenantGoogleOAuthSettingsService.GetRuntimeSettingsAsync(Guid.Empty).ConfigureAwait(false);
                 if (oauthSettings?.IsEnabled == true)
                 {
                     var currentUserId = _userContextService.GetCurrentUserId();
                     if (!currentUserId.HasValue || currentUserId.Value <= 0)
                     {
-                        await _unitOfWork.RollbackTransactionAsync();
+                        await _unitOfWork.RollbackTransactionAsync().ConfigureAwait(false);
                         return ApiResponse<ActivityDto>.ErrorResult(
                             _localizationService.GetLocalizedString("ActivityService.ActivityUpdateFailed"),
                             _localizationService.GetLocalizedString("ActivityService.UserSessionNotFound"),
                             StatusCodes.Status400BadRequest);
                     }
 
-                    var calendarEventId = await _googleCalendarService.SyncActivityEventAsync(currentUserId.Value, updatedWithNav ?? activity);
+                    var calendarEventId = await _googleCalendarService.SyncActivityEventAsync(currentUserId.Value, updatedWithNav ?? activity).ConfigureAwait(false);
                     activity.GoogleCalendarEventId = calendarEventId;
-                    await _unitOfWork.Activities.UpdateAsync(activity);
-                    await _unitOfWork.SaveChangesAsync();
-                    updatedWithNav = await LoadActivityWithRelationsAsync(activity.Id, asNoTracking: true);
+                    await _unitOfWork.Activities.UpdateAsync(activity).ConfigureAwait(false);
+                    await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
+                    updatedWithNav = await LoadActivityWithRelationsAsync(activity.Id, asNoTracking: true).ConfigureAwait(false);
                 }
 
-                await _unitOfWork.CommitTransactionAsync();
+                await _unitOfWork.CommitTransactionAsync().ConfigureAwait(false);
                 var dto = _mapper.Map<ActivityDto>(updatedWithNav ?? activity);
 
                 return ApiResponse<ActivityDto>.SuccessResult(
@@ -309,7 +309,7 @@ namespace crm_api.Services
             }
             catch (InvalidOperationException ex)
             {
-                await _unitOfWork.RollbackTransactionAsync();
+                await _unitOfWork.RollbackTransactionAsync().ConfigureAwait(false);
 
                 return ApiResponse<ActivityDto>.ErrorResult(
                     _localizationService.GetLocalizedString("ActivityService.ActivityUpdateFailed"),
@@ -318,7 +318,7 @@ namespace crm_api.Services
             }
             catch (Exception ex)
             {
-                await _unitOfWork.RollbackTransactionAsync();
+                await _unitOfWork.RollbackTransactionAsync().ConfigureAwait(false);
                 return ApiResponse<ActivityDto>.ErrorResult(
                     _localizationService.GetLocalizedString("ActivityService.InternalServerError"),
                     _localizationService.GetLocalizedString("ActivityService.UpdateActivityExceptionMessage", ex.Message),
@@ -330,38 +330,38 @@ namespace crm_api.Services
         {
             try
             {
-                await _unitOfWork.BeginTransactionAsync();
+                await _unitOfWork.BeginTransactionAsync().ConfigureAwait(false);
 
                 var activity = await _unitOfWork.Activities.Query()
                     .Include(a => a.Reminders)
-                    .FirstOrDefaultAsync(a => a.Id == id && !a.IsDeleted);
+                    .FirstOrDefaultAsync(a => a.Id == id && !a.IsDeleted).ConfigureAwait(false);
 
                 if (activity == null)
                 {
-                    await _unitOfWork.RollbackTransactionAsync();
+                    await _unitOfWork.RollbackTransactionAsync().ConfigureAwait(false);
                     return ApiResponse<object>.ErrorResult(
                         _localizationService.GetLocalizedString("ActivityService.ActivityNotFound"),
                         _localizationService.GetLocalizedString("ActivityService.ActivityNotFound"),
                         StatusCodes.Status404NotFound);
                 }
 
-                var oauthSettings = await _tenantGoogleOAuthSettingsService.GetRuntimeSettingsAsync(Guid.Empty);
+                var oauthSettings = await _tenantGoogleOAuthSettingsService.GetRuntimeSettingsAsync(Guid.Empty).ConfigureAwait(false);
                 if (oauthSettings?.IsEnabled == true && !string.IsNullOrWhiteSpace(activity.GoogleCalendarEventId))
                 {
                     var currentUserId = _userContextService.GetCurrentUserId();
                     if (!currentUserId.HasValue || currentUserId.Value <= 0)
                     {
-                        await _unitOfWork.RollbackTransactionAsync();
+                        await _unitOfWork.RollbackTransactionAsync().ConfigureAwait(false);
                         return ApiResponse<object>.ErrorResult(
                             _localizationService.GetLocalizedString("ActivityService.ActivityDeleteFailed"),
                             _localizationService.GetLocalizedString("ActivityService.UserSessionNotFound"),
                             StatusCodes.Status400BadRequest);
                     }
 
-                    await _googleCalendarService.DeleteActivityEventAsync(currentUserId.Value, activity.GoogleCalendarEventId);
+                    await _googleCalendarService.DeleteActivityEventAsync(currentUserId.Value, activity.GoogleCalendarEventId).ConfigureAwait(false);
                 }
 
-                await _unitOfWork.Activities.SoftDeleteAsync(id);
+                await _unitOfWork.Activities.SoftDeleteAsync(id).ConfigureAwait(false);
 
                 foreach (var reminder in activity.Reminders.Where(r => !r.IsDeleted))
                 {
@@ -369,8 +369,8 @@ namespace crm_api.Services
                     reminder.DeletedDate = DateTime.UtcNow;
                 }
 
-                await _unitOfWork.SaveChangesAsync();
-                await _unitOfWork.CommitTransactionAsync();
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
+                await _unitOfWork.CommitTransactionAsync().ConfigureAwait(false);
 
                 return ApiResponse<object>.SuccessResult(
                     activity,
@@ -378,7 +378,7 @@ namespace crm_api.Services
             }
             catch (InvalidOperationException ex)
             {
-                await _unitOfWork.RollbackTransactionAsync();
+                await _unitOfWork.RollbackTransactionAsync().ConfigureAwait(false);
                 return ApiResponse<object>.ErrorResult(
                     _localizationService.GetLocalizedString("ActivityService.InternalServerError"),
                     ex.Message,
@@ -386,7 +386,7 @@ namespace crm_api.Services
             }
             catch (Exception ex)
             {
-                await _unitOfWork.RollbackTransactionAsync();
+                await _unitOfWork.RollbackTransactionAsync().ConfigureAwait(false);
                 return ApiResponse<object>.ErrorResult(
                     _localizationService.GetLocalizedString("ActivityService.InternalServerError"),
                     _localizationService.GetLocalizedString("ActivityService.DeleteActivityExceptionMessage", ex.Message),
@@ -412,7 +412,7 @@ namespace crm_api.Services
                 .Include(a => a.CreatedByUser)
                 .Include(a => a.UpdatedByUser)
                 .Include(a => a.DeletedByUser)
-                .FirstOrDefaultAsync(a => a.Id == id && !a.IsDeleted);
+                .FirstOrDefaultAsync(a => a.Id == id && !a.IsDeleted).ConfigureAwait(false);
         }
 
         private async Task<ApiResponse<ActivityDto>?> ValidateForeignKeysAsync(
@@ -422,7 +422,7 @@ namespace crm_api.Services
             long? potentialCustomerId)
         {
             var activityTypeExists = await _unitOfWork.ActivityTypes.Query(tracking: false)
-                .AnyAsync(x => x.Id == activityTypeId && !x.IsDeleted);
+                .AnyAsync(x => x.Id == activityTypeId && !x.IsDeleted).ConfigureAwait(false);
             if (!activityTypeExists)
             {
                 return ApiResponse<ActivityDto>.ErrorResult(
@@ -432,7 +432,7 @@ namespace crm_api.Services
             }
 
             var assignedUserExists = await _unitOfWork.Users.Query(tracking: false)
-                .AnyAsync(x => x.Id == assignedUserId && !x.IsDeleted);
+                .AnyAsync(x => x.Id == assignedUserId && !x.IsDeleted).ConfigureAwait(false);
             if (!assignedUserExists)
             {
                 return ApiResponse<ActivityDto>.ErrorResult(
@@ -444,7 +444,7 @@ namespace crm_api.Services
             if (contactId.HasValue)
             {
                 var contactExists = await _unitOfWork.Contacts.Query(tracking: false)
-                    .AnyAsync(x => x.Id == contactId.Value && !x.IsDeleted);
+                    .AnyAsync(x => x.Id == contactId.Value && !x.IsDeleted).ConfigureAwait(false);
                 if (!contactExists)
                 {
                     return ApiResponse<ActivityDto>.ErrorResult(
@@ -457,7 +457,7 @@ namespace crm_api.Services
             if (potentialCustomerId.HasValue)
             {
                 var customerExists = await _unitOfWork.Customers.Query(tracking: false)
-                    .AnyAsync(x => x.Id == potentialCustomerId.Value && !x.IsDeleted);
+                    .AnyAsync(x => x.Id == potentialCustomerId.Value && !x.IsDeleted).ConfigureAwait(false);
                 if (!customerExists)
                 {
                     return ApiResponse<ActivityDto>.ErrorResult(

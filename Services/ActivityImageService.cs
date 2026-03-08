@@ -43,7 +43,7 @@ namespace crm_api.Services
                 var existingActivityIds = await _unitOfWork.Activities.Query(tracking: false)
                     .Where(x => activityIds.Contains(x.Id) && !x.IsDeleted)
                     .Select(x => x.Id)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 if (existingActivityIds.Count != activityIds.Count)
                 {
@@ -58,11 +58,11 @@ namespace crm_api.Services
                 {
                     var entity = _mapper.Map<ActivityImage>(dto);
                     entity.CreatedDate = DateTime.UtcNow;
-                    await _unitOfWork.ActivityImages.AddAsync(entity);
+                    await _unitOfWork.ActivityImages.AddAsync(entity).ConfigureAwait(false);
                     entities.Add(entity);
                 }
 
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 var response = entities.Select(x => _mapper.Map<ActivityImageDto>(x)).ToList();
                 return ApiResponse<List<ActivityImageDto>>.SuccessResult(
@@ -91,7 +91,7 @@ namespace crm_api.Services
                 }
 
                 var activityExists = await _unitOfWork.Activities.Query(tracking: false)
-                    .AnyAsync(x => x.Id == activityId && !x.IsDeleted);
+                    .AnyAsync(x => x.Id == activityId && !x.IsDeleted).ConfigureAwait(false);
 
                 if (!activityExists)
                 {
@@ -103,7 +103,7 @@ namespace crm_api.Services
 
                 var uploaded = new List<ActivityImageDto>();
 
-                await _unitOfWork.BeginTransactionAsync();
+                await _unitOfWork.BeginTransactionAsync().ConfigureAwait(false);
 
                 for (var i = 0; i < files.Count; i++)
                 {
@@ -112,10 +112,10 @@ namespace crm_api.Services
                         ? resimAciklamalar[i]
                         : null;
 
-                    var uploadResult = await _fileUploadService.UploadActivityImageAsync(file, activityId);
+                    var uploadResult = await _fileUploadService.UploadActivityImageAsync(file, activityId).ConfigureAwait(false);
                     if (!uploadResult.Success || string.IsNullOrWhiteSpace(uploadResult.Data))
                     {
-                        await _unitOfWork.RollbackTransactionAsync();
+                        await _unitOfWork.RollbackTransactionAsync().ConfigureAwait(false);
                         return ApiResponse<List<ActivityImageDto>>.ErrorResult(
                             uploadResult.Message ?? _localizationService.GetLocalizedString("ActivityImageService.FileUploadFailed"),
                             uploadResult.ExceptionMessage,
@@ -130,12 +130,12 @@ namespace crm_api.Services
                         CreatedDate = DateTime.UtcNow
                     };
 
-                    await _unitOfWork.ActivityImages.AddAsync(entity);
+                    await _unitOfWork.ActivityImages.AddAsync(entity).ConfigureAwait(false);
                     uploaded.Add(_mapper.Map<ActivityImageDto>(entity));
                 }
 
-                await _unitOfWork.SaveChangesAsync();
-                await _unitOfWork.CommitTransactionAsync();
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
+                await _unitOfWork.CommitTransactionAsync().ConfigureAwait(false);
 
                 return ApiResponse<List<ActivityImageDto>>.SuccessResult(
                     uploaded,
@@ -143,7 +143,7 @@ namespace crm_api.Services
             }
             catch (Exception ex)
             {
-                await _unitOfWork.RollbackTransactionAsync();
+                await _unitOfWork.RollbackTransactionAsync().ConfigureAwait(false);
                 return ApiResponse<List<ActivityImageDto>>.ErrorResult(
                     _localizationService.GetLocalizedString("ActivityService.InternalServerError"),
                     ex.Message,
@@ -156,7 +156,7 @@ namespace crm_api.Services
             try
             {
                 var activityExists = await _unitOfWork.Activities.Query(tracking: false)
-                    .AnyAsync(x => x.Id == activityId && !x.IsDeleted);
+                    .AnyAsync(x => x.Id == activityId && !x.IsDeleted).ConfigureAwait(false);
 
                 if (!activityExists)
                 {
@@ -173,7 +173,7 @@ namespace crm_api.Services
                     .Include(x => x.DeletedByUser)
                     .AsNoTracking()
                     .OrderBy(x => x.Id)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 var response = items.Select(x => _mapper.Map<ActivityImageDto>(x)).ToList();
                 return ApiResponse<List<ActivityImageDto>>.SuccessResult(
@@ -193,7 +193,7 @@ namespace crm_api.Services
         {
             try
             {
-                var entity = await _unitOfWork.ActivityImages.GetByIdAsync(id);
+                var entity = await _unitOfWork.ActivityImages.GetByIdAsync(id).ConfigureAwait(false);
                 if (entity == null || entity.IsDeleted)
                 {
                     return ApiResponse<ActivityImageDto>.ErrorResult(
@@ -203,7 +203,7 @@ namespace crm_api.Services
                 }
 
                 var activityExists = await _unitOfWork.Activities.Query(tracking: false)
-                    .AnyAsync(x => x.Id == request.ActivityId && !x.IsDeleted);
+                    .AnyAsync(x => x.Id == request.ActivityId && !x.IsDeleted).ConfigureAwait(false);
 
                 if (!activityExists)
                 {
@@ -216,8 +216,8 @@ namespace crm_api.Services
                 _mapper.Map(request, entity);
                 entity.UpdatedDate = DateTime.UtcNow;
 
-                await _unitOfWork.ActivityImages.UpdateAsync(entity);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.ActivityImages.UpdateAsync(entity).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 var response = _mapper.Map<ActivityImageDto>(entity);
                 return ApiResponse<ActivityImageDto>.SuccessResult(
@@ -237,7 +237,7 @@ namespace crm_api.Services
         {
             try
             {
-                var entity = await _unitOfWork.ActivityImages.GetByIdAsync(id);
+                var entity = await _unitOfWork.ActivityImages.GetByIdAsync(id).ConfigureAwait(false);
                 if (entity == null || entity.IsDeleted)
                 {
                     return ApiResponse<object>.ErrorResult(
@@ -246,12 +246,12 @@ namespace crm_api.Services
                         StatusCodes.Status404NotFound);
                 }
 
-                await _unitOfWork.ActivityImages.SoftDeleteAsync(id);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.ActivityImages.SoftDeleteAsync(id).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 if (!string.IsNullOrWhiteSpace(entity.ResimUrl))
                 {
-                    await _fileUploadService.DeleteActivityImageAsync(entity.ResimUrl);
+                    await _fileUploadService.DeleteActivityImageAsync(entity.ResimUrl).ConfigureAwait(false);
                 }
 
                 return ApiResponse<object>.SuccessResult(
