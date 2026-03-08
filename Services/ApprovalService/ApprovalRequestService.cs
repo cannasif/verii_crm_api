@@ -55,11 +55,11 @@ namespace crm_api.Services
 
                 query = query.ApplySorting(sortBy, request.SortDirection, columnMapping);
 
-                var totalCount = await query.CountAsync();
+                var totalCount = await query.CountAsync().ConfigureAwait(false);
 
                 var items = await query
                     .ApplyPagination(request.PageNumber, request.PageSize)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 var dtos = items.Select(x => _mapper.Map<ApprovalRequestGetDto>(x)).ToList();
 
@@ -86,7 +86,7 @@ namespace crm_api.Services
         {
             try
             {
-                var approvalRequest = await _unitOfWork.ApprovalRequests.GetByIdAsync(id);
+                var approvalRequest = await _unitOfWork.ApprovalRequests.GetByIdAsync(id).ConfigureAwait(false);
                 if (approvalRequest == null)
                 {
                     return ApiResponse<ApprovalRequestGetDto>.ErrorResult(
@@ -102,7 +102,7 @@ namespace crm_api.Services
                     .Include(ar => ar.UpdatedByUser)
                     .Include(ar => ar.DeletedByUser)
                     .Include(ar => ar.ApprovalFlow)
-                    .FirstOrDefaultAsync(ar => ar.Id == id && !ar.IsDeleted);
+                    .FirstOrDefaultAsync(ar => ar.Id == id && !ar.IsDeleted).ConfigureAwait(false);
 
                 var approvalRequestDto = _mapper.Map<ApprovalRequestGetDto>(approvalRequestWithNav ?? approvalRequest);
                 return ApiResponse<ApprovalRequestGetDto>.SuccessResult(approvalRequestDto, _localizationService.GetLocalizedString("ApprovalRequestService.ApprovalRequestRetrieved"));
@@ -121,8 +121,8 @@ namespace crm_api.Services
             try
             {
                 var approvalRequest = _mapper.Map<ApprovalRequest>(approvalRequestCreateDto);
-                await _unitOfWork.ApprovalRequests.AddAsync(approvalRequest);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.ApprovalRequests.AddAsync(approvalRequest).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 // Reload with navigation properties for mapping
                 var approvalRequestWithNav = await _unitOfWork.ApprovalRequests
@@ -131,7 +131,7 @@ namespace crm_api.Services
                     .Include(ar => ar.UpdatedByUser)
                     .Include(ar => ar.DeletedByUser)
                     .Include(ar => ar.ApprovalFlow)
-                    .FirstOrDefaultAsync(ar => ar.Id == approvalRequest.Id && !ar.IsDeleted);
+                    .FirstOrDefaultAsync(ar => ar.Id == approvalRequest.Id && !ar.IsDeleted).ConfigureAwait(false);
 
                 if (approvalRequestWithNav == null)
                 {
@@ -159,7 +159,7 @@ namespace crm_api.Services
             try
             {
                 // Get tracked entity for update
-                var approvalRequest = await _unitOfWork.ApprovalRequests.GetByIdForUpdateAsync(id);
+                var approvalRequest = await _unitOfWork.ApprovalRequests.GetByIdForUpdateAsync(id).ConfigureAwait(false);
                 if (approvalRequest == null)
                 {
                     return ApiResponse<ApprovalRequestGetDto>.ErrorResult(
@@ -169,8 +169,8 @@ namespace crm_api.Services
                 }
 
                 _mapper.Map(approvalRequestUpdateDto, approvalRequest);
-                await _unitOfWork.ApprovalRequests.UpdateAsync(approvalRequest);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.ApprovalRequests.UpdateAsync(approvalRequest).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 // Reload with navigation properties for mapping (read-only)
                 var approvalRequestWithNav = await _unitOfWork.ApprovalRequests
@@ -179,7 +179,7 @@ namespace crm_api.Services
                     .Include(ar => ar.UpdatedByUser)
                     .Include(ar => ar.DeletedByUser)
                     .Include(ar => ar.ApprovalFlow)
-                    .FirstOrDefaultAsync(ar => ar.Id == id);
+                    .FirstOrDefaultAsync(ar => ar.Id == id).ConfigureAwait(false);
 
                 if (approvalRequestWithNav == null)
                 {
@@ -206,7 +206,7 @@ namespace crm_api.Services
         {
             try
             {
-                var deleted = await _unitOfWork.ApprovalRequests.SoftDeleteAsync(id);
+                var deleted = await _unitOfWork.ApprovalRequests.SoftDeleteAsync(id).ConfigureAwait(false);
                 if (!deleted)
                 {
                     return ApiResponse<object>.ErrorResult(
@@ -215,7 +215,7 @@ namespace crm_api.Services
                         StatusCodes.Status404NotFound);
                 }
 
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 return ApiResponse<object>.SuccessResult(null, _localizationService.GetLocalizedString("ApprovalRequestService.ApprovalRequestDeleted"));
             }

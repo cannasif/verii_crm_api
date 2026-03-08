@@ -55,11 +55,11 @@ namespace crm_api.Services
 
                 query = query.ApplySorting(sortBy, request.SortDirection, columnMapping);
 
-                var totalCount = await query.CountAsync();
+                var totalCount = await query.CountAsync().ConfigureAwait(false);
 
                 var items = await query
                     .ApplyPagination(request.PageNumber, request.PageSize)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 var dtos = items.Select(x => _mapper.Map<ApprovalRoleGetDto>(x)).ToList();
 
@@ -86,7 +86,7 @@ namespace crm_api.Services
         {
             try
             {
-                var approvalRole = await _unitOfWork.ApprovalRoles.GetByIdAsync(id);
+                var approvalRole = await _unitOfWork.ApprovalRoles.GetByIdAsync(id).ConfigureAwait(false);
                 if (approvalRole == null)
                 {
                     return ApiResponse<ApprovalRoleGetDto>.ErrorResult(
@@ -102,7 +102,7 @@ namespace crm_api.Services
                     .Include(ar => ar.UpdatedByUser)
                     .Include(ar => ar.DeletedByUser)
                     .Include(ar => ar.ApprovalRoleGroup)
-                    .FirstOrDefaultAsync(ar => ar.Id == id && !ar.IsDeleted);
+                    .FirstOrDefaultAsync(ar => ar.Id == id && !ar.IsDeleted).ConfigureAwait(false);
 
                 var approvalRoleDto = _mapper.Map<ApprovalRoleGetDto>(approvalRoleWithNav ?? approvalRole);
                 return ApiResponse<ApprovalRoleGetDto>.SuccessResult(approvalRoleDto, _localizationService.GetLocalizedString("ApprovalRoleService.ApprovalRoleRetrieved"));
@@ -121,8 +121,8 @@ namespace crm_api.Services
             try
             {
                 var approvalRole = _mapper.Map<ApprovalRole>(approvalRoleCreateDto);
-                await _unitOfWork.ApprovalRoles.AddAsync(approvalRole);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.ApprovalRoles.AddAsync(approvalRole).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 // Reload with navigation properties for mapping
                 var approvalRoleWithNav = await _unitOfWork.ApprovalRoles
@@ -131,7 +131,7 @@ namespace crm_api.Services
                     .Include(ar => ar.UpdatedByUser)
                     .Include(ar => ar.DeletedByUser)
                     .Include(ar => ar.ApprovalRoleGroup)
-                    .FirstOrDefaultAsync(ar => ar.Id == approvalRole.Id && !ar.IsDeleted);
+                    .FirstOrDefaultAsync(ar => ar.Id == approvalRole.Id && !ar.IsDeleted).ConfigureAwait(false);
 
                 if (approvalRoleWithNav == null)
                 {
@@ -159,7 +159,7 @@ namespace crm_api.Services
             try
             {
                 // Get tracked entity for update
-                var approvalRole = await _unitOfWork.ApprovalRoles.GetByIdForUpdateAsync(id);
+                var approvalRole = await _unitOfWork.ApprovalRoles.GetByIdForUpdateAsync(id).ConfigureAwait(false);
                 if (approvalRole == null)
                 {
                     return ApiResponse<ApprovalRoleGetDto>.ErrorResult(
@@ -169,8 +169,8 @@ namespace crm_api.Services
                 }
 
                 _mapper.Map(approvalRoleUpdateDto, approvalRole);
-                await _unitOfWork.ApprovalRoles.UpdateAsync(approvalRole);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.ApprovalRoles.UpdateAsync(approvalRole).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 // Reload with navigation properties for mapping (read-only)
                 var approvalRoleWithNav = await _unitOfWork.ApprovalRoles
@@ -179,7 +179,7 @@ namespace crm_api.Services
                     .Include(ar => ar.UpdatedByUser)
                     .Include(ar => ar.DeletedByUser)
                     .Include(ar => ar.ApprovalRoleGroup)
-                    .FirstOrDefaultAsync(ar => ar.Id == id);
+                    .FirstOrDefaultAsync(ar => ar.Id == id).ConfigureAwait(false);
 
                 if (approvalRoleWithNav == null)
                 {
@@ -206,7 +206,7 @@ namespace crm_api.Services
         {
             try
             {
-                var deleted = await _unitOfWork.ApprovalRoles.SoftDeleteAsync(id);
+                var deleted = await _unitOfWork.ApprovalRoles.SoftDeleteAsync(id).ConfigureAwait(false);
                 if (!deleted)
                 {
                     return ApiResponse<object>.ErrorResult(
@@ -215,7 +215,7 @@ namespace crm_api.Services
                         StatusCodes.Status404NotFound);
                 }
 
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 return ApiResponse<object>.SuccessResult(null, _localizationService.GetLocalizedString("ApprovalRoleService.ApprovalRoleDeleted"));
             }

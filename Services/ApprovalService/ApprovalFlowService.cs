@@ -50,11 +50,11 @@ namespace crm_api.Services
 
                 query = query.ApplySorting(sortBy, request.SortDirection);
 
-                var totalCount = await query.CountAsync();
+                var totalCount = await query.CountAsync().ConfigureAwait(false);
 
                 var items = await query
                     .ApplyPagination(request.PageNumber, request.PageSize)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 var dtos = items.Select(x => _mapper.Map<ApprovalFlowGetDto>(x)).ToList();
 
@@ -81,7 +81,7 @@ namespace crm_api.Services
         {
             try
             {
-                var approvalFlow = await _unitOfWork.ApprovalFlows.GetByIdAsync(id);
+                var approvalFlow = await _unitOfWork.ApprovalFlows.GetByIdAsync(id).ConfigureAwait(false);
                 if (approvalFlow == null)
                 {
                     return ApiResponse<ApprovalFlowGetDto>.ErrorResult(
@@ -96,7 +96,7 @@ namespace crm_api.Services
                     .Include(af => af.CreatedByUser)
                     .Include(af => af.UpdatedByUser)
                     .Include(af => af.DeletedByUser)
-                    .FirstOrDefaultAsync(af => af.Id == id && !af.IsDeleted);
+                    .FirstOrDefaultAsync(af => af.Id == id && !af.IsDeleted).ConfigureAwait(false);
 
                 var approvalFlowDto = _mapper.Map<ApprovalFlowGetDto>(approvalFlowWithNav ?? approvalFlow);
                 return ApiResponse<ApprovalFlowGetDto>.SuccessResult(approvalFlowDto, _localizationService.GetLocalizedString("ApprovalFlowService.ApprovalFlowRetrieved"));
@@ -115,8 +115,8 @@ namespace crm_api.Services
             try
             {
                 var approvalFlow = _mapper.Map<ApprovalFlow>(approvalFlowCreateDto);
-                await _unitOfWork.ApprovalFlows.AddAsync(approvalFlow);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.ApprovalFlows.AddAsync(approvalFlow).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 // Reload with navigation properties for mapping
                 var approvalFlowWithNav = await _unitOfWork.ApprovalFlows
@@ -124,7 +124,7 @@ namespace crm_api.Services
                     .Include(af => af.CreatedByUser)
                     .Include(af => af.UpdatedByUser)
                     .Include(af => af.DeletedByUser)
-                    .FirstOrDefaultAsync(af => af.Id == approvalFlow.Id && !af.IsDeleted);
+                    .FirstOrDefaultAsync(af => af.Id == approvalFlow.Id && !af.IsDeleted).ConfigureAwait(false);
 
                 if (approvalFlowWithNav == null)
                 {
@@ -152,7 +152,7 @@ namespace crm_api.Services
             try
             {
                 // Get tracked entity for update
-                var approvalFlow = await _unitOfWork.ApprovalFlows.GetByIdForUpdateAsync(id);
+                var approvalFlow = await _unitOfWork.ApprovalFlows.GetByIdForUpdateAsync(id).ConfigureAwait(false);
                 if (approvalFlow == null)
                 {
                     return ApiResponse<ApprovalFlowGetDto>.ErrorResult(
@@ -162,8 +162,8 @@ namespace crm_api.Services
                 }
 
                 _mapper.Map(approvalFlowUpdateDto, approvalFlow);
-                await _unitOfWork.ApprovalFlows.UpdateAsync(approvalFlow);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.ApprovalFlows.UpdateAsync(approvalFlow).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 // Reload with navigation properties for mapping (read-only)
                 var approvalFlowWithNav = await _unitOfWork.ApprovalFlows
@@ -171,7 +171,7 @@ namespace crm_api.Services
                     .Include(af => af.CreatedByUser)
                     .Include(af => af.UpdatedByUser)
                     .Include(af => af.DeletedByUser)
-                    .FirstOrDefaultAsync(af => af.Id == id);
+                    .FirstOrDefaultAsync(af => af.Id == id).ConfigureAwait(false);
 
                 if (approvalFlowWithNav == null)
                 {
@@ -198,7 +198,7 @@ namespace crm_api.Services
         {
             try
             {
-                var deleted = await _unitOfWork.ApprovalFlows.SoftDeleteAsync(id);
+                var deleted = await _unitOfWork.ApprovalFlows.SoftDeleteAsync(id).ConfigureAwait(false);
                 if (!deleted)
                 {
                     return ApiResponse<object>.ErrorResult(
@@ -207,7 +207,7 @@ namespace crm_api.Services
                         StatusCodes.Status404NotFound);
                 }
 
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 return ApiResponse<object>.SuccessResult(null, _localizationService.GetLocalizedString("ApprovalFlowService.ApprovalFlowDeleted"));
             }

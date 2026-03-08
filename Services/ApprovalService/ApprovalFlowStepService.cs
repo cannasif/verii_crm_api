@@ -57,11 +57,11 @@ namespace crm_api.Services
 
                 query = query.ApplySorting(sortBy, request.SortDirection, columnMapping);
 
-                var totalCount = await query.CountAsync();
+                var totalCount = await query.CountAsync().ConfigureAwait(false);
 
                 var items = await query
                     .ApplyPagination(request.PageNumber, request.PageSize)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 var dtos = items.Select(x => _mapper.Map<ApprovalFlowStepGetDto>(x)).ToList();
 
@@ -88,7 +88,7 @@ namespace crm_api.Services
         {
             try
             {
-                var approvalFlowStep = await _unitOfWork.ApprovalFlowSteps.GetByIdAsync(id);
+                var approvalFlowStep = await _unitOfWork.ApprovalFlowSteps.GetByIdAsync(id).ConfigureAwait(false);
                 if (approvalFlowStep == null)
                 {
                     return ApiResponse<ApprovalFlowStepGetDto>.ErrorResult(
@@ -105,7 +105,7 @@ namespace crm_api.Services
                     .Include(afs => afs.DeletedByUser)
                     .Include(afs => afs.ApprovalFlow)
                     .Include(afs => afs.ApprovalRoleGroup)
-                    .FirstOrDefaultAsync(afs => afs.Id == id && !afs.IsDeleted);
+                    .FirstOrDefaultAsync(afs => afs.Id == id && !afs.IsDeleted).ConfigureAwait(false);
 
                 var approvalFlowStepDto = _mapper.Map<ApprovalFlowStepGetDto>(approvalFlowStepWithNav ?? approvalFlowStep);
                 return ApiResponse<ApprovalFlowStepGetDto>.SuccessResult(approvalFlowStepDto, _localizationService.GetLocalizedString("ApprovalFlowStepService.ApprovalFlowStepRetrieved"));
@@ -124,8 +124,8 @@ namespace crm_api.Services
             try
             {
                 var approvalFlowStep = _mapper.Map<ApprovalFlowStep>(approvalFlowStepCreateDto);
-                await _unitOfWork.ApprovalFlowSteps.AddAsync(approvalFlowStep);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.ApprovalFlowSteps.AddAsync(approvalFlowStep).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 // Reload with navigation properties for mapping
                 var approvalFlowStepWithNav = await _unitOfWork.ApprovalFlowSteps
@@ -135,7 +135,7 @@ namespace crm_api.Services
                     .Include(afs => afs.DeletedByUser)
                     .Include(afs => afs.ApprovalFlow)
                     .Include(afs => afs.ApprovalRoleGroup)
-                    .FirstOrDefaultAsync(afs => afs.Id == approvalFlowStep.Id && !afs.IsDeleted);
+                    .FirstOrDefaultAsync(afs => afs.Id == approvalFlowStep.Id && !afs.IsDeleted).ConfigureAwait(false);
 
                 if (approvalFlowStepWithNav == null)
                 {
@@ -163,7 +163,7 @@ namespace crm_api.Services
             try
             {
                 // Get tracked entity for update
-                var approvalFlowStep = await _unitOfWork.ApprovalFlowSteps.GetByIdForUpdateAsync(id);
+                var approvalFlowStep = await _unitOfWork.ApprovalFlowSteps.GetByIdForUpdateAsync(id).ConfigureAwait(false);
                 if (approvalFlowStep == null)
                 {
                     return ApiResponse<ApprovalFlowStepGetDto>.ErrorResult(
@@ -173,8 +173,8 @@ namespace crm_api.Services
                 }
 
                 _mapper.Map(approvalFlowStepUpdateDto, approvalFlowStep);
-                await _unitOfWork.ApprovalFlowSteps.UpdateAsync(approvalFlowStep);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.ApprovalFlowSteps.UpdateAsync(approvalFlowStep).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 // Reload with navigation properties for mapping (read-only)
                 var approvalFlowStepWithNav = await _unitOfWork.ApprovalFlowSteps
@@ -184,7 +184,7 @@ namespace crm_api.Services
                     .Include(afs => afs.DeletedByUser)
                     .Include(afs => afs.ApprovalFlow)
                     .Include(afs => afs.ApprovalRoleGroup)
-                    .FirstOrDefaultAsync(afs => afs.Id == id);
+                    .FirstOrDefaultAsync(afs => afs.Id == id).ConfigureAwait(false);
 
                 if (approvalFlowStepWithNav == null)
                 {
@@ -211,7 +211,7 @@ namespace crm_api.Services
         {
             try
             {
-                var deleted = await _unitOfWork.ApprovalFlowSteps.SoftDeleteAsync(id);
+                var deleted = await _unitOfWork.ApprovalFlowSteps.SoftDeleteAsync(id).ConfigureAwait(false);
                 if (!deleted)
                 {
                     return ApiResponse<object>.ErrorResult(
@@ -220,7 +220,7 @@ namespace crm_api.Services
                         StatusCodes.Status404NotFound);
                 }
 
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 return ApiResponse<object>.SuccessResult(null, _localizationService.GetLocalizedString("ApprovalFlowStepService.ApprovalFlowStepDeleted"));
             }
