@@ -38,11 +38,11 @@ namespace crm_api.Services
                     .ApplyFilters(request.Filters, request.FilterLogic)
                     .ApplySorting(request.SortBy ?? nameof(DemandNotes.Id), request.SortDirection);
 
-                var totalCount = await query.CountAsync();
+                var totalCount = await query.CountAsync().ConfigureAwait(false);
                 var items = await query
                     .ApplyPagination(request.PageNumber, request.PageSize)
                     .Select(x => _mapper.Map<DemandNotesGetDto>(x))
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 var pagedResponse = new PagedResponse<DemandNotesGetDto>
                 {
@@ -69,7 +69,7 @@ namespace crm_api.Services
         {
             try
             {
-                var entity = await _unitOfWork.DemandNotes.GetByIdAsync(id);
+                var entity = await _unitOfWork.DemandNotes.GetByIdAsync(id).ConfigureAwait(false);
                 if (entity == null || entity.IsDeleted)
                 {
                     return ApiResponse<DemandNotesGetDto>.ErrorResult(
@@ -96,7 +96,7 @@ namespace crm_api.Services
         {
             try
             {
-                var demandExists = await _unitOfWork.Demands.Query().AnyAsync(x => x.Id == demandId && !x.IsDeleted);
+                var demandExists = await _unitOfWork.Demands.Query().AnyAsync(x => x.Id == demandId && !x.IsDeleted).ConfigureAwait(false);
                 if (!demandExists)
                 {
                     return ApiResponse<DemandNotesGetDto>.ErrorResult(
@@ -105,7 +105,7 @@ namespace crm_api.Services
                         StatusCodes.Status404NotFound);
                 }
 
-                var entity = await _unitOfWork.DemandNotes.Query().AsNoTracking().FirstOrDefaultAsync(x => x.DemandId == demandId && !x.IsDeleted);
+                var entity = await _unitOfWork.DemandNotes.Query().AsNoTracking().FirstOrDefaultAsync(x => x.DemandId == demandId && !x.IsDeleted).ConfigureAwait(false);
                 if (entity == null)
                 {
                     return ApiResponse<DemandNotesGetDto>.SuccessResult(
@@ -130,7 +130,7 @@ namespace crm_api.Services
         {
             try
             {
-                var demandExists = await _unitOfWork.Demands.Query().AnyAsync(x => x.Id == createDemandNotesDto.DemandId && !x.IsDeleted);
+                var demandExists = await _unitOfWork.Demands.Query().AnyAsync(x => x.Id == createDemandNotesDto.DemandId && !x.IsDeleted).ConfigureAwait(false);
                 if (!demandExists)
                 {
                     return ApiResponse<DemandNotesDto>.ErrorResult(
@@ -139,7 +139,7 @@ namespace crm_api.Services
                         StatusCodes.Status404NotFound);
                 }
 
-                var exists = await _unitOfWork.DemandNotes.Query().AnyAsync(x => x.DemandId == createDemandNotesDto.DemandId && !x.IsDeleted);
+                var exists = await _unitOfWork.DemandNotes.Query().AnyAsync(x => x.DemandId == createDemandNotesDto.DemandId && !x.IsDeleted).ConfigureAwait(false);
                 if (exists)
                 {
                     return ApiResponse<DemandNotesDto>.ErrorResult(
@@ -150,8 +150,8 @@ namespace crm_api.Services
 
                 var entity = _mapper.Map<DemandNotes>(createDemandNotesDto);
                 entity.CreatedDate = DateTime.UtcNow;
-                await _unitOfWork.DemandNotes.AddAsync(entity);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.DemandNotes.AddAsync(entity).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 return ApiResponse<DemandNotesDto>.SuccessResult(
                     _mapper.Map<DemandNotesDto>(entity),
@@ -170,7 +170,7 @@ namespace crm_api.Services
         {
             try
             {
-                var existing = await _unitOfWork.DemandNotes.GetByIdAsync(id);
+                var existing = await _unitOfWork.DemandNotes.GetByIdAsync(id).ConfigureAwait(false);
                 if (existing == null || existing.IsDeleted)
                 {
                     return ApiResponse<DemandNotesDto>.ErrorResult(
@@ -181,8 +181,8 @@ namespace crm_api.Services
 
                 _mapper.Map(updateDemandNotesDto, existing);
                 existing.UpdatedDate = DateTime.UtcNow;
-                await _unitOfWork.DemandNotes.UpdateAsync(existing);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.DemandNotes.UpdateAsync(existing).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 return ApiResponse<DemandNotesDto>.SuccessResult(
                     _mapper.Map<DemandNotesDto>(existing),
@@ -201,7 +201,7 @@ namespace crm_api.Services
         {
             try
             {
-                var demandExists = await _unitOfWork.Demands.Query().AnyAsync(x => x.Id == demandId && !x.IsDeleted);
+                var demandExists = await _unitOfWork.Demands.Query().AnyAsync(x => x.Id == demandId && !x.IsDeleted).ConfigureAwait(false);
                 if (!demandExists)
                 {
                     return ApiResponse<DemandNotesGetDto>.ErrorResult(
@@ -228,16 +228,16 @@ namespace crm_api.Services
                     return ApiResponse<DemandNotesGetDto>.ErrorResult(maxLengthMessage, maxLengthMessage, StatusCodes.Status400BadRequest);
                 }
 
-                var entity = await _unitOfWork.DemandNotes.Query().FirstOrDefaultAsync(x => x.DemandId == demandId && !x.IsDeleted);
+                var entity = await _unitOfWork.DemandNotes.Query().FirstOrDefaultAsync(x => x.DemandId == demandId && !x.IsDeleted).ConfigureAwait(false);
                 if (entity == null)
                 {
                     entity = new DemandNotes { DemandId = demandId, CreatedDate = DateTime.UtcNow };
-                    await _unitOfWork.DemandNotes.AddAsync(entity);
+                    await _unitOfWork.DemandNotes.AddAsync(entity).ConfigureAwait(false);
                 }
                 else
                 {
                     entity.UpdatedDate = DateTime.UtcNow;
-                    await _unitOfWork.DemandNotes.UpdateAsync(entity);
+                    await _unitOfWork.DemandNotes.UpdateAsync(entity).ConfigureAwait(false);
                 }
 
                 entity.Note1 = notes.ElementAtOrDefault(0);
@@ -256,7 +256,7 @@ namespace crm_api.Services
                 entity.Note14 = notes.ElementAtOrDefault(13);
                 entity.Note15 = notes.ElementAtOrDefault(14);
 
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 return ApiResponse<DemandNotesGetDto>.SuccessResult(
                     _mapper.Map<DemandNotesGetDto>(entity),
@@ -275,7 +275,7 @@ namespace crm_api.Services
         {
             try
             {
-                var existing = await _unitOfWork.DemandNotes.GetByIdAsync(id);
+                var existing = await _unitOfWork.DemandNotes.GetByIdAsync(id).ConfigureAwait(false);
                 if (existing == null || existing.IsDeleted)
                 {
                     return ApiResponse<object>.ErrorResult(
@@ -284,8 +284,8 @@ namespace crm_api.Services
                         StatusCodes.Status404NotFound);
                 }
 
-                await _unitOfWork.DemandNotes.SoftDeleteAsync(id);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.DemandNotes.SoftDeleteAsync(id).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
                 return ApiResponse<object>.SuccessResult(
                     null,
                     _localizationService.GetLocalizedString("DemandNotesService.DemandNotesDeleted"));

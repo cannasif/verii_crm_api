@@ -49,11 +49,11 @@ namespace crm_api.Services
 
                 query = query.ApplySorting(sortBy, request.SortDirection);
 
-                var totalCount = await query.CountAsync();
+                var totalCount = await query.CountAsync().ConfigureAwait(false);
 
                 var items = await query
                     .ApplyPagination(request.PageNumber, request.PageSize)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 var dtos = items.Select(x => _mapper.Map<DemandLineGetDto>(x)).ToList();
 
@@ -79,7 +79,7 @@ namespace crm_api.Services
         {
             try
             {
-                var line = await _unitOfWork.DemandLines.GetByIdAsync(id);
+                var line = await _unitOfWork.DemandLines.GetByIdAsync(id).ConfigureAwait(false);
                 if (line == null)
                 {
                     return ApiResponse<DemandLineGetDto>.ErrorResult(
@@ -106,8 +106,8 @@ namespace crm_api.Services
                 var entity = _mapper.Map<DemandLine>(createDemandLineDto);
                 entity.CreatedDate = DateTime.UtcNow;
 
-                await _unitOfWork.DemandLines.AddAsync(entity);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.DemandLines.AddAsync(entity).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 var dto = _mapper.Map<DemandLineDto>(entity);
                 return ApiResponse<DemandLineDto>.SuccessResult(dto, _localizationService.GetLocalizedString("DemandLineService.DemandLineCreated"));
@@ -125,8 +125,8 @@ namespace crm_api.Services
             try
             {
                 var entities = _mapper.Map<List<DemandLine>>(createDemandLineDtos);
-                await _unitOfWork.DemandLines.AddAllAsync(entities);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.DemandLines.AddAllAsync(entities).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
                 var dtos = _mapper.Map<List<DemandLineDto>>(entities);
                 return ApiResponse<List<DemandLineDto>>.SuccessResult(dtos, _localizationService.GetLocalizedString("DemandLineService.DemandLinesCreated"));
             }
@@ -143,8 +143,8 @@ namespace crm_api.Services
             try
             {
                 var entities = _mapper.Map<List<DemandLine>>(demandLineDtos);
-                await _unitOfWork.DemandLines.UpdateAllAsync(entities);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.DemandLines.UpdateAllAsync(entities).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
                 var dtos = _mapper.Map<List<DemandLineDto>>(entities);
                 return ApiResponse<List<DemandLineDto>>.SuccessResult(dtos, _localizationService.GetLocalizedString("DemandLineService.DemandLinesUpdated"));
             }
@@ -161,7 +161,7 @@ namespace crm_api.Services
         {
             try
             {
-                var existing = await _unitOfWork.DemandLines.GetByIdAsync(id);
+                var existing = await _unitOfWork.DemandLines.GetByIdAsync(id).ConfigureAwait(false);
                 if (existing == null)
                 {
                     return ApiResponse<DemandLineDto>.ErrorResult(
@@ -173,8 +173,8 @@ namespace crm_api.Services
                 _mapper.Map(updateDemandLineDto, existing);
                 existing.UpdatedDate = DateTime.UtcNow;
 
-                await _unitOfWork.DemandLines.UpdateAsync(existing);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.DemandLines.UpdateAsync(existing).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 var dto = _mapper.Map<DemandLineDto>(existing);
                 return ApiResponse<DemandLineDto>.SuccessResult(dto, _localizationService.GetLocalizedString("DemandLineService.DemandLineUpdated"));
@@ -191,7 +191,7 @@ namespace crm_api.Services
         {
             try
             {
-                var currentUserResponse = await _userService.GetCurrentUserIdAsync();
+                var currentUserResponse = await _userService.GetCurrentUserIdAsync().ConfigureAwait(false);
                 if (!currentUserResponse.Success)
                 {
                     return ApiResponse<object>.ErrorResult(
@@ -204,7 +204,7 @@ namespace crm_api.Services
                     .Query()
                     .Where(x => x.Id == id && !x.IsDeleted)
                     .Select(x => new { x.RelatedProductKey, x.DemandId })
-                    .FirstOrDefaultAsync();
+                    .FirstOrDefaultAsync().ConfigureAwait(false);
 
                 if (existing == null)
                 {
@@ -221,7 +221,7 @@ namespace crm_api.Services
                     .ExecuteUpdateAsync(s => s
                         .SetProperty(p => p.IsDeleted, true)
                         .SetProperty(p => p.DeletedDate, DateTime.UtcNow)
-                        .SetProperty(p => p.DeletedBy, currentUserId));
+                        .SetProperty(p => p.DeletedBy, currentUserId)).ConfigureAwait(false);
 
                 if (rowsAffected == 0)
                 {
@@ -295,7 +295,7 @@ namespace crm_api.Services
                         ErpProjectCode = x.DemandLine.ErpProjectCode,
                         ApprovalStatus = x.DemandLine.ApprovalStatus
                     })
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 return ApiResponse<List<DemandLineGetDto>>.SuccessResult(dtos, _localizationService.GetLocalizedString("DemandLineService.DemandLinesByDemandRetrieved"));
             }

@@ -51,11 +51,11 @@ namespace crm_api.Services
                 var sortBy = request.SortBy ?? nameof(DemandExchangeRate.Id);
                 query = query.ApplySorting(sortBy, request.SortDirection);
 
-                var totalCount = await query.CountAsync();
+                var totalCount = await query.CountAsync().ConfigureAwait(false);
 
                 var items = await query
                     .ApplyPagination(request.PageNumber, request.PageSize)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 var dtos = items.Select(x => _mapper.Map<DemandExchangeRateGetDto>(x)).ToList();
 
@@ -88,7 +88,7 @@ namespace crm_api.Services
                     .Include(e => e.CreatedByUser)
                     .Include(e => e.UpdatedByUser)
                     .Include(e => e.DeletedByUser)
-                    .FirstOrDefaultAsync(e => e.Id == id && !e.IsDeleted);
+                    .FirstOrDefaultAsync(e => e.Id == id && !e.IsDeleted).ConfigureAwait(false);
 
                 if (exchangeRate == null)
                 {
@@ -115,8 +115,8 @@ namespace crm_api.Services
             try
             {
                 var exchangeRate = _mapper.Map<DemandExchangeRate>(createDto);
-                await _unitOfWork.DemandExchangeRates.AddAsync(exchangeRate);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.DemandExchangeRates.AddAsync(exchangeRate).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 // Reload with navigation properties
                 var exchangeRateWithNav = await _unitOfWork.DemandExchangeRates
@@ -125,7 +125,7 @@ namespace crm_api.Services
                     .Include(e => e.CreatedByUser)
                     .Include(e => e.UpdatedByUser)
                     .Include(e => e.DeletedByUser)
-                    .FirstOrDefaultAsync(e => e.Id == exchangeRate.Id && !e.IsDeleted);
+                    .FirstOrDefaultAsync(e => e.Id == exchangeRate.Id && !e.IsDeleted).ConfigureAwait(false);
 
                 if (exchangeRateWithNav == null)
                 {
@@ -151,7 +151,7 @@ namespace crm_api.Services
         {
             try
             {
-                var exchangeRate = await _unitOfWork.DemandExchangeRates.GetByIdForUpdateAsync(id);
+                var exchangeRate = await _unitOfWork.DemandExchangeRates.GetByIdForUpdateAsync(id).ConfigureAwait(false);
                 if (exchangeRate == null)
                 {
                     return ApiResponse<DemandExchangeRateGetDto>.ErrorResult(
@@ -161,8 +161,8 @@ namespace crm_api.Services
                 }
 
                 _mapper.Map(updateDto, exchangeRate);
-                await _unitOfWork.DemandExchangeRates.UpdateAsync(exchangeRate);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.DemandExchangeRates.UpdateAsync(exchangeRate).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 // Reload with navigation properties
                 var exchangeRateWithNav = await _unitOfWork.DemandExchangeRates
@@ -171,7 +171,7 @@ namespace crm_api.Services
                     .Include(e => e.CreatedByUser)
                     .Include(e => e.UpdatedByUser)
                     .Include(e => e.DeletedByUser)
-                    .FirstOrDefaultAsync(e => e.Id == exchangeRate.Id && !e.IsDeleted);
+                    .FirstOrDefaultAsync(e => e.Id == exchangeRate.Id && !e.IsDeleted).ConfigureAwait(false);
 
                 if (exchangeRateWithNav == null)
                 {
@@ -199,7 +199,7 @@ namespace crm_api.Services
             {
                 foreach (var dto in updateDtos)
                 {
-                    var exchangeRate = await _unitOfWork.DemandExchangeRates.GetByIdForUpdateAsync(dto.Id);
+                    var exchangeRate = await _unitOfWork.DemandExchangeRates.GetByIdForUpdateAsync(dto.Id).ConfigureAwait(false);
 
                     if (exchangeRate == null)
                     {
@@ -211,7 +211,7 @@ namespace crm_api.Services
                     exchangeRate.ExchangeRate = dto.ExchangeRate;
                 }
 
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 return ApiResponse<bool>.SuccessResult(
                     true,
@@ -230,7 +230,7 @@ namespace crm_api.Services
         {
             try
             {
-                var exchangeRate = await _unitOfWork.DemandExchangeRates.GetByIdAsync(id);
+                var exchangeRate = await _unitOfWork.DemandExchangeRates.GetByIdAsync(id).ConfigureAwait(false);
                 if (exchangeRate == null)
                 {
                     return ApiResponse<object>.ErrorResult(
@@ -239,8 +239,8 @@ namespace crm_api.Services
                         StatusCodes.Status404NotFound);
                 }
 
-                await _unitOfWork.DemandExchangeRates.SoftDeleteAsync(id);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.DemandExchangeRates.SoftDeleteAsync(id).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 return ApiResponse<object>.SuccessResult(null, _localizationService.GetLocalizedString("DemandExchangeRateService.RateDeleted"));
             }
@@ -264,7 +264,7 @@ namespace crm_api.Services
                     .Include(e => e.CreatedByUser)
                     .Include(e => e.UpdatedByUser)
                     .Include(e => e.DeletedByUser)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 var dtos = exchangeRates.Select(x => _mapper.Map<DemandExchangeRateGetDto>(x)).ToList();
                 return ApiResponse<List<DemandExchangeRateGetDto>>.SuccessResult(dtos, _localizationService.GetLocalizedString("DemandExchangeRateService.RatesRetrieved"));
