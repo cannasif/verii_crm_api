@@ -3143,4 +3143,95 @@
     <value>حدث خطأ أثناء العملية: {0}</value>
   </data>
 
+
+  <data name="GoogleIntegrationController.GoogleIntegrationLogsCouldNotBeLoaded" xml:space="preserve">
+    <value>تعذر تحميل سجلات تكامل Google.</value>
+  </data>
+  <data name="GoogleIntegrationController.TenantContextIsMissing" xml:space="preserve">
+    <value>سياق المستأجر مفقود.</value>
+  </data>
+  <data name="GoogleIntegrationController.GoogleIntegrationLogsRetrieved" xml:space="preserve">
+    <value>تم استرجاع سجلات تكامل Google.</value>
+  </data>
+  <data name="GoogleIntegrationController.GoogleIntegrationStatusRetrieved" xml:space="preserve">
+    <value>تم استرجاع حالة تكامل Google.</value>
+  </data>
+  <data name="GoogleIntegrationController.GoogleAuthorizeUrlCreated" xml:space="preserve">
+    <value>تم إنشاء رابط تفويض Google.</value>
+  </data>
+  <data name="GoogleIntegrationController.GoogleAuthorizeUrlCouldNotBeGenerated" xml:space="preserve">
+    <value>تعذر إنشاء رابط تفويض Google.</value>
+  </data>
+  <data name="GoogleIntegrationController.GoogleIntegrationDisconnected" xml:space="preserve">
+    <value>تم قطع اتصال تكامل Google.</value>
+  </data>
+  <data name="GoogleIntegrationController.GoogleIntegrationCouldNotBeDisconnected" xml:space="preserve">
+    <value>تعذر فصل تكامل Google.</value>
+  </data>
+  <data name="GoogleIntegrationController.GoogleCalendarTestEventCreated" xml:space="preserve">
+    <value>تم إنشاء حدث اختبار تقويم Google.</value>
+  </data>
+  <data name="GoogleIntegrationController.GoogleCalendarTestEventCouldNotBeCreated" xml:space="preserve">
+    <value>تعذر إنشاء حدث اختبار تقويم Google.</value>
+  </data>
+  <data name="TenantGoogleOAuthSettingsService.GoogleOAuthSettingsRetrieved" xml:space="preserve">
+    <value>تم استرجاع إعدادات Google OAuth.</value>
+  </data>
+  <data name="TenantGoogleOAuthSettingsService.ClientIdRequired" xml:space="preserve">
+    <value>ClientId مطلوب.</value>
+  </data>
+  <data name="TenantGoogleOAuthSettingsService.ClientSecretPlainRequiredForInitialSetup" xml:space="preserve">
+    <value>ClientSecretPlain مطلوب للإعداد الأولي.</value>
+  </data>
+  <data name="TenantGoogleOAuthSettingsService.ClientSecretNotConfigured" xml:space="preserve">
+    <value>سر العميل غير مهيأ.</value>
+  </data>
+  <data name="TenantGoogleOAuthSettingsService.GoogleOAuthSettingsUpdated" xml:space="preserve">
+    <value>تم تحديث إعدادات Google OAuth.</value>
+  </data>
+  <data name="ActivityImageService.AtLeastOneImageRequired" xml:space="preserve">
+    <value>مطلوب صورة واحدة على الأقل.</value>
+  </data>
+  <data name="ActivityImageService.ActivitiesNotFound" xml:space="preserve">
+    <value>لم يتم العثور على نشاط واحد أو أكثر.</value>
+  </data>
+  <data name="ActivityImageService.ActivityImagesCreated" xml:space="preserve">
+    <value>تم إنشاء صور النشاط.</value>
+  </data>
+  <data name="ActivityImageService.AtLeastOneImageFileRequired" xml:space="preserve">
+    <value>مطلوب ملف صورة واحد على الأقل.</value>
+  </data>
+  <data name="ActivityImageService.ActivityNotFound" xml:space="preserve">
+    <value>النشاط غير موجود.</value>
+  </data>
+  <data name="ActivityImageService.FileUploadFailed" xml:space="preserve">
+    <value>فشل رفع الملف.</value>
+  </data>
+  <data name="ActivityImageService.ActivityImagesUploaded" xml:space="preserve">
+    <value>تم رفع صور النشاط.</value>
+  </data>
+  <data name="ActivityImageService.ActivityImagesRetrieved" xml:space="preserve">
+    <value>تم استرجاع صور النشاط.</value>
+  </data>
+  <data name="ActivityImageService.ActivityImageNotFound" xml:space="preserve">
+    <value>صورة النشاط غير موجودة.</value>
+  </data>
+  <data name="ActivityImageService.ActivityImageUpdated" xml:space="preserve">
+    <value>تم تحديث صورة النشاط.</value>
+  </data>
+  <data name="ActivityImageService.ActivityImageDeleted" xml:space="preserve">
+    <value>تم حذف صورة النشاط.</value>
+  </data>
+  <data name="OrderService.ApprovalScopeUsersRetrieved" xml:space="preserve">
+    <value>تم استرجاع مستخدمي نطاق الموافقة.</value>
+  </data>
+  <data name="DemandService.ApprovalScopeUsersRetrieved" xml:space="preserve">
+    <value>تم استرجاع مستخدمي نطاق الموافقة.</value>
+  </data>
+  <data name="QuotationService.ApprovalScopeUsersRetrieved" xml:space="preserve">
+    <value>تم استرجاع مستخدمي نطاق الموافقة.</value>
+  </data>
+  <data name="TempQuotattionService.NoLineToCreate" xml:space="preserve">
+    <value>لا يوجد سطر لإنشائه.</value>
+  </data>
 </root>

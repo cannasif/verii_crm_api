@@ -3454,4 +3454,95 @@
     <value>İşlem sırasında bir hata oluştu: {0}</value>
   </data>
 
+
+  <data name="GoogleIntegrationController.GoogleIntegrationLogsCouldNotBeLoaded" xml:space="preserve">
+    <value>Google entegrasyon logları yüklenemedi.</value>
+  </data>
+  <data name="GoogleIntegrationController.TenantContextIsMissing" xml:space="preserve">
+    <value>Tenant bağlamı eksik.</value>
+  </data>
+  <data name="GoogleIntegrationController.GoogleIntegrationLogsRetrieved" xml:space="preserve">
+    <value>Google entegrasyon logları getirildi.</value>
+  </data>
+  <data name="GoogleIntegrationController.GoogleIntegrationStatusRetrieved" xml:space="preserve">
+    <value>Google entegrasyon durumu getirildi.</value>
+  </data>
+  <data name="GoogleIntegrationController.GoogleAuthorizeUrlCreated" xml:space="preserve">
+    <value>Google yetkilendirme URL’i oluşturuldu.</value>
+  </data>
+  <data name="GoogleIntegrationController.GoogleAuthorizeUrlCouldNotBeGenerated" xml:space="preserve">
+    <value>Google yetkilendirme URL’i oluşturulamadı.</value>
+  </data>
+  <data name="GoogleIntegrationController.GoogleIntegrationDisconnected" xml:space="preserve">
+    <value>Google entegrasyonu bağlantısı kesildi.</value>
+  </data>
+  <data name="GoogleIntegrationController.GoogleIntegrationCouldNotBeDisconnected" xml:space="preserve">
+    <value>Google entegrasyon bağlantısı kesilemedi.</value>
+  </data>
+  <data name="GoogleIntegrationController.GoogleCalendarTestEventCreated" xml:space="preserve">
+    <value>Google takvim test etkinliği oluşturuldu.</value>
+  </data>
+  <data name="GoogleIntegrationController.GoogleCalendarTestEventCouldNotBeCreated" xml:space="preserve">
+    <value>Google takvim test etkinliği oluşturulamadı.</value>
+  </data>
+  <data name="TenantGoogleOAuthSettingsService.GoogleOAuthSettingsRetrieved" xml:space="preserve">
+    <value>Google OAuth ayarları getirildi.</value>
+  </data>
+  <data name="TenantGoogleOAuthSettingsService.ClientIdRequired" xml:space="preserve">
+    <value>ClientId zorunludur.</value>
+  </data>
+  <data name="TenantGoogleOAuthSettingsService.ClientSecretPlainRequiredForInitialSetup" xml:space="preserve">
+    <value>İlk kurulum için ClientSecretPlain zorunludur.</value>
+  </data>
+  <data name="TenantGoogleOAuthSettingsService.ClientSecretNotConfigured" xml:space="preserve">
+    <value>Client secret yapılandırılmamış.</value>
+  </data>
+  <data name="TenantGoogleOAuthSettingsService.GoogleOAuthSettingsUpdated" xml:space="preserve">
+    <value>Google OAuth ayarları güncellendi.</value>
+  </data>
+  <data name="ActivityImageService.AtLeastOneImageRequired" xml:space="preserve">
+    <value>En az bir görsel zorunludur.</value>
+  </data>
+  <data name="ActivityImageService.ActivitiesNotFound" xml:space="preserve">
+    <value>Bir veya daha fazla aktivite bulunamadı.</value>
+  </data>
+  <data name="ActivityImageService.ActivityImagesCreated" xml:space="preserve">
+    <value>Aktivite görselleri oluşturuldu.</value>
+  </data>
+  <data name="ActivityImageService.AtLeastOneImageFileRequired" xml:space="preserve">
+    <value>En az bir görsel dosyası zorunludur.</value>
+  </data>
+  <data name="ActivityImageService.ActivityNotFound" xml:space="preserve">
+    <value>Aktivite bulunamadı.</value>
+  </data>
+  <data name="ActivityImageService.FileUploadFailed" xml:space="preserve">
+    <value>Dosya yükleme başarısız oldu.</value>
+  </data>
+  <data name="ActivityImageService.ActivityImagesUploaded" xml:space="preserve">
+    <value>Aktivite görselleri yüklendi.</value>
+  </data>
+  <data name="ActivityImageService.ActivityImagesRetrieved" xml:space="preserve">
+    <value>Aktivite görselleri getirildi.</value>
+  </data>
+  <data name="ActivityImageService.ActivityImageNotFound" xml:space="preserve">
+    <value>Aktivite görseli bulunamadı.</value>
+  </data>
+  <data name="ActivityImageService.ActivityImageUpdated" xml:space="preserve">
+    <value>Aktivite görseli güncellendi.</value>
+  </data>
+  <data name="ActivityImageService.ActivityImageDeleted" xml:space="preserve">
+    <value>Aktivite görseli silindi.</value>
+  </data>
+  <data name="OrderService.ApprovalScopeUsersRetrieved" xml:space="preserve">
+    <value>Onay kapsamındaki kullanıcılar getirildi.</value>
+  </data>
+  <data name="DemandService.ApprovalScopeUsersRetrieved" xml:space="preserve">
+    <value>Onay kapsamındaki kullanıcılar getirildi.</value>
+  </data>
+  <data name="QuotationService.ApprovalScopeUsersRetrieved" xml:space="preserve">
+    <value>Onay kapsamındaki kullanıcılar getirildi.</value>
+  </data>
+  <data name="TempQuotattionService.NoLineToCreate" xml:space="preserve">
+    <value>Oluşturulacak satır yok.</value>
+  </data>
 </root>

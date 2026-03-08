@@ -3140,4 +3140,95 @@
     <value>Une erreur s'est produite pendant l'opération : {0}</value>
   </data>
 
+
+  <data name="GoogleIntegrationController.GoogleIntegrationLogsCouldNotBeLoaded" xml:space="preserve">
+    <value>Les journaux d’intégration Google n’ont pas pu être chargés.</value>
+  </data>
+  <data name="GoogleIntegrationController.TenantContextIsMissing" xml:space="preserve">
+    <value>Le contexte du locataire est manquant.</value>
+  </data>
+  <data name="GoogleIntegrationController.GoogleIntegrationLogsRetrieved" xml:space="preserve">
+    <value>Les journaux d’intégration Google ont été récupérés.</value>
+  </data>
+  <data name="GoogleIntegrationController.GoogleIntegrationStatusRetrieved" xml:space="preserve">
+    <value>Le statut de l’intégration Google a été récupéré.</value>
+  </data>
+  <data name="GoogleIntegrationController.GoogleAuthorizeUrlCreated" xml:space="preserve">
+    <value>L’URL d’autorisation Google a été créée.</value>
+  </data>
+  <data name="GoogleIntegrationController.GoogleAuthorizeUrlCouldNotBeGenerated" xml:space="preserve">
+    <value>L’URL d’autorisation Google n’a pas pu être générée.</value>
+  </data>
+  <data name="GoogleIntegrationController.GoogleIntegrationDisconnected" xml:space="preserve">
+    <value>L’intégration Google a été déconnectée.</value>
+  </data>
+  <data name="GoogleIntegrationController.GoogleIntegrationCouldNotBeDisconnected" xml:space="preserve">
+    <value>L’intégration Google n’a pas pu être déconnectée.</value>
+  </data>
+  <data name="GoogleIntegrationController.GoogleCalendarTestEventCreated" xml:space="preserve">
+    <value>L’événement de test Google Calendar a été créé.</value>
+  </data>
+  <data name="GoogleIntegrationController.GoogleCalendarTestEventCouldNotBeCreated" xml:space="preserve">
+    <value>L’événement de test Google Calendar n’a pas pu être créé.</value>
+  </data>
+  <data name="TenantGoogleOAuthSettingsService.GoogleOAuthSettingsRetrieved" xml:space="preserve">
+    <value>Les paramètres Google OAuth ont été récupérés.</value>
+  </data>
+  <data name="TenantGoogleOAuthSettingsService.ClientIdRequired" xml:space="preserve">
+    <value>ClientId est requis.</value>
+  </data>
+  <data name="TenantGoogleOAuthSettingsService.ClientSecretPlainRequiredForInitialSetup" xml:space="preserve">
+    <value>ClientSecretPlain est requis pour la configuration initiale.</value>
+  </data>
+  <data name="TenantGoogleOAuthSettingsService.ClientSecretNotConfigured" xml:space="preserve">
+    <value>Le secret client n’est pas configuré.</value>
+  </data>
+  <data name="TenantGoogleOAuthSettingsService.GoogleOAuthSettingsUpdated" xml:space="preserve">
+    <value>Les paramètres Google OAuth ont été mis à jour.</value>
+  </data>
+  <data name="ActivityImageService.AtLeastOneImageRequired" xml:space="preserve">
+    <value>Au moins une image est requise.</value>
+  </data>
+  <data name="ActivityImageService.ActivitiesNotFound" xml:space="preserve">
+    <value>Une ou plusieurs activités sont introuvables.</value>
+  </data>
+  <data name="ActivityImageService.ActivityImagesCreated" xml:space="preserve">
+    <value>Les images d’activité ont été créées.</value>
+  </data>
+  <data name="ActivityImageService.AtLeastOneImageFileRequired" xml:space="preserve">
+    <value>Au moins un fichier image est requis.</value>
+  </data>
+  <data name="ActivityImageService.ActivityNotFound" xml:space="preserve">
+    <value>Activité introuvable.</value>
+  </data>
+  <data name="ActivityImageService.FileUploadFailed" xml:space="preserve">
+    <value>Le téléversement du fichier a échoué.</value>
+  </data>
+  <data name="ActivityImageService.ActivityImagesUploaded" xml:space="preserve">
+    <value>Les images d’activité ont été téléversées.</value>
+  </data>
+  <data name="ActivityImageService.ActivityImagesRetrieved" xml:space="preserve">
+    <value>Les images d’activité ont été récupérées.</value>
+  </data>
+  <data name="ActivityImageService.ActivityImageNotFound" xml:space="preserve">
+    <value>Image d’activité introuvable.</value>
+  </data>
+  <data name="ActivityImageService.ActivityImageUpdated" xml:space="preserve">
+    <value>L’image d’activité a été mise à jour.</value>
+  </data>
+  <data name="ActivityImageService.ActivityImageDeleted" xml:space="preserve">
+    <value>L’image d’activité a été supprimée.</value>
+  </data>
+  <data name="OrderService.ApprovalScopeUsersRetrieved" xml:space="preserve">
+    <value>Les utilisateurs du périmètre d’approbation ont été récupérés.</value>
+  </data>
+  <data name="DemandService.ApprovalScopeUsersRetrieved" xml:space="preserve">
+    <value>Les utilisateurs du périmètre d’approbation ont été récupérés.</value>
+  </data>
+  <data name="QuotationService.ApprovalScopeUsersRetrieved" xml:space="preserve">
+    <value>Les utilisateurs du périmètre d’approbation ont été récupérés.</value>
+  </data>
+  <data name="TempQuotattionService.NoLineToCreate" xml:space="preserve">
+    <value>Aucune ligne à créer.</value>
+  </data>
 </root>
