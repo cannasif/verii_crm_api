@@ -58,7 +58,7 @@ namespace crm_api.Services
             var dbConfig = await _unitOfWork.PowerBIConfigurations
                 .Query()
                 .AsNoTracking()
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync().ConfigureAwait(false);
 
             if (dbConfig != null)
             {
@@ -95,8 +95,8 @@ namespace crm_api.Services
                     ApiBaseUrl = _powerBi.ApiBaseUrl?.Trim(),
                     Scope = _powerBi.Scope?.Trim()
                 };
-                await _unitOfWork.PowerBIConfigurations.AddAsync(entity);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.PowerBIConfigurations.AddAsync(entity).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 var clientSecret = _configuration["PowerBi:ClientSecret"]
                     ?? _configuration["AzureAd:ClientSecret"]
@@ -143,7 +143,7 @@ namespace crm_api.Services
         {
             try
             {
-                var definition = await _unitOfWork.PowerBIReportDefinitions.GetByIdAsync(reportDefinitionId);
+                var definition = await _unitOfWork.PowerBIReportDefinitions.GetByIdAsync(reportDefinitionId).ConfigureAwait(false);
                 if (definition == null)
                 {
                     return ApiResponse<EmbedConfigDto>.ErrorResult(
@@ -160,7 +160,7 @@ namespace crm_api.Services
                         StatusCodes.Status400BadRequest);
                 }
 
-                var rlsResult = await ResolveRlsRolesAsync(definition);
+                var rlsResult = await ResolveRlsRolesAsync(definition).ConfigureAwait(false);
                 if (rlsResult.Denied != null)
                     return rlsResult.Denied;
 
@@ -172,7 +172,7 @@ namespace crm_api.Services
                         StatusCodes.Status400BadRequest);
                 }
 
-                var config = await GetEffectiveConfigAsync();
+                var config = await GetEffectiveConfigAsync().ConfigureAwait(false);
                 if (string.IsNullOrWhiteSpace(config.TenantId) ||
                     string.IsNullOrWhiteSpace(config.ClientId) ||
                     config.DefaultWorkspaceId == Guid.Empty)
@@ -225,7 +225,7 @@ namespace crm_api.Services
                         _localizationService.GetLocalizedString("PowerBIEmbedService.EmbedConfigRetrieved"));
                 }
 
-                var accessToken = await GetAzureAdAccessTokenAsync(config);
+                var accessToken = await GetAzureAdAccessTokenAsync(config).ConfigureAwait(false);
                 if (string.IsNullOrEmpty(accessToken))
                 {
                     return ApiResponse<EmbedConfigDto>.ErrorResult(
@@ -234,7 +234,7 @@ namespace crm_api.Services
                         StatusCodes.Status502BadGateway);
                 }
 
-                var embedResult = await GetEmbedTokenAsync(definition, workspaceId, accessToken, config, rlsResult.Roles);
+                var embedResult = await GetEmbedTokenAsync(definition, workspaceId, accessToken, config, rlsResult.Roles).ConfigureAwait(false);
                 if (embedResult == null)
                 {
                     return ApiResponse<EmbedConfigDto>.ErrorResult(
@@ -282,11 +282,11 @@ namespace crm_api.Services
                 ["scope"] = config.Scope
             });
 
-            var response = await client.PostAsync(tokenUrl, content);
+            var response = await client.PostAsync(tokenUrl, content).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
                 return null;
 
-            var json = await response.Content.ReadAsStringAsync();
+            var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             using var doc = JsonDocument.Parse(json);
             if (doc.RootElement.TryGetProperty("access_token", out var tokenProp))
                 return tokenProp.GetString();
@@ -304,11 +304,11 @@ namespace crm_api.Services
             var body = JsonSerializer.Serialize(requestBody);
             var content = new StringContent(body, Encoding.UTF8, "application/json");
 
-            var response = await client.PostAsync(url, content);
+            var response = await client.PostAsync(url, content).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
                 return null;
 
-            var json = await response.Content.ReadAsStringAsync();
+            var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             return JsonSerializer.Deserialize<PowerBIEmbedTokenResponse>(json);
         }
 
@@ -336,7 +336,7 @@ namespace crm_api.Services
                 .Query()
                 .AsNoTracking()
                 .Where(x => x.PowerBIReportDefinitionId == definition.Id)
-                .ToListAsync();
+                .ToListAsync().ConfigureAwait(false);
 
             if (mappings.Count > 0)
             {

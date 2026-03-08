@@ -43,7 +43,7 @@ namespace crm_api.Services
         {
             try
             {
-                var config = await GetEffectiveConfigAsync();
+                var config = await GetEffectiveConfigAsync().ConfigureAwait(false);
                 if (string.IsNullOrWhiteSpace(config.TenantId) ||
                     string.IsNullOrWhiteSpace(config.ClientId) ||
                     config.DefaultWorkspaceId == Guid.Empty)
@@ -71,7 +71,7 @@ namespace crm_api.Services
                         StatusCodes.Status400BadRequest);
                 }
 
-                var accessToken = await GetAzureAdAccessTokenAsync(config);
+                var accessToken = await GetAzureAdAccessTokenAsync(config).ConfigureAwait(false);
                 if (string.IsNullOrEmpty(accessToken))
                 {
                     return ApiResponse<PowerBIReportSyncResultDto>.ErrorResult(
@@ -80,7 +80,7 @@ namespace crm_api.Services
                         StatusCodes.Status502BadGateway);
                 }
 
-                var remoteReports = await GetWorkspaceReportsAsync(targetWorkspaceId, accessToken, config.ApiBaseUrl);
+                var remoteReports = await GetWorkspaceReportsAsync(targetWorkspaceId, accessToken, config.ApiBaseUrl).ConfigureAwait(false);
                 if (remoteReports == null)
                 {
                     return ApiResponse<PowerBIReportSyncResultDto>.ErrorResult(
@@ -92,7 +92,7 @@ namespace crm_api.Services
                 var existing = await _unitOfWork.PowerBIReportDefinitions
                     .Query(tracking: true, ignoreQueryFilters: true)
                     .Where(r => r.WorkspaceId == targetWorkspaceId)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 var byReportId = existing.ToDictionary(r => r.ReportId, r => r);
                 var remoteIds = new HashSet<Guid>(remoteReports.Select(r => r.Id));
@@ -121,7 +121,7 @@ namespace crm_api.Services
                         {
                             updated++;
                         }
-                        await _unitOfWork.PowerBIReportDefinitions.UpdateAsync(entity);
+                        await _unitOfWork.PowerBIReportDefinitions.UpdateAsync(entity).ConfigureAwait(false);
                         continue;
                     }
 
@@ -135,18 +135,18 @@ namespace crm_api.Services
                         EmbedUrl = report.EmbedUrl,
                         IsActive = true
                     };
-                    await _unitOfWork.PowerBIReportDefinitions.AddAsync(newEntity);
+                    await _unitOfWork.PowerBIReportDefinitions.AddAsync(newEntity).ConfigureAwait(false);
                     created++;
                 }
 
                 foreach (var entity in existing.Where(e => !e.IsDeleted && !remoteIds.Contains(e.ReportId)))
                 {
-                    var deletedResult = await _unitOfWork.PowerBIReportDefinitions.SoftDeleteAsync(entity.Id);
+                    var deletedResult = await _unitOfWork.PowerBIReportDefinitions.SoftDeleteAsync(entity.Id).ConfigureAwait(false);
                     if (deletedResult)
                         deleted++;
                 }
 
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 var result = new PowerBIReportSyncResultDto
                 {
@@ -175,11 +175,11 @@ namespace crm_api.Services
             var client = _httpClientFactory.CreateClient();
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
             var url = $"{apiBaseUrl.TrimEnd('/')}/v1.0/myorg/groups/{workspaceId}/reports";
-            var response = await client.GetAsync(url);
+            var response = await client.GetAsync(url).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
                 return null;
 
-            var json = await response.Content.ReadAsStringAsync();
+            var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             var payload = JsonSerializer.Deserialize<PowerBIReportListResponse>(json);
             if (payload?.Value == null)
                 return new List<PowerBIReportItem>();
@@ -210,11 +210,11 @@ namespace crm_api.Services
                 ["scope"] = config.Scope
             });
 
-            var response = await client.PostAsync(tokenUrl, content);
+            var response = await client.PostAsync(tokenUrl, content).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
                 return null;
 
-            var json = await response.Content.ReadAsStringAsync();
+            var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             using var doc = JsonDocument.Parse(json);
             if (doc.RootElement.TryGetProperty("access_token", out var tokenProp))
                 return tokenProp.GetString();
@@ -226,7 +226,7 @@ namespace crm_api.Services
             var dbConfig = await _unitOfWork.PowerBIConfigurations
                 .Query()
                 .AsNoTracking()
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync().ConfigureAwait(false);
 
             if (dbConfig != null)
             {
@@ -262,8 +262,8 @@ namespace crm_api.Services
                     ApiBaseUrl = _powerBi.ApiBaseUrl?.Trim(),
                     Scope = _powerBi.Scope?.Trim()
                 };
-                await _unitOfWork.PowerBIConfigurations.AddAsync(entity);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.PowerBIConfigurations.AddAsync(entity).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 var clientSecret = _configuration["PowerBi:ClientSecret"]
                     ?? _configuration["AzureAd:ClientSecret"]

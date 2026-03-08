@@ -46,11 +46,11 @@ namespace crm_api.Services
                 var sortBy = request.SortBy ?? nameof(PowerBIGroupReportDefinition.Id);
                 query = query.ApplySorting(sortBy, request.SortDirection);
 
-                var totalCount = await query.CountAsync();
+                var totalCount = await query.CountAsync().ConfigureAwait(false);
 
                 var items = await query
                     .ApplyPagination(request.PageNumber, request.PageSize)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 var dtos = items.Select(x => _mapper.Map<PowerBIGroupReportDefinitionGetDto>(x)).ToList();
 
@@ -79,7 +79,7 @@ namespace crm_api.Services
         {
             try
             {
-                var entity = await _unitOfWork.PowerBIGroupReportDefinitions.GetByIdAsync(id);
+                var entity = await _unitOfWork.PowerBIGroupReportDefinitions.GetByIdAsync(id).ConfigureAwait(false);
                 if (entity == null)
                 {
                     return ApiResponse<PowerBIGroupReportDefinitionGetDto>.ErrorResult(
@@ -96,7 +96,7 @@ namespace crm_api.Services
                     .Include(x => x.CreatedByUser)
                     .Include(x => x.UpdatedByUser)
                     .Include(x => x.DeletedByUser)
-                    .FirstOrDefaultAsync(x => x.Id == id);
+                    .FirstOrDefaultAsync(x => x.Id == id).ConfigureAwait(false);
 
                 var dto = _mapper.Map<PowerBIGroupReportDefinitionGetDto>(entityWithNav ?? entity);
 
@@ -119,8 +119,8 @@ namespace crm_api.Services
             {
                 var entity = _mapper.Map<PowerBIGroupReportDefinition>(dto);
 
-                await _unitOfWork.PowerBIGroupReportDefinitions.AddAsync(entity);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.PowerBIGroupReportDefinitions.AddAsync(entity).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 var createdEntity = await _unitOfWork.PowerBIGroupReportDefinitions
                     .Query()
@@ -130,7 +130,7 @@ namespace crm_api.Services
                     .Include(x => x.CreatedByUser)
                     .Include(x => x.UpdatedByUser)
                     .Include(x => x.DeletedByUser)
-                    .FirstOrDefaultAsync(x => x.Id == entity.Id);
+                    .FirstOrDefaultAsync(x => x.Id == entity.Id).ConfigureAwait(false);
 
                 var resultDto = _mapper.Map<PowerBIGroupReportDefinitionGetDto>(createdEntity ?? entity);
 
@@ -151,7 +151,7 @@ namespace crm_api.Services
         {
             try
             {
-                var entity = await _unitOfWork.PowerBIGroupReportDefinitions.GetByIdForUpdateAsync(id);
+                var entity = await _unitOfWork.PowerBIGroupReportDefinitions.GetByIdForUpdateAsync(id).ConfigureAwait(false);
                 if (entity == null)
                 {
                     return ApiResponse<PowerBIGroupReportDefinitionGetDto>.ErrorResult(
@@ -162,8 +162,8 @@ namespace crm_api.Services
 
                 _mapper.Map(dto, entity);
 
-                await _unitOfWork.PowerBIGroupReportDefinitions.UpdateAsync(entity);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.PowerBIGroupReportDefinitions.UpdateAsync(entity).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 var updatedEntity = await _unitOfWork.PowerBIGroupReportDefinitions
                     .Query()
@@ -173,7 +173,7 @@ namespace crm_api.Services
                     .Include(x => x.CreatedByUser)
                     .Include(x => x.UpdatedByUser)
                     .Include(x => x.DeletedByUser)
-                    .FirstOrDefaultAsync(x => x.Id == id);
+                    .FirstOrDefaultAsync(x => x.Id == id).ConfigureAwait(false);
 
                 var resultDto = _mapper.Map<PowerBIGroupReportDefinitionGetDto>(updatedEntity ?? entity);
 
@@ -194,7 +194,7 @@ namespace crm_api.Services
         {
             try
             {
-                var entity = await _unitOfWork.PowerBIGroupReportDefinitions.GetByIdAsync(id);
+                var entity = await _unitOfWork.PowerBIGroupReportDefinitions.GetByIdAsync(id).ConfigureAwait(false);
                 if (entity == null)
                 {
                     return ApiResponse<object>.ErrorResult(
@@ -203,8 +203,8 @@ namespace crm_api.Services
                         StatusCodes.Status404NotFound);
                 }
 
-                await _unitOfWork.PowerBIGroupReportDefinitions.SoftDeleteAsync(id);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.PowerBIGroupReportDefinitions.SoftDeleteAsync(id).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 return ApiResponse<object>.SuccessResult(
                     null,

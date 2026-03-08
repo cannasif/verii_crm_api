@@ -33,7 +33,7 @@ namespace crm_api.Services
                 var entity = await _unitOfWork.PowerBIConfigurations
                     .Query()
                     .AsNoTracking()
-                    .FirstOrDefaultAsync();
+                    .FirstOrDefaultAsync().ConfigureAwait(false);
 
                 if (entity == null)
                 {
@@ -63,7 +63,7 @@ namespace crm_api.Services
             {
                 var existing = await _unitOfWork.PowerBIConfigurations
                     .Query()
-                    .FirstOrDefaultAsync();
+                    .FirstOrDefaultAsync().ConfigureAwait(false);
                 if (existing != null)
                 {
                     return ApiResponse<PowerBIConfigurationGetDto>.ErrorResult(
@@ -73,10 +73,10 @@ namespace crm_api.Services
                 }
 
                 var entity = _mapper.Map<PowerBIConfiguration>(dto);
-                await _unitOfWork.PowerBIConfigurations.AddAsync(entity);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.PowerBIConfigurations.AddAsync(entity).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
-                var created = await _unitOfWork.PowerBIConfigurations.GetByIdAsync(entity.Id);
+                var created = await _unitOfWork.PowerBIConfigurations.GetByIdAsync(entity.Id).ConfigureAwait(false);
                 var resultDto = _mapper.Map<PowerBIConfigurationGetDto>(created!);
                 return ApiResponse<PowerBIConfigurationGetDto>.SuccessResult(
                     resultDto,
@@ -95,7 +95,7 @@ namespace crm_api.Services
         {
             try
             {
-                var entity = await _unitOfWork.PowerBIConfigurations.GetByIdForUpdateAsync(id);
+                var entity = await _unitOfWork.PowerBIConfigurations.GetByIdForUpdateAsync(id).ConfigureAwait(false);
                 if (entity == null)
                 {
                     return ApiResponse<PowerBIConfigurationGetDto>.ErrorResult(
@@ -105,10 +105,10 @@ namespace crm_api.Services
                 }
 
                 _mapper.Map(dto, entity);
-                await _unitOfWork.PowerBIConfigurations.UpdateAsync(entity);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.PowerBIConfigurations.UpdateAsync(entity).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
-                var updated = await _unitOfWork.PowerBIConfigurations.GetByIdAsync(id);
+                var updated = await _unitOfWork.PowerBIConfigurations.GetByIdAsync(id).ConfigureAwait(false);
                 var resultDto = _mapper.Map<PowerBIConfigurationGetDto>(updated!);
                 return ApiResponse<PowerBIConfigurationGetDto>.SuccessResult(
                     resultDto,
@@ -127,7 +127,7 @@ namespace crm_api.Services
         {
             try
             {
-                var entity = await _unitOfWork.PowerBIConfigurations.GetByIdAsync(id);
+                var entity = await _unitOfWork.PowerBIConfigurations.GetByIdAsync(id).ConfigureAwait(false);
                 if (entity == null)
                 {
                     return ApiResponse<object>.ErrorResult(
@@ -136,8 +136,8 @@ namespace crm_api.Services
                         StatusCodes.Status404NotFound);
                 }
 
-                await _unitOfWork.PowerBIConfigurations.SoftDeleteAsync(id);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.PowerBIConfigurations.SoftDeleteAsync(id).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
                 return ApiResponse<object>.SuccessResult(
                     null,
                     _localizationService.GetLocalizedString("PowerBIConfigurationService.Deleted"));

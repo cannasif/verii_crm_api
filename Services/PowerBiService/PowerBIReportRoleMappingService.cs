@@ -46,11 +46,11 @@ namespace crm_api.Services
                 var sortBy = request.SortBy ?? nameof(PowerBIReportRoleMapping.Id);
                 query = query.ApplySorting(sortBy, request.SortDirection);
 
-                var totalCount = await query.CountAsync();
+                var totalCount = await query.CountAsync().ConfigureAwait(false);
 
                 var items = await query
                     .ApplyPagination(request.PageNumber, request.PageSize)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 var dtos = items.Select(x => _mapper.Map<PowerBIReportRoleMappingGetDto>(x)).ToList();
 
@@ -79,7 +79,7 @@ namespace crm_api.Services
         {
             try
             {
-                var entity = await _unitOfWork.PowerBIReportRoleMappings.GetByIdAsync(id);
+                var entity = await _unitOfWork.PowerBIReportRoleMappings.GetByIdAsync(id).ConfigureAwait(false);
                 if (entity == null)
                 {
                     return ApiResponse<PowerBIReportRoleMappingGetDto>.ErrorResult(
@@ -96,7 +96,7 @@ namespace crm_api.Services
                     .Include(x => x.CreatedByUser)
                     .Include(x => x.UpdatedByUser)
                     .Include(x => x.DeletedByUser)
-                    .FirstOrDefaultAsync(x => x.Id == id);
+                    .FirstOrDefaultAsync(x => x.Id == id).ConfigureAwait(false);
 
                 var dto = _mapper.Map<PowerBIReportRoleMappingGetDto>(entityWithNav ?? entity);
 
@@ -120,7 +120,7 @@ namespace crm_api.Services
                 var exists = await _unitOfWork.PowerBIReportRoleMappings
                     .Query()
                     .AsNoTracking()
-                    .AnyAsync(x => x.PowerBIReportDefinitionId == dto.PowerBIReportDefinitionId && x.RoleId == dto.RoleId);
+                    .AnyAsync(x => x.PowerBIReportDefinitionId == dto.PowerBIReportDefinitionId && x.RoleId == dto.RoleId).ConfigureAwait(false);
                 if (exists)
                 {
                     return ApiResponse<PowerBIReportRoleMappingGetDto>.ErrorResult(
@@ -131,8 +131,8 @@ namespace crm_api.Services
 
                 var entity = _mapper.Map<PowerBIReportRoleMapping>(dto);
 
-                await _unitOfWork.PowerBIReportRoleMappings.AddAsync(entity);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.PowerBIReportRoleMappings.AddAsync(entity).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 var created = await _unitOfWork.PowerBIReportRoleMappings
                     .Query()
@@ -141,7 +141,7 @@ namespace crm_api.Services
                     .Include(x => x.Role)
                     .Include(x => x.CreatedByUser)
                     .Include(x => x.UpdatedByUser)
-                    .FirstOrDefaultAsync(x => x.Id == entity.Id);
+                    .FirstOrDefaultAsync(x => x.Id == entity.Id).ConfigureAwait(false);
 
                 var resultDto = _mapper.Map<PowerBIReportRoleMappingGetDto>(created ?? entity);
 
@@ -162,7 +162,7 @@ namespace crm_api.Services
         {
             try
             {
-                var entity = await _unitOfWork.PowerBIReportRoleMappings.GetByIdForUpdateAsync(id);
+                var entity = await _unitOfWork.PowerBIReportRoleMappings.GetByIdForUpdateAsync(id).ConfigureAwait(false);
                 if (entity == null)
                 {
                     return ApiResponse<PowerBIReportRoleMappingGetDto>.ErrorResult(
@@ -176,7 +176,7 @@ namespace crm_api.Services
                     .AsNoTracking()
                     .AnyAsync(x => x.Id != id &&
                                    x.PowerBIReportDefinitionId == dto.PowerBIReportDefinitionId &&
-                                   x.RoleId == dto.RoleId);
+                                   x.RoleId == dto.RoleId).ConfigureAwait(false);
                 if (duplicate)
                 {
                     return ApiResponse<PowerBIReportRoleMappingGetDto>.ErrorResult(
@@ -186,8 +186,8 @@ namespace crm_api.Services
                 }
 
                 _mapper.Map(dto, entity);
-                await _unitOfWork.PowerBIReportRoleMappings.UpdateAsync(entity);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.PowerBIReportRoleMappings.UpdateAsync(entity).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 var updated = await _unitOfWork.PowerBIReportRoleMappings
                     .Query()
@@ -196,7 +196,7 @@ namespace crm_api.Services
                     .Include(x => x.Role)
                     .Include(x => x.CreatedByUser)
                     .Include(x => x.UpdatedByUser)
-                    .FirstOrDefaultAsync(x => x.Id == id);
+                    .FirstOrDefaultAsync(x => x.Id == id).ConfigureAwait(false);
 
                 var resultDto = _mapper.Map<PowerBIReportRoleMappingGetDto>(updated ?? entity);
 
@@ -217,7 +217,7 @@ namespace crm_api.Services
         {
             try
             {
-                var entity = await _unitOfWork.PowerBIReportRoleMappings.GetByIdAsync(id);
+                var entity = await _unitOfWork.PowerBIReportRoleMappings.GetByIdAsync(id).ConfigureAwait(false);
                 if (entity == null)
                 {
                     return ApiResponse<bool>.ErrorResult(
@@ -226,8 +226,8 @@ namespace crm_api.Services
                         StatusCodes.Status404NotFound);
                 }
 
-                await _unitOfWork.PowerBIReportRoleMappings.SoftDeleteAsync(id);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.PowerBIReportRoleMappings.SoftDeleteAsync(id).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 return ApiResponse<bool>.SuccessResult(
                     true,
