@@ -224,19 +224,19 @@ namespace crm_api.Services
                     .Where(d => d.RepresentativeId == userId && !d.IsDeleted && (d.Status == null || d.Status != ApprovalStatus.Closed))
                     .Select(d => d.OfferDate ?? d.CreatedDate)
                     .Where(d => d >= startMonth && d < endExclusive)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 var quotationDates = await _unitOfWork.Quotations.Query(tracking: false)
                     .Where(q => q.RepresentativeId == userId && !q.IsDeleted && (q.Status == null || q.Status != ApprovalStatus.Closed))
                     .Select(q => q.OfferDate ?? q.CreatedDate)
                     .Where(d => d >= startMonth && d < endExclusive)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 var orderDates = await _unitOfWork.Orders.Query(tracking: false)
                     .Where(o => o.RepresentativeId == userId && !o.IsDeleted && (o.Status == null || o.Status != ApprovalStatus.Closed))
                     .Select(o => o.OfferDate ?? o.CreatedDate)
                     .Where(d => d >= startMonth && d < endExclusive)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 var demandByMonth = demandDates
                     .GroupBy(d => d.ToString("yyyy-MM"))

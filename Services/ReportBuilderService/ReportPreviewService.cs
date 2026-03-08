@@ -208,7 +208,7 @@ namespace crm_api.Services.ReportBuilderService
                             IsNullable = true
                         });
                     }
-                    while (await reader.ReadAsync())
+                    while (await reader.ReadAsync().ConfigureAwait(false))
                     {
                         var row = new Dictionary<string, object?>();
                         for (var i = 0; i < reader.FieldCount; i++)
