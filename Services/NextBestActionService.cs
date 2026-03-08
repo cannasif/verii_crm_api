@@ -24,27 +24,27 @@ namespace crm_api.Services
                 .Where(x => x.PotentialCustomerId == customerId && !x.IsDeleted)
                 .Select(x => (DateTime?)x.StartDateTime)
                 .DefaultIfEmpty()
-                .MaxAsync();
+                .MaxAsync().ConfigureAwait(false);
 
             var openQuotationCount = await _unitOfWork.Quotations.Query(tracking: false)
                 .CountAsync(x => x.PotentialCustomerId == customerId &&
                                  !x.IsDeleted &&
                                  (x.Status == null || x.Status != ApprovalStatus.Closed) &&
                                  x.Status != ApprovalStatus.Approved &&
-                                 x.Status != ApprovalStatus.Rejected);
+                                 x.Status != ApprovalStatus.Rejected).ConfigureAwait(false);
 
             var openDemandCount = await _unitOfWork.Demands.Query(tracking: false)
                 .CountAsync(x => x.PotentialCustomerId == customerId &&
                                  !x.IsDeleted &&
                                  (x.Status == null || x.Status != ApprovalStatus.Closed) &&
                                  x.Status != ApprovalStatus.Approved &&
-                                 x.Status != ApprovalStatus.Rejected);
+                                 x.Status != ApprovalStatus.Rejected).ConfigureAwait(false);
 
             var lastOrderDate = await _unitOfWork.Orders.Query(tracking: false)
                 .Where(x => x.PotentialCustomerId == customerId && !x.IsDeleted && (x.Status == null || x.Status != ApprovalStatus.Closed))
                 .Select(x => (DateTime?)(x.OfferDate ?? x.CreatedDate))
                 .DefaultIfEmpty()
-                .MaxAsync();
+                .MaxAsync().ConfigureAwait(false);
 
             var inactivityDays = lastActivityDate.HasValue ? (now.Date - lastActivityDate.Value.Date).Days : int.MaxValue;
             var daysSinceLastOrder = lastOrderDate.HasValue ? (now.Date - lastOrderDate.Value.Date).Days : int.MaxValue;
@@ -145,22 +145,22 @@ namespace crm_api.Services
                                  !x.IsDeleted &&
                                  (x.Status == null || x.Status != ApprovalStatus.Closed) &&
                                  x.Status != ApprovalStatus.Approved &&
-                                 x.Status != ApprovalStatus.Rejected);
+                                 x.Status != ApprovalStatus.Rejected).ConfigureAwait(false);
 
             var quotationCount90 = await _unitOfWork.Quotations.Query(tracking: false)
                 .CountAsync(x => x.RepresentativeId == userId &&
                                  !x.IsDeleted &&
                                  (x.Status == null || x.Status != ApprovalStatus.Closed) &&
-                                 (x.OfferDate ?? x.CreatedDate) >= since90);
+                                 (x.OfferDate ?? x.CreatedDate) >= since90).ConfigureAwait(false);
 
             var wonQuotationCount90 = await _unitOfWork.Quotations.Query(tracking: false)
                 .CountAsync(x => x.RepresentativeId == userId &&
                                  !x.IsDeleted &&
                                  x.Status == ApprovalStatus.Approved &&
-                                 (x.OfferDate ?? x.CreatedDate) >= since90);
+                                 (x.OfferDate ?? x.CreatedDate) >= since90).ConfigureAwait(false);
 
             var activityCount7 = await _unitOfWork.Activities.Query(tracking: false)
-                .CountAsync(x => x.AssignedUserId == userId && !x.IsDeleted && x.StartDateTime >= since7);
+                .CountAsync(x => x.AssignedUserId == userId && !x.IsDeleted && x.StartDateTime >= since7).ConfigureAwait(false);
 
             if (openQuotationCount >= 15)
             {

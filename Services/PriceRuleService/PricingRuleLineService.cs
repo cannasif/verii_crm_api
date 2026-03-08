@@ -47,11 +47,11 @@ namespace crm_api.Services
                 var sortBy = request.SortBy ?? nameof(PricingRuleLine.Id);
                 query = query.ApplySorting(sortBy, request.SortDirection);
 
-                var totalCount = await query.CountAsync();
+                var totalCount = await query.CountAsync().ConfigureAwait(false);
 
                 var items = await query
                     .ApplyPagination(request.PageNumber, request.PageSize)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 var dtos = items.Select(x => _mapper.Map<PricingRuleLineGetDto>(x)).ToList();
 
@@ -84,7 +84,7 @@ namespace crm_api.Services
                     .Include(l => l.CreatedByUser)
                     .Include(l => l.UpdatedByUser)
                     .Include(l => l.DeletedByUser)
-                    .FirstOrDefaultAsync(l => l.Id == id && !l.IsDeleted);
+                    .FirstOrDefaultAsync(l => l.Id == id && !l.IsDeleted).ConfigureAwait(false);
 
                 if (line == null)
                 {
@@ -113,7 +113,7 @@ namespace crm_api.Services
                 var line = _mapper.Map<PricingRuleLine>(createDto);
                 var lineCheck = await _unitOfWork.PricingRuleLines.Query(tracking: false, ignoreQueryFilters: true)
                                     .IgnoreQueryFilters()
-                                    .FirstOrDefaultAsync(l => l.PricingRuleHeaderId == createDto.PricingRuleHeaderId && l.StokCode == createDto.StokCode);
+                                    .FirstOrDefaultAsync(l => l.PricingRuleHeaderId == createDto.PricingRuleHeaderId && l.StokCode == createDto.StokCode).ConfigureAwait(false);
                 if (lineCheck != null)
                 {
                     lineCheck.IsDeleted = false;
@@ -129,12 +129,12 @@ namespace crm_api.Services
                     lineCheck.DiscountAmount3 = createDto.DiscountAmount3;
                     lineCheck.DeletedBy = null;
                     lineCheck.DeletedDate = null;
-                    await _unitOfWork.PricingRuleLines.UpdateAsync(lineCheck);
+                    await _unitOfWork.PricingRuleLines.UpdateAsync(lineCheck).ConfigureAwait(false);
                     line = lineCheck;
                 }else{
-                await _unitOfWork.PricingRuleLines.AddAsync(line);
+                await _unitOfWork.PricingRuleLines.AddAsync(line).ConfigureAwait(false);
                 }
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 // Reload with navigation properties
                 var lineWithNav = await _unitOfWork.PricingRuleLines
@@ -143,7 +143,7 @@ namespace crm_api.Services
                     .Include(l => l.CreatedByUser)
                     .Include(l => l.UpdatedByUser)
                     .Include(l => l.DeletedByUser)
-                    .FirstOrDefaultAsync(l => l.Id == line.Id && !l.IsDeleted);
+                    .FirstOrDefaultAsync(l => l.Id == line.Id && !l.IsDeleted).ConfigureAwait(false);
 
                 if (lineWithNav == null)
                 {
@@ -169,7 +169,7 @@ namespace crm_api.Services
         {
             try
             {
-                var line = await _unitOfWork.PricingRuleLines.GetByIdForUpdateAsync(id);
+                var line = await _unitOfWork.PricingRuleLines.GetByIdForUpdateAsync(id).ConfigureAwait(false);
                 if (line == null)
                 {
                     return ApiResponse<PricingRuleLineGetDto>.ErrorResult(
@@ -179,8 +179,8 @@ namespace crm_api.Services
                 }
 
                 _mapper.Map(updateDto, line);
-                await _unitOfWork.PricingRuleLines.UpdateAsync(line);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.PricingRuleLines.UpdateAsync(line).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 // Reload with navigation properties
                 var lineWithNav = await _unitOfWork.PricingRuleLines
@@ -189,7 +189,7 @@ namespace crm_api.Services
                     .Include(l => l.CreatedByUser)
                     .Include(l => l.UpdatedByUser)
                     .Include(l => l.DeletedByUser)
-                    .FirstOrDefaultAsync(l => l.Id == line.Id && !l.IsDeleted);
+                    .FirstOrDefaultAsync(l => l.Id == line.Id && !l.IsDeleted).ConfigureAwait(false);
 
                 if (lineWithNav == null)
                 {
@@ -215,7 +215,7 @@ namespace crm_api.Services
         {
             try
             {
-                var line = await _unitOfWork.PricingRuleLines.GetByIdAsync(id);
+                var line = await _unitOfWork.PricingRuleLines.GetByIdAsync(id).ConfigureAwait(false);
                 if (line == null)
                 {
                     return ApiResponse<object>.ErrorResult(
@@ -224,8 +224,8 @@ namespace crm_api.Services
                         StatusCodes.Status404NotFound);
                 }
 
-                await _unitOfWork.PricingRuleLines.SoftDeleteAsync(id);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.PricingRuleLines.SoftDeleteAsync(id).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 return ApiResponse<object>.SuccessResult(null, _localizationService.GetLocalizedString("PricingRuleLineService.LineDeleted"));
             }
@@ -249,7 +249,7 @@ namespace crm_api.Services
                     .Include(l => l.CreatedByUser)
                     .Include(l => l.UpdatedByUser)
                     .Include(l => l.DeletedByUser)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 var dtos = lines.Select(x => _mapper.Map<PricingRuleLineGetDto>(x)).ToList();
                 return ApiResponse<List<PricingRuleLineGetDto>>.SuccessResult(dtos, _localizationService.GetLocalizedString("PricingRuleLineService.LinesRetrieved"));

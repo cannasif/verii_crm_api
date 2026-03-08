@@ -48,11 +48,11 @@ namespace crm_api.Services
                 var sortBy = request.SortBy ?? nameof(PricingRuleSalesman.Id);
                 query = query.ApplySorting(sortBy, request.SortDirection);
 
-                var totalCount = await query.CountAsync();
+                var totalCount = await query.CountAsync().ConfigureAwait(false);
 
                 var items = await query
                     .ApplyPagination(request.PageNumber, request.PageSize)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 var dtos = items.Select(x => _mapper.Map<PricingRuleSalesmanGetDto>(x)).ToList();
 
@@ -86,7 +86,7 @@ namespace crm_api.Services
                     .Include(s => s.CreatedByUser)
                     .Include(s => s.UpdatedByUser)
                     .Include(s => s.DeletedByUser)
-                    .FirstOrDefaultAsync(s => s.Id == id && !s.IsDeleted);
+                    .FirstOrDefaultAsync(s => s.Id == id && !s.IsDeleted).ConfigureAwait(false);
 
                 if (salesman == null)
                 {
@@ -118,18 +118,18 @@ namespace crm_api.Services
                                     .IgnoreQueryFilters()
                                     .FirstOrDefaultAsync(s =>
                                         s.PricingRuleHeaderId == createDto.PricingRuleHeaderId &&
-                                        s.SalesmanId == createDto.SalesmanId);
+                                        s.SalesmanId == createDto.SalesmanId).ConfigureAwait(false);
                 if (salesmanCheck != null)
                 {
                     salesmanCheck.IsDeleted = false;
                     salesmanCheck.DeletedBy = null;
                     salesmanCheck.DeletedDate = null;
-                    await _unitOfWork.PricingRuleSalesmen.UpdateAsync(salesmanCheck);
+                    await _unitOfWork.PricingRuleSalesmen.UpdateAsync(salesmanCheck).ConfigureAwait(false);
                     salesman = salesmanCheck;
                 }else{
-                await _unitOfWork.PricingRuleSalesmen.AddAsync(salesman);
+                await _unitOfWork.PricingRuleSalesmen.AddAsync(salesman).ConfigureAwait(false);
                 }
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 // Reload with navigation properties
                 var salesmanWithNav = await _unitOfWork.PricingRuleSalesmen
@@ -139,7 +139,7 @@ namespace crm_api.Services
                     .Include(s => s.CreatedByUser)
                     .Include(s => s.UpdatedByUser)
                     .Include(s => s.DeletedByUser)
-                    .FirstOrDefaultAsync(s => s.Id == salesman.Id && !s.IsDeleted);
+                    .FirstOrDefaultAsync(s => s.Id == salesman.Id && !s.IsDeleted).ConfigureAwait(false);
 
                 if (salesmanWithNav == null)
                 {
@@ -165,7 +165,7 @@ namespace crm_api.Services
         {
             try
             {
-                var salesman = await _unitOfWork.PricingRuleSalesmen.GetByIdForUpdateAsync(id);
+                var salesman = await _unitOfWork.PricingRuleSalesmen.GetByIdForUpdateAsync(id).ConfigureAwait(false);
                 if (salesman == null)
                 {
                     return ApiResponse<PricingRuleSalesmanGetDto>.ErrorResult(
@@ -175,8 +175,8 @@ namespace crm_api.Services
                 }
 
                 _mapper.Map(updateDto, salesman);
-                await _unitOfWork.PricingRuleSalesmen.UpdateAsync(salesman);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.PricingRuleSalesmen.UpdateAsync(salesman).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 // Reload with navigation properties
                 var salesmanWithNav = await _unitOfWork.PricingRuleSalesmen
@@ -186,7 +186,7 @@ namespace crm_api.Services
                     .Include(s => s.CreatedByUser)
                     .Include(s => s.UpdatedByUser)
                     .Include(s => s.DeletedByUser)
-                    .FirstOrDefaultAsync(s => s.Id == salesman.Id && !s.IsDeleted);
+                    .FirstOrDefaultAsync(s => s.Id == salesman.Id && !s.IsDeleted).ConfigureAwait(false);
 
                 if (salesmanWithNav == null)
                 {
@@ -212,7 +212,7 @@ namespace crm_api.Services
         {
             try
             {
-                var salesman = await _unitOfWork.PricingRuleSalesmen.GetByIdAsync(id);
+                var salesman = await _unitOfWork.PricingRuleSalesmen.GetByIdAsync(id).ConfigureAwait(false);
                 if (salesman == null)
                 {
                     return ApiResponse<object>.ErrorResult(
@@ -221,8 +221,8 @@ namespace crm_api.Services
                         StatusCodes.Status404NotFound);
                 }
 
-                await _unitOfWork.PricingRuleSalesmen.SoftDeleteAsync(id);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.PricingRuleSalesmen.SoftDeleteAsync(id).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 return ApiResponse<object>.SuccessResult(null, _localizationService.GetLocalizedString("PricingRuleSalesmanService.SalesmanDeleted"));
             }
@@ -247,7 +247,7 @@ namespace crm_api.Services
                     .Include(s => s.CreatedByUser)
                     .Include(s => s.UpdatedByUser)
                     .Include(s => s.DeletedByUser)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 var dtos = salesmen.Select(x => _mapper.Map<PricingRuleSalesmanGetDto>(x)).ToList();
                 return ApiResponse<List<PricingRuleSalesmanGetDto>>.SuccessResult(dtos, _localizationService.GetLocalizedString("PricingRuleSalesmanService.SalesmenRetrieved"));

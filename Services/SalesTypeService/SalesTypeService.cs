@@ -38,10 +38,10 @@ namespace crm_api.Services
                     .ApplyFilters(request.Filters, request.FilterLogic)
                     .ApplySorting(request.SortBy ?? nameof(SalesTypeDefinition.Id), request.SortDirection);
 
-                var totalCount = await query.CountAsync();
+                var totalCount = await query.CountAsync().ConfigureAwait(false);
                 var items = await query
                     .ApplyPagination(request.PageNumber, request.PageSize)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 var dtos = items.Select(x => _mapper.Map<SalesTypeGetDto>(x)).ToList();
 
@@ -70,7 +70,7 @@ namespace crm_api.Services
         {
             try
             {
-                var entity = await _unitOfWork.SalesTypeDefinitions.GetByIdAsync(id);
+                var entity = await _unitOfWork.SalesTypeDefinitions.GetByIdAsync(id).ConfigureAwait(false);
                 if (entity == null || entity.IsDeleted)
                 {
                     return ApiResponse<SalesTypeGetDto>.ErrorResult(
@@ -84,7 +84,7 @@ namespace crm_api.Services
                     .Include(x => x.CreatedByUser)
                     .Include(x => x.UpdatedByUser)
                     .Include(x => x.DeletedByUser)
-                    .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
+                    .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted).ConfigureAwait(false);
 
                 return ApiResponse<SalesTypeGetDto>.SuccessResult(
                     _mapper.Map<SalesTypeGetDto>(withNav ?? entity),
@@ -122,7 +122,7 @@ namespace crm_api.Services
                 }
 
                 var exists = await _unitOfWork.SalesTypeDefinitions.Query()
-                    .AnyAsync(x => !x.IsDeleted && x.SalesType == normalizedSalesType && x.Name == normalizedName);
+                    .AnyAsync(x => !x.IsDeleted && x.SalesType == normalizedSalesType && x.Name == normalizedName).ConfigureAwait(false);
                 if (exists)
                 {
                     return ApiResponse<SalesTypeGetDto>.ErrorResult(
@@ -136,15 +136,15 @@ namespace crm_api.Services
                 entity.Name = normalizedName;
                 entity.CreatedDate = DateTime.UtcNow;
 
-                await _unitOfWork.SalesTypeDefinitions.AddAsync(entity);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.SalesTypeDefinitions.AddAsync(entity).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 var created = await _unitOfWork.SalesTypeDefinitions.Query()
                     .AsNoTracking()
                     .Include(x => x.CreatedByUser)
                     .Include(x => x.UpdatedByUser)
                     .Include(x => x.DeletedByUser)
-                    .FirstOrDefaultAsync(x => x.Id == entity.Id && !x.IsDeleted);
+                    .FirstOrDefaultAsync(x => x.Id == entity.Id && !x.IsDeleted).ConfigureAwait(false);
 
                 return ApiResponse<SalesTypeGetDto>.SuccessResult(
                     _mapper.Map<SalesTypeGetDto>(created ?? entity),
@@ -163,7 +163,7 @@ namespace crm_api.Services
         {
             try
             {
-                var entity = await _unitOfWork.SalesTypeDefinitions.GetByIdAsync(id);
+                var entity = await _unitOfWork.SalesTypeDefinitions.GetByIdAsync(id).ConfigureAwait(false);
                 if (entity == null || entity.IsDeleted)
                 {
                     return ApiResponse<SalesTypeGetDto>.ErrorResult(
@@ -191,7 +191,7 @@ namespace crm_api.Services
                 }
 
                 var exists = await _unitOfWork.SalesTypeDefinitions.Query()
-                    .AnyAsync(x => !x.IsDeleted && x.Id != id && x.SalesType == normalizedSalesType && x.Name == normalizedName);
+                    .AnyAsync(x => !x.IsDeleted && x.Id != id && x.SalesType == normalizedSalesType && x.Name == normalizedName).ConfigureAwait(false);
                 if (exists)
                 {
                     return ApiResponse<SalesTypeGetDto>.ErrorResult(
@@ -204,15 +204,15 @@ namespace crm_api.Services
                 entity.Name = normalizedName;
                 entity.UpdatedDate = DateTime.UtcNow;
 
-                await _unitOfWork.SalesTypeDefinitions.UpdateAsync(entity);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.SalesTypeDefinitions.UpdateAsync(entity).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 var updated = await _unitOfWork.SalesTypeDefinitions.Query()
                     .AsNoTracking()
                     .Include(x => x.CreatedByUser)
                     .Include(x => x.UpdatedByUser)
                     .Include(x => x.DeletedByUser)
-                    .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
+                    .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted).ConfigureAwait(false);
 
                 return ApiResponse<SalesTypeGetDto>.SuccessResult(
                     _mapper.Map<SalesTypeGetDto>(updated ?? entity),
@@ -231,7 +231,7 @@ namespace crm_api.Services
         {
             try
             {
-                var entity = await _unitOfWork.SalesTypeDefinitions.GetByIdAsync(id);
+                var entity = await _unitOfWork.SalesTypeDefinitions.GetByIdAsync(id).ConfigureAwait(false);
                 if (entity == null || entity.IsDeleted)
                 {
                     return ApiResponse<object>.ErrorResult(
@@ -240,8 +240,8 @@ namespace crm_api.Services
                         StatusCodes.Status404NotFound);
                 }
 
-                await _unitOfWork.SalesTypeDefinitions.SoftDeleteAsync(id);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.SalesTypeDefinitions.SoftDeleteAsync(id).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 return ApiResponse<object>.SuccessResult(
                     null,

@@ -63,7 +63,7 @@ namespace crm_api.Services
                         string.IsNullOrWhiteSpace(cariKodu) ? DBNull.Value : cariKodu,
                         string.IsNullOrWhiteSpace(subeKodu) ? DBNull.Value : subeKodu)
                     .AsNoTracking()
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 var mappedResult = _mapper.Map<List<CariDto>>(result);
                 return ApiResponse<List<CariDto>>.SuccessResult(mappedResult, _localizationService.GetLocalizedString("ErpService.CariRecordsRetrieved"));
@@ -100,7 +100,7 @@ namespace crm_api.Services
                         string.IsNullOrWhiteSpace(cariParam) ? DBNull.Value : cariParam,
                         string.IsNullOrWhiteSpace(subeCsv) ? DBNull.Value : subeCsv)
                     .AsNoTracking()
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 var mappedResult = _mapper.Map<List<CariDto>>(result);
                 return ApiResponse<List<CariDto>>.SuccessResult(mappedResult, _localizationService.GetLocalizedString("ErpService.CariRecordsRetrieved"));
@@ -128,7 +128,7 @@ namespace crm_api.Services
                         string.IsNullOrWhiteSpace(stokKodu) ? DBNull.Value : stokKodu,
                         string.IsNullOrWhiteSpace(subeKodu) ? DBNull.Value : subeKodu)
                     .AsNoTracking()
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
                 var mappedResult = _mapper.Map<List<StokFunctionDto>>(result);
 
                 return ApiResponse<List<StokFunctionDto>>.SuccessResult(mappedResult, _localizationService.GetLocalizedString("ErpService.StokRecordsRetrieved"));
@@ -167,7 +167,7 @@ namespace crm_api.Services
                         "SELECT * FROM dbo.RII_FN_BRANCHES({0})",
                         branchNo.HasValue ? branchNo.Value : DBNull.Value)
                     .AsNoTracking()
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 _logger.LogInformation("ERP branch list retrieved successfully. Count: {Count}", rows.Count);
 
@@ -200,7 +200,7 @@ namespace crm_api.Services
                 var result = await _cmsContext.Set<RII_FN_KUR>()
                 .FromSqlRaw("SELECT * FROM dbo.RII_FN_KUR({0}, {1})", resultDate, fiyatTipi)
                 .AsNoTracking()
-                .ToListAsync();
+                .ToListAsync().ConfigureAwait(false);
                 var mappedResult = _mapper.Map<List<KurDto>>(result);
                 return ApiResponse<List<KurDto>>.SuccessResult(mappedResult, _localizationService.GetLocalizedString("ErpService.ExchangeRateRecordsRetrieved"));
             }
@@ -220,7 +220,7 @@ namespace crm_api.Services
                 var result = await _cmsContext.Set<RII_FN_2SHIPPING>()
                 .FromSqlRaw("SELECT * FROM dbo.RII_FN_2SHIPPING({0})", customerCode)
                 .AsNoTracking()
-                .ToListAsync();
+                .ToListAsync().ConfigureAwait(false);
                 var mappedResult = _mapper.Map<List<ErpShippingAddressDto>>(result);
                 return ApiResponse<List<ErpShippingAddressDto>>.SuccessResult(mappedResult, _localizationService.GetLocalizedString("ErpService.ExchangeRateRecordsRetrieved"));
             }
@@ -245,7 +245,7 @@ namespace crm_api.Services
                     string.IsNullOrWhiteSpace(grupKodu) ? DBNull.Value : grupKodu,
                     string.IsNullOrWhiteSpace(subeKodu) ? DBNull.Value : subeKodu)
                 .AsNoTracking()
-                .ToListAsync();
+                .ToListAsync().ConfigureAwait(false);
                 var mappedResult = _mapper.Map<List<StokGroupDto>>(result);
 
                 return ApiResponse<List<StokGroupDto>>.SuccessResult(mappedResult, _localizationService.GetLocalizedString("ErpService.StokGroupRecordsRetrieved"));
@@ -266,7 +266,7 @@ namespace crm_api.Services
                 var result = await _erpContext.Set<RII_FN_PROJECTCODE>()
                     .FromSqlRaw("SELECT * FROM dbo.RII_FN_PROJECTCODE()")
                     .AsNoTracking()
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
                 var mappedResult = _mapper.Map<List<ProjeDto>>(result);
                 return ApiResponse<List<ProjeDto>>.SuccessResult(mappedResult, _localizationService.GetLocalizedString("ErpService.ProjeRecordsRetrieved"));
             }
@@ -285,7 +285,7 @@ namespace crm_api.Services
             try
             {
                 // ERP veritabanı bağlantısını test et
-                await _erpContext.Database.CanConnectAsync();
+                await _erpContext.Database.CanConnectAsync().ConfigureAwait(false);
 
                 return ApiResponse<object>.SuccessResult(new { Status = "Healthy", Timestamp = DateTime.UtcNow }, _localizationService.GetLocalizedString("ErpService.ErpConnectionSuccessful"));
             }

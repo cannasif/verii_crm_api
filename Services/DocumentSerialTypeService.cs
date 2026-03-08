@@ -48,11 +48,11 @@ namespace crm_api.Services
                 var sortBy = request.SortBy ?? nameof(DocumentSerialType.Id);
                 query = query.ApplySorting(sortBy, request.SortDirection);
 
-                var totalCount = await query.CountAsync();
+                var totalCount = await query.CountAsync().ConfigureAwait(false);
 
                 var items = await query
                     .ApplyPagination(request.PageNumber, request.PageSize)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 var dtos = items.Select(x => _mapper.Map<DocumentSerialTypeGetDto>(x)).ToList();
 
@@ -86,7 +86,7 @@ namespace crm_api.Services
                     .Include(d => d.CreatedByUser)
                     .Include(d => d.UpdatedByUser)
                     .Include(d => d.DeletedByUser)
-                    .FirstOrDefaultAsync(d => d.Id == id && !d.IsDeleted);
+                    .FirstOrDefaultAsync(d => d.Id == id && !d.IsDeleted).ConfigureAwait(false);
 
                 if (documentSerialType == null)
                 {
@@ -113,8 +113,8 @@ namespace crm_api.Services
             try
             {
                 var documentSerialType = _mapper.Map<DocumentSerialType>(createDto);
-                await _unitOfWork.DocumentSerialTypes.AddAsync(documentSerialType);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.DocumentSerialTypes.AddAsync(documentSerialType).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 // Reload with navigation properties
                 var documentSerialTypeWithNav = await _unitOfWork.DocumentSerialTypes
@@ -124,7 +124,7 @@ namespace crm_api.Services
                     .Include(d => d.CreatedByUser)
                     .Include(d => d.UpdatedByUser)
                     .Include(d => d.DeletedByUser)
-                    .FirstOrDefaultAsync(d => d.Id == documentSerialType.Id && !d.IsDeleted);
+                    .FirstOrDefaultAsync(d => d.Id == documentSerialType.Id && !d.IsDeleted).ConfigureAwait(false);
 
                 if (documentSerialTypeWithNav == null)
                 {
@@ -150,7 +150,7 @@ namespace crm_api.Services
         {
             try
             {
-                var documentSerialType = await _unitOfWork.DocumentSerialTypes.GetByIdForUpdateAsync(id);
+                var documentSerialType = await _unitOfWork.DocumentSerialTypes.GetByIdForUpdateAsync(id).ConfigureAwait(false);
                 if (documentSerialType == null)
                 {
                     return ApiResponse<DocumentSerialTypeGetDto>.ErrorResult(
@@ -160,8 +160,8 @@ namespace crm_api.Services
                 }
 
                 _mapper.Map(updateDto, documentSerialType);
-                await _unitOfWork.DocumentSerialTypes.UpdateAsync(documentSerialType);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.DocumentSerialTypes.UpdateAsync(documentSerialType).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 // Reload with navigation properties
                 var documentSerialTypeWithNav = await _unitOfWork.DocumentSerialTypes
@@ -171,7 +171,7 @@ namespace crm_api.Services
                     .Include(d => d.CreatedByUser)
                     .Include(d => d.UpdatedByUser)
                     .Include(d => d.DeletedByUser)
-                    .FirstOrDefaultAsync(d => d.Id == documentSerialType.Id && !d.IsDeleted);
+                    .FirstOrDefaultAsync(d => d.Id == documentSerialType.Id && !d.IsDeleted).ConfigureAwait(false);
 
                 if (documentSerialTypeWithNav == null)
                 {
@@ -197,7 +197,7 @@ namespace crm_api.Services
         {
             try
             {
-                var documentSerialType = await _unitOfWork.DocumentSerialTypes.GetByIdAsync(id);
+                var documentSerialType = await _unitOfWork.DocumentSerialTypes.GetByIdAsync(id).ConfigureAwait(false);
                 if (documentSerialType == null)
                 {
                     return ApiResponse<object>.ErrorResult(
@@ -206,8 +206,8 @@ namespace crm_api.Services
                         StatusCodes.Status404NotFound);
                 }
 
-                await _unitOfWork.DocumentSerialTypes.SoftDeleteAsync(id);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.DocumentSerialTypes.SoftDeleteAsync(id).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 return ApiResponse<object>.SuccessResult(null, _localizationService.GetLocalizedString("DocumentSerialTypeService.TypeDeleted"));
             }
@@ -229,27 +229,27 @@ namespace crm_api.Services
 
                 List<DocumentSerialType> documentSerialTypes = await documentSerialTypeBaseQuery
                     .Where(x => x.CustomerTypeId == customerTypeId && x.SalesRepId == salesRepId)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 if (!documentSerialTypes.Any())
                 {
                     documentSerialTypes = await documentSerialTypeBaseQuery
                         .Where(x => x.CustomerTypeId == customerTypeId && x.SalesRepId == null)
-                        .ToListAsync();
+                        .ToListAsync().ConfigureAwait(false);
                 }
 
                 if (!documentSerialTypes.Any())
                 {
                     documentSerialTypes = await documentSerialTypeBaseQuery
                         .Where(x => x.CustomerTypeId == null && x.SalesRepId == salesRepId)
-                        .ToListAsync();
+                        .ToListAsync().ConfigureAwait(false);
                 }
 
                 if (!documentSerialTypes.Any())
                 {
                     documentSerialTypes = await documentSerialTypeBaseQuery
                         .Where(x => x.CustomerTypeId == null && x.SalesRepId == null)
-                        .ToListAsync();
+                        .ToListAsync().ConfigureAwait(false);
                 }
 
                 var dtos = _mapper.Map<List<DocumentSerialTypeGetDto>>(documentSerialTypes);
@@ -276,7 +276,7 @@ namespace crm_api.Services
             try
             {
                 var documentSerialType = await _unitOfWork.DocumentSerialTypes.Query(tracking:true)
-                .Where(x => x.Id == id && !x.IsDeleted).FirstOrDefaultAsync();
+                .Where(x => x.Id == id && !x.IsDeleted).FirstOrDefaultAsync().ConfigureAwait(false);
 
                 if (documentSerialType == null)
                 {
@@ -293,7 +293,7 @@ namespace crm_api.Services
                     returnDocumentSerial = $"{documentSerialType.SerialPrefix}{DateTime.UtcNow.Year.ToString()}{current.ToString($"D{length}")}";
                     current++;
                     documentSerialType.SerialCurrent = current;
-                    await _unitOfWork.SaveChangesAsync();
+                    await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 }
                 else
@@ -307,7 +307,7 @@ namespace crm_api.Services
                     }
 
                     string beforeDash = oldDocumentSerial.Split('-')[0];
-                    var QuotationDocumentSerialTypes = await _unitOfWork.Quotations.Query().Where(x => x.OfferNo == beforeDash).ToListAsync();
+                    var QuotationDocumentSerialTypes = await _unitOfWork.Quotations.Query().Where(x => x.OfferNo == beforeDash).ToListAsync().ConfigureAwait(false);
                     int maxSerialNumber = QuotationDocumentSerialTypes
                                                             .Select(x =>
                                                             {

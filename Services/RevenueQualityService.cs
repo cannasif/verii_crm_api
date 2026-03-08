@@ -26,7 +26,7 @@ namespace crm_api.Services
                     x.GrandTotal,
                     x.Status
                 })
-                .ToListAsync();
+                .ToListAsync().ConfigureAwait(false);
 
             var quotations = await _unitOfWork.Quotations.Query(tracking: false)
                 .Where(x => x.PotentialCustomerId == customerId && !x.IsDeleted && (x.Status == null || x.Status != ApprovalStatus.Closed))
@@ -36,18 +36,18 @@ namespace crm_api.Services
                     x.GrandTotal,
                     x.Status
                 })
-                .ToListAsync();
+                .ToListAsync().ConfigureAwait(false);
 
             var demands = await _unitOfWork.Demands.Query(tracking: false)
                 .Where(x => x.PotentialCustomerId == customerId && !x.IsDeleted && (x.Status == null || x.Status != ApprovalStatus.Closed))
                 .Select(x => x.OfferDate ?? x.CreatedDate)
-                .ToListAsync();
+                .ToListAsync().ConfigureAwait(false);
 
             var lastActivityDate = await _unitOfWork.Activities.Query(tracking: false)
                 .Where(x => x.PotentialCustomerId == customerId && !x.IsDeleted)
                 .Select(x => (DateTime?)x.StartDateTime)
                 .DefaultIfEmpty()
-                .MaxAsync();
+                .MaxAsync().ConfigureAwait(false);
 
             var firstTouchDate = orders.Select(x => (DateTime?)x.Date)
                 .Concat(quotations.Select(x => (DateTime?)x.Date))
@@ -104,7 +104,7 @@ namespace crm_api.Services
                     Date = x.OfferDate ?? x.CreatedDate,
                     x.GrandTotal
                 })
-                .ToListAsync();
+                .ToListAsync().ConfigureAwait(false);
 
             var quotations = await _unitOfWork.Quotations.Query(tracking: false)
                 .Where(x => x.RepresentativeId == userId && !x.IsDeleted && (x.Status == null || x.Status != ApprovalStatus.Closed))
@@ -113,12 +113,12 @@ namespace crm_api.Services
                     Date = x.OfferDate ?? x.CreatedDate,
                     x.Status
                 })
-                .ToListAsync();
+                .ToListAsync().ConfigureAwait(false);
 
             var activities = await _unitOfWork.Activities.Query(tracking: false)
                 .Where(x => x.AssignedUserId == userId && !x.IsDeleted)
                 .Select(x => x.StartDateTime)
-                .ToListAsync();
+                .ToListAsync().ConfigureAwait(false);
 
             var firstTouchDate = orders.Select(x => (DateTime?)x.Date)
                 .Concat(quotations.Select(x => (DateTime?)x.Date))
@@ -137,7 +137,7 @@ namespace crm_api.Services
                 .Where(x => x.RepresentativeId == userId && !x.IsDeleted && (x.Status == null || x.Status != ApprovalStatus.Closed) && (x.OfferDate ?? x.CreatedDate) >= since12Months)
                 .Select(x => x.PotentialCustomerId)
                 .Distinct()
-                .CountAsync(x => x.HasValue);
+                .CountAsync(x => x.HasValue).ConfigureAwait(false);
 
             var allCustomerIds = await _unitOfWork.Orders.Query(tracking: false)
                 .Where(o => o.RepresentativeId == userId &&
@@ -146,7 +146,7 @@ namespace crm_api.Services
                             (o.Status == null || o.Status != ApprovalStatus.Closed))
                 .Select(o => o.PotentialCustomerId!.Value)
                 .Distinct()
-                .ToListAsync();
+                .ToListAsync().ConfigureAwait(false);
 
             var activeCustomerIds90 = await _unitOfWork.Orders.Query(tracking: false)
                 .Where(o => o.RepresentativeId == userId &&
@@ -156,7 +156,7 @@ namespace crm_api.Services
                             (o.OfferDate ?? o.CreatedDate) >= now.AddDays(-90))
                 .Select(o => o.PotentialCustomerId!.Value)
                 .Distinct()
-                .ToListAsync();
+                .ToListAsync().ConfigureAwait(false);
 
             var dormantCustomers90 = allCustomerIds.Except(activeCustomerIds90).Count();
 

@@ -54,11 +54,11 @@ namespace crm_api.Services
                 var sortBy = request.SortBy ?? nameof(PricingRuleHeader.Id);
                 query = query.ApplySorting(sortBy, request.SortDirection, columnMapping);
 
-                var totalCount = await query.CountAsync();
+                var totalCount = await query.CountAsync().ConfigureAwait(false);
 
                 var items = await query
                     .ApplyPagination(request.PageNumber, request.PageSize)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 var dtos = items.Select(x => _mapper.Map<PricingRuleHeaderGetDto>(x)).ToList();
 
@@ -93,7 +93,7 @@ namespace crm_api.Services
                     .Include(h => h.CreatedByUser)
                     .Include(h => h.UpdatedByUser)
                     .Include(h => h.DeletedByUser)
-                    .FirstOrDefaultAsync(h => h.Id == id && !h.IsDeleted);
+                    .FirstOrDefaultAsync(h => h.Id == id && !h.IsDeleted).ConfigureAwait(false);
 
                 if (header == null)
                 {
@@ -120,8 +120,8 @@ namespace crm_api.Services
             try
             {
                 var header = _mapper.Map<PricingRuleHeader>(createDto);
-                await _unitOfWork.PricingRuleHeaders.AddAsync(header);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.PricingRuleHeaders.AddAsync(header).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 // Handle Lines
                 if (createDto.Lines != null && createDto.Lines.Any())
@@ -130,7 +130,7 @@ namespace crm_api.Services
                     {
                         var line = _mapper.Map<PricingRuleLine>(lineDto);
                         line.PricingRuleHeaderId = header.Id;
-                        await _unitOfWork.PricingRuleLines.AddAsync(line);
+                        await _unitOfWork.PricingRuleLines.AddAsync(line).ConfigureAwait(false);
                     }
                 }
 
@@ -141,11 +141,11 @@ namespace crm_api.Services
                     {
                         var salesman = _mapper.Map<PricingRuleSalesman>(salesmanDto);
                         salesman.PricingRuleHeaderId = header.Id;
-                        await _unitOfWork.PricingRuleSalesmen.AddAsync(salesman);
+                        await _unitOfWork.PricingRuleSalesmen.AddAsync(salesman).ConfigureAwait(false);
                     }
                 }
 
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 // Reload with navigation properties
                 var headerWithNav = await _unitOfWork.PricingRuleHeaders
@@ -156,7 +156,7 @@ namespace crm_api.Services
                     .Include(h => h.CreatedByUser)
                     .Include(h => h.UpdatedByUser)
                     .Include(h => h.DeletedByUser)
-                    .FirstOrDefaultAsync(h => h.Id == header.Id && !h.IsDeleted);
+                    .FirstOrDefaultAsync(h => h.Id == header.Id && !h.IsDeleted).ConfigureAwait(false);
 
                 if (headerWithNav == null)
                 {
@@ -182,7 +182,7 @@ namespace crm_api.Services
         {
             try
             {
-                var header = await _unitOfWork.PricingRuleHeaders.GetByIdForUpdateAsync(id);
+                var header = await _unitOfWork.PricingRuleHeaders.GetByIdForUpdateAsync(id).ConfigureAwait(false);
                 if (header == null)
                 {
                     return ApiResponse<PricingRuleHeaderGetDto>.ErrorResult(
@@ -192,9 +192,9 @@ namespace crm_api.Services
                 }
 
                 _mapper.Map(updateDto, header);
-                await _unitOfWork.PricingRuleHeaders.UpdateAsync(header);
+                await _unitOfWork.PricingRuleHeaders.UpdateAsync(header).ConfigureAwait(false);
 
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 // Reload with navigation properties
                 var headerWithNav = await _unitOfWork.PricingRuleHeaders
@@ -205,7 +205,7 @@ namespace crm_api.Services
                     .Include(h => h.CreatedByUser)
                     .Include(h => h.UpdatedByUser)
                     .Include(h => h.DeletedByUser)
-                    .FirstOrDefaultAsync(h => h.Id == header.Id && !h.IsDeleted);
+                    .FirstOrDefaultAsync(h => h.Id == header.Id && !h.IsDeleted).ConfigureAwait(false);
 
                 if (headerWithNav == null)
                 {
@@ -231,7 +231,7 @@ namespace crm_api.Services
         {
             try
             {
-                var header = await _unitOfWork.PricingRuleHeaders.GetByIdAsync(id);
+                var header = await _unitOfWork.PricingRuleHeaders.GetByIdAsync(id).ConfigureAwait(false);
                 if (header == null)
                 {
                     return ApiResponse<object>.ErrorResult(
@@ -240,8 +240,8 @@ namespace crm_api.Services
                         StatusCodes.Status404NotFound);
                 }
 
-                await _unitOfWork.PricingRuleHeaders.SoftDeleteAsync(id);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.PricingRuleHeaders.SoftDeleteAsync(id).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 return ApiResponse<object>.SuccessResult(null, _localizationService.GetLocalizedString("PricingRuleHeaderService.HeaderDeleted"));
             }
