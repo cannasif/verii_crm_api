@@ -5,6 +5,7 @@ using crm_api.Models;
 using crm_api.UnitOfWork;
 using crm_api.Helpers;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using System;
 using System.Collections.Generic;
 
@@ -12,15 +13,20 @@ namespace crm_api.Services
 {
     public class CityService : ICityService
     {
+        private const string CacheVersionKey = "city:version";
+        private static readonly TimeSpan CacheDuration = TimeSpan.FromDays(1);
+
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly ILocalizationService _localizationService;
+        private readonly IMemoryCache _memoryCache;
 
-        public CityService(IUnitOfWork unitOfWork, IMapper mapper, ILocalizationService localizationService)
+        public CityService(IUnitOfWork unitOfWork, IMapper mapper, ILocalizationService localizationService, IMemoryCache memoryCache)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _localizationService = localizationService;
+            _memoryCache = memoryCache;
         }
 
         public async Task<ApiResponse<PagedResponse<CityGetDto>>> GetAllCitiesAsync(PagedRequest request)
@@ -35,6 +41,14 @@ namespace crm_api.Services
                 if (request.Filters == null)
                 {
                     request.Filters = new List<Filter>();
+                }
+
+                var cacheKey = GetAllCacheKey(request);
+                if (_memoryCache.TryGetValue(cacheKey, out PagedResponse<CityGetDto>? cachedResponse) && cachedResponse != null)
+                {
+                    return ApiResponse<PagedResponse<CityGetDto>>.SuccessResult(
+                        cachedResponse,
+                        _localizationService.GetLocalizedString("CityService.CitiesRetrieved"));
                 }
 
                 var query = _unitOfWork.Cities
@@ -67,6 +81,8 @@ namespace crm_api.Services
                     PageSize = request.PageSize
                 };
 
+                _memoryCache.Set(cacheKey, pagedResponse, CacheDuration);
+
                 return ApiResponse<PagedResponse<CityGetDto>>.SuccessResult(pagedResponse, _localizationService.GetLocalizedString("CityService.CitiesRetrieved"));
             }
             catch (Exception ex)
@@ -82,6 +98,14 @@ namespace crm_api.Services
         {
             try
             {
+                var cacheKey = GetByIdCacheKey(id);
+                if (_memoryCache.TryGetValue(cacheKey, out CityGetDto? cachedCity) && cachedCity != null)
+                {
+                    return ApiResponse<CityGetDto>.SuccessResult(
+                        cachedCity,
+                        _localizationService.GetLocalizedString("CityService.CityRetrieved"));
+                }
+
                 var city = await _unitOfWork.Cities.GetByIdAsync(id).ConfigureAwait(false);
                 if (city == null)
                 {
@@ -101,6 +125,7 @@ namespace crm_api.Services
                     .FirstOrDefaultAsync(c => c.Id == id && !c.IsDeleted).ConfigureAwait(false);
 
                 var cityDto = _mapper.Map<CityGetDto>(cityWithNav ?? city);
+                _memoryCache.Set(cacheKey, cityDto, CacheDuration);
                 return ApiResponse<CityGetDto>.SuccessResult(cityDto, _localizationService.GetLocalizedString("CityService.CityRetrieved"));
             }
             catch (Exception ex)
@@ -119,6 +144,7 @@ namespace crm_api.Services
                 var city = _mapper.Map<City>(cityCreateDto);
                 await _unitOfWork.Cities.AddAsync(city).ConfigureAwait(false);
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
+                InvalidateCache();
 
                 // Reload with navigation properties for mapping
                 var cityWithNav = await _unitOfWork.Cities
@@ -166,6 +192,7 @@ namespace crm_api.Services
                 _mapper.Map(cityUpdateDto, city);
                 await _unitOfWork.Cities.UpdateAsync(city).ConfigureAwait(false);
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
+                InvalidateCache();
 
                 // Reload with navigation properties for mapping
                 var cityWithNav = await _unitOfWork.Cities
@@ -212,6 +239,7 @@ namespace crm_api.Services
 
                 await _unitOfWork.Cities.SoftDeleteAsync(id).ConfigureAwait(false);
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
+                InvalidateCache();
 
                 return ApiResponse<object>.SuccessResult(null, _localizationService.GetLocalizedString("CityService.CityDeleted"));
             }
@@ -222,6 +250,37 @@ namespace crm_api.Services
                     _localizationService.GetLocalizedString("CityService.DeleteCityExceptionMessage", ex.Message),
                     StatusCodes.Status500InternalServerError);
             }
+        }
+
+        private string GetAllCacheKey(PagedRequest request)
+        {
+            var filters = request.Filters == null
+                ? string.Empty
+                : string.Join("|", request.Filters.Select(f => $"{f.Column}:{f.Operator}:{f.Value}"));
+
+            return $"city:all:{GetCacheVersion()}:{request.PageNumber}:{request.PageSize}:{request.SortBy}:{request.SortDirection}:{request.FilterLogic}:{filters}";
+        }
+
+        private string GetByIdCacheKey(long id)
+        {
+            return $"city:id:{GetCacheVersion()}:{id}";
+        }
+
+        private string GetCacheVersion()
+        {
+            if (_memoryCache.TryGetValue(CacheVersionKey, out string? version) && !string.IsNullOrWhiteSpace(version))
+            {
+                return version;
+            }
+
+            version = Guid.NewGuid().ToString("N");
+            _memoryCache.Set(CacheVersionKey, version, CacheDuration);
+            return version;
+        }
+
+        private void InvalidateCache()
+        {
+            _memoryCache.Set(CacheVersionKey, Guid.NewGuid().ToString("N"), CacheDuration);
         }
     }
 }
