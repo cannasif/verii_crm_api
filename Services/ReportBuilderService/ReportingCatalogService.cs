@@ -10,28 +10,42 @@ namespace crm_api.Services.ReportBuilderService
     {
         private readonly IReportingConnectionService _connectionService;
         private readonly ILogger<ReportingCatalogService> _logger;
+        private readonly ILocalizationService _localizationService;
 
         private static readonly Regex NameRegex = new(@"^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)?$", RegexOptions.Compiled);
 
-        public ReportingCatalogService(IReportingConnectionService connectionService, ILogger<ReportingCatalogService> logger)
+        public ReportingCatalogService(
+            IReportingConnectionService connectionService,
+            ILogger<ReportingCatalogService> logger,
+            ILocalizationService localizationService)
         {
             _connectionService = connectionService;
             _logger = logger;
+            _localizationService = localizationService;
         }
 
         public async Task<ApiResponse<List<FieldSchemaDto>>> CheckAndGetSchemaAsync(string connectionKey, string type, string name)
         {
             var connResp = _connectionService.ResolveConnectionString(connectionKey);
             if (!connResp.Success || string.IsNullOrEmpty(connResp.Data))
-                return ApiResponse<List<FieldSchemaDto>>.ErrorResult(connResp.Message ?? "Invalid connection.", null, connResp.StatusCode);
+                return ApiResponse<List<FieldSchemaDto>>.ErrorResult(
+                    connResp.Message ?? _localizationService.GetLocalizedString("ReportingCatalogService.InvalidConnection"),
+                    null,
+                    connResp.StatusCode);
 
             var typeNorm = type?.Trim().ToLowerInvariant() ?? "";
             if (typeNorm != "view" && typeNorm != "function")
-                return ApiResponse<List<FieldSchemaDto>>.ErrorResult("Type must be 'view' or 'function'.", null, 400);
+                return ApiResponse<List<FieldSchemaDto>>.ErrorResult(
+                    _localizationService.GetLocalizedString("ReportingCatalogService.InvalidType"),
+                    null,
+                    400);
 
             var nameTrim = name?.Trim() ?? "";
             if (!NameRegex.IsMatch(nameTrim))
-                return ApiResponse<List<FieldSchemaDto>>.ErrorResult("Invalid datasource name format.", null, 400);
+                return ApiResponse<List<FieldSchemaDto>>.ErrorResult(
+                    _localizationService.GetLocalizedString("ReportingCatalogService.InvalidDatasourceNameFormat"),
+                    null,
+                    400);
 
             var (schemaName, objectName) = ParseSchemaAndObject(nameTrim);
 
@@ -73,14 +87,19 @@ ORDER BY c.column_id";
 
                 if (columns.Count == 0)
                     return ApiResponse<List<FieldSchemaDto>>.SuccessResult(new List<FieldSchemaDto>(),
-                        "Object not found or has no columns.");
+                        _localizationService.GetLocalizedString("ReportingCatalogService.ObjectNotFoundOrNoColumns"));
 
-                return ApiResponse<List<FieldSchemaDto>>.SuccessResult(columns, "OK");
+                return ApiResponse<List<FieldSchemaDto>>.SuccessResult(
+                    columns,
+                    _localizationService.GetLocalizedString("General.OperationSuccessful"));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "CheckAndGetSchema {Key} {Type} {Name}", connectionKey, type, name);
-                return ApiResponse<List<FieldSchemaDto>>.ErrorResult("Error reading catalog.", ex.Message, 500);
+                return ApiResponse<List<FieldSchemaDto>>.ErrorResult(
+                    _localizationService.GetLocalizedString("ReportingCatalogService.CatalogReadError"),
+                    ex.Message,
+                    500);
             }
         }
 

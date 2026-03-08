@@ -53,7 +53,9 @@ namespace crm_api.Services
                     PageSize = request.PageSize
                 };
 
-                return ApiResponse<PagedResponse<SalesTypeGetDto>>.SuccessResult(pagedResponse, "Sales types retrieved.");
+                return ApiResponse<PagedResponse<SalesTypeGetDto>>.SuccessResult(
+                    pagedResponse,
+                    _localizationService.GetLocalizedString("SalesTypeService.SalesTypesRetrieved"));
             }
             catch (Exception ex)
             {
@@ -71,7 +73,10 @@ namespace crm_api.Services
                 var entity = await _unitOfWork.SalesTypeDefinitions.GetByIdAsync(id);
                 if (entity == null || entity.IsDeleted)
                 {
-                    return ApiResponse<SalesTypeGetDto>.ErrorResult("Sales type not found.", "Sales type not found.", StatusCodes.Status404NotFound);
+                    return ApiResponse<SalesTypeGetDto>.ErrorResult(
+                        _localizationService.GetLocalizedString("SalesTypeService.SalesTypeNotFound"),
+                        _localizationService.GetLocalizedString("SalesTypeService.SalesTypeNotFound"),
+                        StatusCodes.Status404NotFound);
                 }
 
                 var withNav = await _unitOfWork.SalesTypeDefinitions.Query()
@@ -81,7 +86,9 @@ namespace crm_api.Services
                     .Include(x => x.DeletedByUser)
                     .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
 
-                return ApiResponse<SalesTypeGetDto>.SuccessResult(_mapper.Map<SalesTypeGetDto>(withNav ?? entity), "Sales type retrieved.");
+                return ApiResponse<SalesTypeGetDto>.SuccessResult(
+                    _mapper.Map<SalesTypeGetDto>(withNav ?? entity),
+                    _localizationService.GetLocalizedString("SalesTypeService.SalesTypeRetrieved"));
             }
             catch (Exception ex)
             {
@@ -99,20 +106,29 @@ namespace crm_api.Services
                 var normalizedSalesType = NormalizeSalesType(createSalesTypeDto.SalesType);
                 if (normalizedSalesType == null)
                 {
-                    return ApiResponse<SalesTypeGetDto>.ErrorResult("SalesType must be YURTICI or YURTDISI.", "SalesType must be YURTICI or YURTDISI.", StatusCodes.Status400BadRequest);
+                    return ApiResponse<SalesTypeGetDto>.ErrorResult(
+                        _localizationService.GetLocalizedString("SalesTypeService.SalesTypeInvalid"),
+                        _localizationService.GetLocalizedString("SalesTypeService.SalesTypeInvalid"),
+                        StatusCodes.Status400BadRequest);
                 }
 
                 var normalizedName = (createSalesTypeDto.Name ?? string.Empty).Trim();
                 if (string.IsNullOrWhiteSpace(normalizedName))
                 {
-                    return ApiResponse<SalesTypeGetDto>.ErrorResult("Name is required.", "Name is required.", StatusCodes.Status400BadRequest);
+                    return ApiResponse<SalesTypeGetDto>.ErrorResult(
+                        _localizationService.GetLocalizedString("General.NameRequired"),
+                        _localizationService.GetLocalizedString("General.NameRequired"),
+                        StatusCodes.Status400BadRequest);
                 }
 
                 var exists = await _unitOfWork.SalesTypeDefinitions.Query()
                     .AnyAsync(x => !x.IsDeleted && x.SalesType == normalizedSalesType && x.Name == normalizedName);
                 if (exists)
                 {
-                    return ApiResponse<SalesTypeGetDto>.ErrorResult("Sales type record already exists.", "Sales type record already exists.", StatusCodes.Status400BadRequest);
+                    return ApiResponse<SalesTypeGetDto>.ErrorResult(
+                        _localizationService.GetLocalizedString("SalesTypeService.SalesTypeAlreadyExists"),
+                        _localizationService.GetLocalizedString("SalesTypeService.SalesTypeAlreadyExists"),
+                        StatusCodes.Status400BadRequest);
                 }
 
                 var entity = _mapper.Map<SalesTypeDefinition>(createSalesTypeDto);
@@ -130,7 +146,9 @@ namespace crm_api.Services
                     .Include(x => x.DeletedByUser)
                     .FirstOrDefaultAsync(x => x.Id == entity.Id && !x.IsDeleted);
 
-                return ApiResponse<SalesTypeGetDto>.SuccessResult(_mapper.Map<SalesTypeGetDto>(created ?? entity), "Sales type created.");
+                return ApiResponse<SalesTypeGetDto>.SuccessResult(
+                    _mapper.Map<SalesTypeGetDto>(created ?? entity),
+                    _localizationService.GetLocalizedString("SalesTypeService.SalesTypeCreated"));
             }
             catch (Exception ex)
             {
@@ -148,26 +166,38 @@ namespace crm_api.Services
                 var entity = await _unitOfWork.SalesTypeDefinitions.GetByIdAsync(id);
                 if (entity == null || entity.IsDeleted)
                 {
-                    return ApiResponse<SalesTypeGetDto>.ErrorResult("Sales type not found.", "Sales type not found.", StatusCodes.Status404NotFound);
+                    return ApiResponse<SalesTypeGetDto>.ErrorResult(
+                        _localizationService.GetLocalizedString("SalesTypeService.SalesTypeNotFound"),
+                        _localizationService.GetLocalizedString("SalesTypeService.SalesTypeNotFound"),
+                        StatusCodes.Status404NotFound);
                 }
 
                 var normalizedSalesType = NormalizeSalesType(updateSalesTypeDto.SalesType);
                 if (normalizedSalesType == null)
                 {
-                    return ApiResponse<SalesTypeGetDto>.ErrorResult("SalesType must be YURTICI or YURTDISI.", "SalesType must be YURTICI or YURTDISI.", StatusCodes.Status400BadRequest);
+                    return ApiResponse<SalesTypeGetDto>.ErrorResult(
+                        _localizationService.GetLocalizedString("SalesTypeService.SalesTypeInvalid"),
+                        _localizationService.GetLocalizedString("SalesTypeService.SalesTypeInvalid"),
+                        StatusCodes.Status400BadRequest);
                 }
 
                 var normalizedName = (updateSalesTypeDto.Name ?? string.Empty).Trim();
                 if (string.IsNullOrWhiteSpace(normalizedName))
                 {
-                    return ApiResponse<SalesTypeGetDto>.ErrorResult("Name is required.", "Name is required.", StatusCodes.Status400BadRequest);
+                    return ApiResponse<SalesTypeGetDto>.ErrorResult(
+                        _localizationService.GetLocalizedString("General.NameRequired"),
+                        _localizationService.GetLocalizedString("General.NameRequired"),
+                        StatusCodes.Status400BadRequest);
                 }
 
                 var exists = await _unitOfWork.SalesTypeDefinitions.Query()
                     .AnyAsync(x => !x.IsDeleted && x.Id != id && x.SalesType == normalizedSalesType && x.Name == normalizedName);
                 if (exists)
                 {
-                    return ApiResponse<SalesTypeGetDto>.ErrorResult("Sales type record already exists.", "Sales type record already exists.", StatusCodes.Status400BadRequest);
+                    return ApiResponse<SalesTypeGetDto>.ErrorResult(
+                        _localizationService.GetLocalizedString("SalesTypeService.SalesTypeAlreadyExists"),
+                        _localizationService.GetLocalizedString("SalesTypeService.SalesTypeAlreadyExists"),
+                        StatusCodes.Status400BadRequest);
                 }
 
                 entity.SalesType = normalizedSalesType;
@@ -184,7 +214,9 @@ namespace crm_api.Services
                     .Include(x => x.DeletedByUser)
                     .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
 
-                return ApiResponse<SalesTypeGetDto>.SuccessResult(_mapper.Map<SalesTypeGetDto>(updated ?? entity), "Sales type updated.");
+                return ApiResponse<SalesTypeGetDto>.SuccessResult(
+                    _mapper.Map<SalesTypeGetDto>(updated ?? entity),
+                    _localizationService.GetLocalizedString("SalesTypeService.SalesTypeUpdated"));
             }
             catch (Exception ex)
             {
@@ -202,13 +234,18 @@ namespace crm_api.Services
                 var entity = await _unitOfWork.SalesTypeDefinitions.GetByIdAsync(id);
                 if (entity == null || entity.IsDeleted)
                 {
-                    return ApiResponse<object>.ErrorResult("Sales type not found.", "Sales type not found.", StatusCodes.Status404NotFound);
+                    return ApiResponse<object>.ErrorResult(
+                        _localizationService.GetLocalizedString("SalesTypeService.SalesTypeNotFound"),
+                        _localizationService.GetLocalizedString("SalesTypeService.SalesTypeNotFound"),
+                        StatusCodes.Status404NotFound);
                 }
 
                 await _unitOfWork.SalesTypeDefinitions.SoftDeleteAsync(id);
                 await _unitOfWork.SaveChangesAsync();
 
-                return ApiResponse<object>.SuccessResult(null, "Sales type deleted.");
+                return ApiResponse<object>.SuccessResult(
+                    null,
+                    _localizationService.GetLocalizedString("SalesTypeService.SalesTypeDeleted"));
             }
             catch (Exception ex)
             {
