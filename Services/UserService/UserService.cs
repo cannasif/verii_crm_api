@@ -89,11 +89,11 @@ namespace crm_api.Services
 
                 query = query.ApplySorting(sortBy, request.SortDirection, columnMapping);
 
-                var totalCount = await query.CountAsync();
+                var totalCount = await query.CountAsync().ConfigureAwait(false);
 
                 var items = await query
                     .ApplyPagination(request.PageNumber, request.PageSize)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 var dtos = items.Select(x => _mapper.Map<UserDto>(x)).ToList();
 
@@ -120,7 +120,7 @@ namespace crm_api.Services
         {
             try
             {
-                var user = await _uow.Users.GetByIdAsync(id);
+                var user = await _uow.Users.GetByIdAsync(id).ConfigureAwait(false);
                 if (user == null) return ApiResponse<UserDto>.ErrorResult(
                     _loc.GetLocalizedString("UserService.UserNotFound"),
                     _loc.GetLocalizedString("UserService.UserNotFound"),
@@ -133,7 +133,7 @@ namespace crm_api.Services
                     .Include(u => u.CreatedByUser)
                     .Include(u => u.UpdatedByUser)
                     .Include(u => u.DeletedByUser)
-                    .FirstOrDefaultAsync(u => u.Id == id && !u.IsDeleted);
+                    .FirstOrDefaultAsync(u => u.Id == id && !u.IsDeleted).ConfigureAwait(false);
 
                 var dto = _mapper.Map<UserDto>(userWithNav ?? user);
                 return ApiResponse<UserDto>.SuccessResult(dto, _loc.GetLocalizedString("UserService.UserRetrieved"));
@@ -161,7 +161,7 @@ namespace crm_api.Services
 
                 var existsByEmail = await _uow.Users.Query()
                     .AsNoTracking()
-                    .AnyAsync(x => !x.IsDeleted && x.Email == dto.Email);
+                    .AnyAsync(x => !x.IsDeleted && x.Email == dto.Email).ConfigureAwait(false);
 
                 if (existsByEmail)
                 {
@@ -173,7 +173,7 @@ namespace crm_api.Services
 
                 var existsByUsername = await _uow.Users.Query()
                     .AsNoTracking()
-                    .AnyAsync(x => !x.IsDeleted && x.Username == dto.Username);
+                    .AnyAsync(x => !x.IsDeleted && x.Username == dto.Username).ConfigureAwait(false);
 
                 if (existsByUsername)
                 {
@@ -190,7 +190,7 @@ namespace crm_api.Services
 
                 var roleExists = await _uow.UserAuthorities.Query()
                     .AsNoTracking()
-                    .AnyAsync(x => x.Id == dto.RoleId && !x.IsDeleted);
+                    .AnyAsync(x => x.Id == dto.RoleId && !x.IsDeleted).ConfigureAwait(false);
 
                 if (!roleExists)
                 {
@@ -202,7 +202,7 @@ namespace crm_api.Services
 
                 if (dto.PermissionGroupIds != null)
                 {
-                    var validateGroups = await ValidatePermissionGroupIdsAsync(dto.PermissionGroupIds);
+                    var validateGroups = await ValidatePermissionGroupIdsAsync(dto.PermissionGroupIds).ConfigureAwait(false);
                     if (!validateGroups.Success)
                     {
                         return ApiResponse<UserDto>.ErrorResult(validateGroups.Message, validateGroups.ExceptionMessage, validateGroups.StatusCode);
@@ -217,12 +217,12 @@ namespace crm_api.Services
                 entity.IsEmailConfirmed = true;
                 entity.IsActive = dto.IsActive ?? true;
                 entity.PasswordHash = BCrypt.Net.BCrypt.HashPassword(plainPassword);
-                await _uow.Users.AddAsync(entity);
-                await _uow.SaveChangesAsync();
+                await _uow.Users.AddAsync(entity).ConfigureAwait(false);
+                await _uow.SaveChangesAsync().ConfigureAwait(false);
 
                 if (dto.PermissionGroupIds != null)
                 {
-                    var syncResult = await SyncUserPermissionGroupsAsync(entity.Id, dto.PermissionGroupIds);
+                    var syncResult = await SyncUserPermissionGroupsAsync(entity.Id, dto.PermissionGroupIds).ConfigureAwait(false);
                     if (!syncResult.Success)
                     {
                         return ApiResponse<UserDto>.ErrorResult(syncResult.Message, syncResult.ExceptionMessage, syncResult.StatusCode);
@@ -236,7 +236,7 @@ namespace crm_api.Services
                     .Include(u => u.CreatedByUser)
                     .Include(u => u.UpdatedByUser)
                     .Include(u => u.DeletedByUser)
-                    .FirstOrDefaultAsync(u => u.Id == entity.Id && !u.IsDeleted);
+                    .FirstOrDefaultAsync(u => u.Id == entity.Id && !u.IsDeleted).ConfigureAwait(false);
 
                 var outDto = _mapper.Map<UserDto>(userWithNav ?? entity);
                 
@@ -287,7 +287,7 @@ namespace crm_api.Services
         {
             try
             {
-                var entity = await _uow.Users.GetByIdForUpdateAsync(id);
+                var entity = await _uow.Users.GetByIdForUpdateAsync(id).ConfigureAwait(false);
                 if (entity == null) return ApiResponse<UserDto>.ErrorResult(
                     _loc.GetLocalizedString("UserService.UserNotFound"),
                     null,
@@ -306,7 +306,7 @@ namespace crm_api.Services
                 {
                     var emailExists = await _uow.Users.Query()
                         .AsNoTracking()
-                        .AnyAsync(x => !x.IsDeleted && x.Id != id && x.Email == dto.Email);
+                        .AnyAsync(x => !x.IsDeleted && x.Id != id && x.Email == dto.Email).ConfigureAwait(false);
 
                     if (emailExists)
                     {
@@ -321,7 +321,7 @@ namespace crm_api.Services
                 {
                     var roleExists = await _uow.UserAuthorities.Query()
                         .AsNoTracking()
-                        .AnyAsync(x => x.Id == dto.RoleId.Value && !x.IsDeleted);
+                        .AnyAsync(x => x.Id == dto.RoleId.Value && !x.IsDeleted).ConfigureAwait(false);
 
                     if (!roleExists)
                     {
@@ -334,7 +334,7 @@ namespace crm_api.Services
 
                 if (dto.PermissionGroupIds != null)
                 {
-                    var validateGroups = await ValidatePermissionGroupIdsAsync(dto.PermissionGroupIds);
+                    var validateGroups = await ValidatePermissionGroupIdsAsync(dto.PermissionGroupIds).ConfigureAwait(false);
                     if (!validateGroups.Success)
                     {
                         return ApiResponse<UserDto>.ErrorResult(validateGroups.Message, validateGroups.ExceptionMessage, validateGroups.StatusCode);
@@ -342,12 +342,12 @@ namespace crm_api.Services
                 }
 
                 _mapper.Map(dto, entity);
-                await _uow.Users.UpdateAsync(entity);
-                await _uow.SaveChangesAsync();
+                await _uow.Users.UpdateAsync(entity).ConfigureAwait(false);
+                await _uow.SaveChangesAsync().ConfigureAwait(false);
 
                 if (dto.PermissionGroupIds != null)
                 {
-                    var syncResult = await SyncUserPermissionGroupsAsync(entity.Id, dto.PermissionGroupIds);
+                    var syncResult = await SyncUserPermissionGroupsAsync(entity.Id, dto.PermissionGroupIds).ConfigureAwait(false);
                     if (!syncResult.Success)
                     {
                         return ApiResponse<UserDto>.ErrorResult(syncResult.Message, syncResult.ExceptionMessage, syncResult.StatusCode);
@@ -361,7 +361,7 @@ namespace crm_api.Services
                     .Include(u => u.CreatedByUser)
                     .Include(u => u.UpdatedByUser)
                     .Include(u => u.DeletedByUser)
-                    .FirstOrDefaultAsync(u => u.Id == entity.Id && !u.IsDeleted);
+                    .FirstOrDefaultAsync(u => u.Id == entity.Id && !u.IsDeleted).ConfigureAwait(false);
 
                 var outDto = _mapper.Map<UserDto>(userWithNav ?? entity);
                 return ApiResponse<UserDto>.SuccessResult(outDto, _loc.GetLocalizedString("UserService.UserUpdated"));
@@ -407,13 +407,13 @@ namespace crm_api.Services
         {
             try
             {
-                var entity = await _uow.Users.GetByIdAsync(id);
+                var entity = await _uow.Users.GetByIdAsync(id).ConfigureAwait(false);
                 if (entity == null) return ApiResponse<object>.ErrorResult(
                     _loc.GetLocalizedString("UserService.UserNotFound"),
                     _loc.GetLocalizedString("UserService.UserNotFound"),
                     StatusCodes.Status404NotFound);
-                await _uow.Users.SoftDeleteAsync(id);
-                await _uow.SaveChangesAsync();
+                await _uow.Users.SoftDeleteAsync(id).ConfigureAwait(false);
+                await _uow.SaveChangesAsync().ConfigureAwait(false);
                 return ApiResponse<object>.SuccessResult(null, _loc.GetLocalizedString("UserService.UserDeleted"));
             }
             catch (Exception ex)
@@ -437,7 +437,7 @@ namespace crm_api.Services
                         StatusCodes.Status400BadRequest);
                 }
 
-                var user = await _uow.Users.GetByIdAsync(userIdLong);
+                var user = await _uow.Users.GetByIdAsync(userIdLong).ConfigureAwait(false);
                 if (user == null)
                 {
                     return ApiResponse<UserDto>.ErrorResult(
@@ -476,7 +476,7 @@ namespace crm_api.Services
 
                 var validCount = await _uow.PermissionGroups.Query()
                     .AsNoTracking()
-                    .CountAsync(x => !x.IsDeleted && distinctGroupIds.Contains(x.Id));
+                    .CountAsync(x => !x.IsDeleted && distinctGroupIds.Contains(x.Id)).ConfigureAwait(false);
 
                 if (validCount != distinctGroupIds.Count)
                 {
@@ -503,7 +503,7 @@ namespace crm_api.Services
             {
                 var distinctGroupIds = permissionGroupIds.Distinct().ToList();
 
-                var validate = await ValidatePermissionGroupIdsAsync(distinctGroupIds);
+                var validate = await ValidatePermissionGroupIdsAsync(distinctGroupIds).ConfigureAwait(false);
                 if (!validate.Success)
                 {
                     return validate;
@@ -512,12 +512,12 @@ namespace crm_api.Services
                 var allLinks = await _uow.UserPermissionGroups
                     .Query(tracking: true, ignoreQueryFilters: true)
                     .Where(x => x.UserId == userId)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 // Soft-delete links not desired anymore
                 foreach (var link in allLinks.Where(x => !x.IsDeleted && !distinctGroupIds.Contains(x.PermissionGroupId)))
                 {
-                    await _uow.UserPermissionGroups.SoftDeleteAsync(link.Id);
+                    await _uow.UserPermissionGroups.SoftDeleteAsync(link.Id).ConfigureAwait(false);
                 }
 
                 // Ensure each desired groupId is active; revive if previously soft-deleted
@@ -530,7 +530,7 @@ namespace crm_api.Services
                         {
                             UserId = userId,
                             PermissionGroupId = groupId
-                        });
+                        }).ConfigureAwait(false);
                         continue;
                     }
 
@@ -539,11 +539,11 @@ namespace crm_api.Services
                         existing.IsDeleted = false;
                         existing.DeletedDate = null;
                         existing.DeletedBy = null;
-                        await _uow.UserPermissionGroups.UpdateAsync(existing);
+                        await _uow.UserPermissionGroups.UpdateAsync(existing).ConfigureAwait(false);
                     }
                 }
 
-                await _uow.SaveChangesAsync();
+                await _uow.SaveChangesAsync().ConfigureAwait(false);
                 return ApiResponse<bool>.SuccessResult(true, _loc.GetLocalizedString("General.OperationSuccessful"));
             }
             catch (Exception ex)

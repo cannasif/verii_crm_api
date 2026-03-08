@@ -50,11 +50,11 @@ namespace crm_api.Services
 
                 query = query.ApplySorting(sortBy, request.SortDirection);
 
-                var totalCount = await query.CountAsync();
+                var totalCount = await query.CountAsync().ConfigureAwait(false);
 
                 var items = await query
                     .ApplyPagination(request.PageNumber, request.PageSize)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 var dtos = items.Select(x => _mapper.Map<UserAuthorityDto>(x)).ToList();
 
@@ -81,7 +81,7 @@ namespace crm_api.Services
         {
             try
             {
-                var entity = await _unitOfWork.UserAuthorities.GetByIdAsync(id);
+                var entity = await _unitOfWork.UserAuthorities.GetByIdAsync(id).ConfigureAwait(false);
                 if (entity == null)
                 {
                     return ApiResponse<UserAuthorityDto>.ErrorResult(
@@ -96,7 +96,7 @@ namespace crm_api.Services
                     .Include(u => u.CreatedByUser)
                     .Include(u => u.UpdatedByUser)
                     .Include(u => u.DeletedByUser)
-                    .FirstOrDefaultAsync(u => u.Id == id && !u.IsDeleted);
+                    .FirstOrDefaultAsync(u => u.Id == id && !u.IsDeleted).ConfigureAwait(false);
 
                 var dto = _mapper.Map<UserAuthorityDto>(entityWithNav ?? entity);
                 return ApiResponse<UserAuthorityDto>.SuccessResult(dto, _localizationService.GetLocalizedString("UserAuthorityService.UserAuthorityRetrieved"));
@@ -115,8 +115,8 @@ namespace crm_api.Services
             try
             {
                 var entity = _mapper.Map<UserAuthority>(createDto);
-                await _unitOfWork.UserAuthorities.AddAsync(entity);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.UserAuthorities.AddAsync(entity).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 // Reload with navigation properties for mapping
                 var entityWithNav = await _unitOfWork.UserAuthorities.Query()
@@ -124,7 +124,7 @@ namespace crm_api.Services
                     .Include(u => u.CreatedByUser)
                     .Include(u => u.UpdatedByUser)
                     .Include(u => u.DeletedByUser)
-                    .FirstOrDefaultAsync(u => u.Id == entity.Id && !u.IsDeleted);
+                    .FirstOrDefaultAsync(u => u.Id == entity.Id && !u.IsDeleted).ConfigureAwait(false);
 
                 var dto = _mapper.Map<UserAuthorityDto>(entityWithNav ?? entity);
                 return ApiResponse<UserAuthorityDto>.SuccessResult(dto, _localizationService.GetLocalizedString("UserAuthorityService.UserAuthorityCreated"));
@@ -142,7 +142,7 @@ namespace crm_api.Services
         {
             try
             {
-                var entity = await _unitOfWork.UserAuthorities.GetByIdAsync(id);
+                var entity = await _unitOfWork.UserAuthorities.GetByIdAsync(id).ConfigureAwait(false);
                 if (entity == null)
                 {
                     return ApiResponse<UserAuthorityDto>.ErrorResult(
@@ -152,8 +152,8 @@ namespace crm_api.Services
                 }
 
                 _mapper.Map(updateDto, entity);
-                await _unitOfWork.UserAuthorities.UpdateAsync(entity);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.UserAuthorities.UpdateAsync(entity).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 // Reload with navigation properties for mapping
                 var entityWithNav = await _unitOfWork.UserAuthorities.Query()
@@ -161,7 +161,7 @@ namespace crm_api.Services
                     .Include(u => u.CreatedByUser)
                     .Include(u => u.UpdatedByUser)
                     .Include(u => u.DeletedByUser)
-                    .FirstOrDefaultAsync(u => u.Id == entity.Id && !u.IsDeleted);
+                    .FirstOrDefaultAsync(u => u.Id == entity.Id && !u.IsDeleted).ConfigureAwait(false);
 
                 var dto = _mapper.Map<UserAuthorityDto>(entityWithNav ?? entity);
                 return ApiResponse<UserAuthorityDto>.SuccessResult(dto, _localizationService.GetLocalizedString("UserAuthorityService.UserAuthorityUpdated"));
@@ -179,7 +179,7 @@ namespace crm_api.Services
         {
             try
             {
-                var exists = await _unitOfWork.UserAuthorities.ExistsAsync(id);
+                var exists = await _unitOfWork.UserAuthorities.ExistsAsync(id).ConfigureAwait(false);
                 if (!exists)
                 {
                     return ApiResponse<bool>.ErrorResult(
@@ -188,8 +188,8 @@ namespace crm_api.Services
                         StatusCodes.Status404NotFound);
                 }
 
-                await _unitOfWork.UserAuthorities.SoftDeleteAsync(id);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.UserAuthorities.SoftDeleteAsync(id).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 return ApiResponse<bool>.SuccessResult(true, _localizationService.GetLocalizedString("UserAuthorityService.UserAuthorityDeleted"));
             }
@@ -206,7 +206,7 @@ namespace crm_api.Services
         {
             try
             {
-                var exists = await _unitOfWork.UserAuthorities.ExistsAsync(id);
+                var exists = await _unitOfWork.UserAuthorities.ExistsAsync(id).ConfigureAwait(false);
                 return ApiResponse<bool>.SuccessResult(exists, _localizationService.GetLocalizedString("General.OperationSuccessful"));
             }
             catch (Exception ex)

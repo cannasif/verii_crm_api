@@ -21,7 +21,7 @@ namespace crm_api.Services
         {
             try
             {
-                var user = await _unitOfWork.Users.GetByIdAsync(userId);
+                var user = await _unitOfWork.Users.GetByIdAsync(userId).ConfigureAwait(false);
                 if (user == null)
                 {
                     return ApiResponse<UserPermissionGroupDto>.ErrorResult(
@@ -34,7 +34,7 @@ namespace crm_api.Services
                     .AsNoTracking()
                     .Where(x => x.UserId == userId && !x.IsDeleted)
                     .Include(x => x.PermissionGroup)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 var dto = new UserPermissionGroupDto
                 {
@@ -63,7 +63,7 @@ namespace crm_api.Services
         {
             try
             {
-                var user = await _unitOfWork.Users.GetByIdAsync(userId);
+                var user = await _unitOfWork.Users.GetByIdAsync(userId).ConfigureAwait(false);
                 if (user == null)
                 {
                     return ApiResponse<UserPermissionGroupDto>.ErrorResult(
@@ -77,7 +77,7 @@ namespace crm_api.Services
                 {
                     var validCount = await _unitOfWork.PermissionGroups.Query()
                         .AsNoTracking()
-                        .CountAsync(x => !x.IsDeleted && distinctGroupIds.Contains(x.Id));
+                        .CountAsync(x => !x.IsDeleted && distinctGroupIds.Contains(x.Id)).ConfigureAwait(false);
 
                     if (validCount != distinctGroupIds.Count)
                     {
@@ -91,11 +91,11 @@ namespace crm_api.Services
                 var currentLinks = await _unitOfWork.UserPermissionGroups
                     .Query(tracking: true, ignoreQueryFilters: true)
                     .Where(x => x.UserId == userId)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 foreach (var link in currentLinks.Where(x => !x.IsDeleted && !distinctGroupIds.Contains(x.PermissionGroupId)))
                 {
-                    await _unitOfWork.UserPermissionGroups.SoftDeleteAsync(link.Id);
+                    await _unitOfWork.UserPermissionGroups.SoftDeleteAsync(link.Id).ConfigureAwait(false);
                 }
 
                 foreach (var groupId in distinctGroupIds)
@@ -107,7 +107,7 @@ namespace crm_api.Services
                         {
                             UserId = userId,
                             PermissionGroupId = groupId
-                        });
+                        }).ConfigureAwait(false);
                         continue;
                     }
 
@@ -116,12 +116,12 @@ namespace crm_api.Services
                         existing.IsDeleted = false;
                         existing.DeletedDate = null;
                         existing.DeletedBy = null;
-                        await _unitOfWork.UserPermissionGroups.UpdateAsync(existing);
+                        await _unitOfWork.UserPermissionGroups.UpdateAsync(existing).ConfigureAwait(false);
                     }
                 }
 
-                await _unitOfWork.SaveChangesAsync();
-                return await GetByUserIdAsync(userId);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
+                return await GetByUserIdAsync(userId).ConfigureAwait(false);
             }
             catch (Exception ex)
             {

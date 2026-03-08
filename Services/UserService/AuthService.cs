@@ -41,7 +41,7 @@ namespace crm_api.Services
             try
             {
                 var query = _unitOfWork.Users.Query().Include(u => u.RoleNavigation);
-                var user = await query.FirstOrDefaultAsync(u => u.Username == username);
+                var user = await query.FirstOrDefaultAsync(u => u.Username == username).ConfigureAwait(false);
                 
                 if (user == null)
                 {
@@ -62,7 +62,7 @@ namespace crm_api.Services
         {
             try
             {
-                var user = await _unitOfWork.Users.Query().Include(u => u.RoleNavigation).FirstOrDefaultAsync(u => u.Id == id);
+                var user = await _unitOfWork.Users.Query().Include(u => u.RoleNavigation).FirstOrDefaultAsync(u => u.Id == id).ConfigureAwait(false);
                 
                 if (user == null)
                 {
@@ -84,7 +84,7 @@ namespace crm_api.Services
             try
             {
                 // Check if user already exists
-                var existingUserResponse = await GetUserByUsernameAsync(registerDto.Username);
+                var existingUserResponse = await GetUserByUsernameAsync(registerDto.Username).ConfigureAwait(false);
                 if (existingUserResponse.Success)
                 {
                     var msg = _localizationService.GetLocalizedString("AuthUserAlreadyExists");
@@ -101,8 +101,8 @@ namespace crm_api.Services
                     LastName = registerDto.LastName
                 };
 
-                await _unitOfWork.Users.AddAsync(user);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.Users.AddAsync(user).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 var dto = MapToUserDto(user);
                 return ApiResponse<UserDto>.SuccessResult(dto, _localizationService.GetLocalizedString("AuthUserRegisteredSuccessfully"));
@@ -123,7 +123,7 @@ namespace crm_api.Services
                     Password = request.Password
                 };
                 // Email veya username ile kullanıcı arama
-                var user = await _unitOfWork.Users.Query().FirstOrDefaultAsync(u => u.Username == loginDto.Username || u.Email == loginDto.Username);
+                var user = await _unitOfWork.Users.Query().FirstOrDefaultAsync(u => u.Username == loginDto.Username || u.Email == loginDto.Username).ConfigureAwait(false);
                 
                 if (user == null)
                 {
@@ -150,12 +150,12 @@ namespace crm_api.Services
                 }
                 var token = tokenResponse.Data!;
 
-                var activeSession = await _unitOfWork.UserSessions.Query(tracking: true).FirstOrDefaultAsync(s => s.UserId == user.Id && s.RevokedAt == null);
+                var activeSession = await _unitOfWork.UserSessions.Query(tracking: true).FirstOrDefaultAsync(s => s.UserId == user.Id && s.RevokedAt == null).ConfigureAwait(false);
                 if (activeSession != null)
                 {
                     activeSession.RevokedAt = DateTime.UtcNow;
-                    await _unitOfWork.SaveChangesAsync();
-                    await AuthHub.ForceLogoutUser(_hubContext, user.Id.ToString());
+                    await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
+                    await AuthHub.ForceLogoutUser(_hubContext, user.Id.ToString()).ConfigureAwait(false);
                 }
 
                 var session = new UserSession
@@ -167,8 +167,8 @@ namespace crm_api.Services
                     IsDeleted = false,
                     CreatedDate = DateTime.UtcNow
                 };
-                await _unitOfWork.UserSessions.AddAsync(session);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.UserSessions.AddAsync(session).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
                 
                 return ApiResponse<string>.SuccessResult(token, _localizationService.GetLocalizedString("Success.User.LoginSuccessful"));
             }
@@ -182,7 +182,7 @@ namespace crm_api.Services
         {
             try
             {
-                var user = await _unitOfWork.Users.Query().Include(u => u.RoleNavigation).FirstOrDefaultAsync(u => (u.Email == emailOrUsername || u.Username == emailOrUsername) && u.IsActive);
+                var user = await _unitOfWork.Users.Query().Include(u => u.RoleNavigation).FirstOrDefaultAsync(u => (u.Email == emailOrUsername || u.Username == emailOrUsername) && u.IsActive).ConfigureAwait(false);
                 
                 if (user == null)
                 {
@@ -210,25 +210,25 @@ namespace crm_api.Services
                     RememberMe = loginDto.RememberMe
                 };
 
-                var loginResult = await LoginAsync(loginRequest);
+                var loginResult = await LoginAsync(loginRequest).ConfigureAwait(false);
                 if (!loginResult.Success)
                 {
                     return ApiResponse<LoginWithSessionResponseDto>.ErrorResult(loginResult.Message, loginResult.ExceptionMessage ?? string.Empty, loginResult.StatusCode);
                 }
 
-                var userResult = await GetUserByEmailOrUsernameAsync(loginDto.Username);
+                var userResult = await GetUserByEmailOrUsernameAsync(loginDto.Username).ConfigureAwait(false);
                 if (!userResult.Success)
                 {
                     return ApiResponse<LoginWithSessionResponseDto>.ErrorResult(userResult.Message, null, 401);
                 }
 
-                var user = await _unitOfWork.Users.Query().FirstOrDefaultAsync(u => u.Username == loginDto.Username || u.Email == loginDto.Username);
+                var user = await _unitOfWork.Users.Query().FirstOrDefaultAsync(u => u.Username == loginDto.Username || u.Email == loginDto.Username).ConfigureAwait(false);
                 if (user == null)
                 {
                     return ApiResponse<LoginWithSessionResponseDto>.ErrorResult(_localizationService.GetLocalizedString("AuthUserNotFound"), null, 404);
                 }
 
-                var session = await _unitOfWork.UserSessions.Query().FirstOrDefaultAsync(s => s.UserId == user.Id && s.RevokedAt == null);
+                var session = await _unitOfWork.UserSessions.Query().FirstOrDefaultAsync(s => s.UserId == user.Id && s.RevokedAt == null).ConfigureAwait(false);
                 if (session == null)
                 {
                     return ApiResponse<LoginWithSessionResponseDto>.ErrorResult(_localizationService.GetLocalizedString("AuthSessionNotFound"), null, 404);
@@ -257,7 +257,7 @@ namespace crm_api.Services
         {
             try
             {
-                var users = await _unitOfWork.Users.Query().Include(u => u.RoleNavigation).ToListAsync();
+                var users = await _unitOfWork.Users.Query().Include(u => u.RoleNavigation).ToListAsync().ConfigureAwait(false);
                 var dtos = users.Select(MapToUserDto).ToList();
                 return ApiResponse<IEnumerable<UserDto>>.SuccessResult(dtos, _localizationService.GetLocalizedString("DataRetrievedSuccessfully"));
             }
@@ -274,7 +274,7 @@ namespace crm_api.Services
                 var users = await _unitOfWork.Users.Query()
                     .Include(u => u.RoleNavigation)
                     .Where(u => u.IsActive == true)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
                 var dtos = users.Select(MapToUserDto).ToList();
                 return ApiResponse<IEnumerable<UserDto>>.SuccessResult(dtos, _localizationService.GetLocalizedString("ActiveUsersRetrievedSuccessfully"));
             }
@@ -288,7 +288,7 @@ namespace crm_api.Services
         {
             try
             {
-                var user = await _unitOfWork.Users.Query().FirstOrDefaultAsync(u => u.Email == request.Email);
+                var user = await _unitOfWork.Users.Query().FirstOrDefaultAsync(u => u.Email == request.Email).ConfigureAwait(false);
                 var token = Guid.NewGuid().ToString("N");
                 var tokenHash = ComputeSha256Hash(token);
                 var expiresAt = DateTime.UtcNow.AddMinutes(30);
@@ -303,8 +303,8 @@ namespace crm_api.Services
                         CreatedDate = DateTime.UtcNow,
                         IsDeleted = false
                     };
-                    await _unitOfWork.Repository<PasswordResetRequest>().AddAsync(reset);
-                    await _unitOfWork.SaveChangesAsync();
+                    await _unitOfWork.Repository<PasswordResetRequest>().AddAsync(reset).ConfigureAwait(false);
+                    await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
                     
                     var fullName = string.Join(" ", new[] { user.FirstName, user.LastName }.Where(x => !string.IsNullOrWhiteSpace(x)));
                     if (string.IsNullOrWhiteSpace(fullName))
@@ -343,7 +343,7 @@ namespace crm_api.Services
 
                 var reset = await _unitOfWork.Repository<PasswordResetRequest>().Query(tracking: true)
                     .Include(r => r.User)
-                    .FirstOrDefaultAsync(r => r.TokenHash == tokenHash && r.UsedAt == null && r.ExpiresAt > now && !r.IsDeleted);
+                    .FirstOrDefaultAsync(r => r.TokenHash == tokenHash && r.UsedAt == null && r.ExpiresAt > now && !r.IsDeleted).ConfigureAwait(false);
 
                 if (reset == null || reset.User == null)
                 {
@@ -356,9 +356,9 @@ namespace crm_api.Services
                 reset.User.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
                 reset.User.UpdatedDate = now;
 
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
-                await InvalidateUserSessionsAsync(reset.User.Id);
+                await InvalidateUserSessionsAsync(reset.User.Id).ConfigureAwait(false);
 
                 var displayName = string.Join(" ", new[] { reset.User.FirstName, reset.User.LastName }.Where(x => !string.IsNullOrWhiteSpace(x)));
                 if (string.IsNullOrWhiteSpace(displayName))
@@ -380,13 +380,13 @@ namespace crm_api.Services
         {
             try
             {
-                var userIdRequest = await _userService.GetCurrentUserIdAsync();
+                var userIdRequest = await _userService.GetCurrentUserIdAsync().ConfigureAwait(false);
                 if (!userIdRequest.Success)
                 {
                     return ApiResponse<string>.ErrorResult(userIdRequest.Message, userIdRequest.ExceptionMessage ?? string.Empty, userIdRequest.StatusCode);
                 }
                 var userId = userIdRequest.Data!;
-                var user = await _unitOfWork.Users.Query(tracking: true).FirstOrDefaultAsync(u => u.Id == userId);
+                var user = await _unitOfWork.Users.Query(tracking: true).FirstOrDefaultAsync(u => u.Id == userId).ConfigureAwait(false);
                 if (user == null)
                 {
                     var nf = _localizationService.GetLocalizedString("AuthUserNotFound");
@@ -405,14 +405,14 @@ namespace crm_api.Services
 
                 user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
                 user.UpdatedDate = DateTime.UtcNow;
-                var affectedRows = await _unitOfWork.SaveChangesAsync();
+                var affectedRows = await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
                 if (affectedRows == 0 || !BCrypt.Net.BCrypt.Verify(request.NewPassword, user.PasswordHash))
                 {
                     var saveMsg = _localizationService.GetLocalizedString("AuthErrorOccurred");
                     return ApiResponse<string>.ErrorResult(saveMsg, saveMsg, 500);
                 }
 
-                await InvalidateUserSessionsAsync(user.Id);
+                await InvalidateUserSessionsAsync(user.Id).ConfigureAwait(false);
 
                 var tokenResponse = _jwtService.GenerateToken(user);
                 if (!tokenResponse.Success || string.IsNullOrWhiteSpace(tokenResponse.Data))
@@ -433,8 +433,8 @@ namespace crm_api.Services
                     IsDeleted = false,
                     CreatedDate = DateTime.UtcNow
                 };
-                await _unitOfWork.UserSessions.AddAsync(session);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.UserSessions.AddAsync(session).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 var displayName = string.Join(" ", new[] { user.FirstName, user.LastName }.Where(x => !string.IsNullOrWhiteSpace(x)));
                 if (string.IsNullOrWhiteSpace(displayName))
@@ -468,7 +468,7 @@ namespace crm_api.Services
         {
             var sessions = await _unitOfWork.UserSessions.Query(tracking: true)
                 .Where(s => s.UserId == userId && s.RevokedAt == null)
-                .ToListAsync();
+                .ToListAsync().ConfigureAwait(false);
 
             if (sessions.Count > 0)
             {
@@ -478,8 +478,8 @@ namespace crm_api.Services
                     s.RevokedAt = now;
                     s.UpdatedDate = now;
                 }
-                await _unitOfWork.SaveChangesAsync();
-                await AuthHub.ForceLogoutUser(_hubContext, userId.ToString());
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
+                await AuthHub.ForceLogoutUser(_hubContext, userId.ToString()).ConfigureAwait(false);
             }
         }
 

@@ -34,8 +34,8 @@ namespace crm_api.Services
                     .ApplyFilters(request.Filters, request.FilterLogic)
                     .ApplySorting(request.SortBy ?? nameof(PermissionDefinition.Id), request.SortDirection);
 
-                var totalCount = await query.CountAsync();
-                var items = await query.ApplyPagination(request.PageNumber, request.PageSize).ToListAsync();
+                var totalCount = await query.CountAsync().ConfigureAwait(false);
+                var items = await query.ApplyPagination(request.PageNumber, request.PageSize).ToListAsync().ConfigureAwait(false);
 
                 var dtoItems = items.Select(x => new PermissionDefinitionDto
                 {
@@ -81,7 +81,7 @@ namespace crm_api.Services
                     .Include(x => x.CreatedByUser)
                     .Include(x => x.UpdatedByUser)
                     .Include(x => x.DeletedByUser)
-                    .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
+                    .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted).ConfigureAwait(false);
 
                 if (entity == null)
                 {
@@ -124,7 +124,7 @@ namespace crm_api.Services
             {
                 var exists = await _unitOfWork.PermissionDefinitions.Query()
                     .AsNoTracking()
-                    .AnyAsync(x => !x.IsDeleted && x.Code == dto.Code);
+                    .AnyAsync(x => !x.IsDeleted && x.Code == dto.Code).ConfigureAwait(false);
 
                 if (exists)
                 {
@@ -142,10 +142,10 @@ namespace crm_api.Services
                     IsActive = dto.IsActive
                 };
 
-                await _unitOfWork.PermissionDefinitions.AddAsync(entity);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.PermissionDefinitions.AddAsync(entity).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
-                return await GetByIdAsync(entity.Id);
+                return await GetByIdAsync(entity.Id).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -160,7 +160,7 @@ namespace crm_api.Services
         {
             try
             {
-                var entity = await _unitOfWork.PermissionDefinitions.GetByIdForUpdateAsync(id);
+                var entity = await _unitOfWork.PermissionDefinitions.GetByIdForUpdateAsync(id).ConfigureAwait(false);
                 if (entity == null)
                 {
                     return ApiResponse<PermissionDefinitionDto>.ErrorResult(
@@ -173,7 +173,7 @@ namespace crm_api.Services
                 {
                     var duplicate = await _unitOfWork.PermissionDefinitions.Query()
                         .AsNoTracking()
-                        .AnyAsync(x => !x.IsDeleted && x.Id != id && x.Code == dto.Code);
+                        .AnyAsync(x => !x.IsDeleted && x.Id != id && x.Code == dto.Code).ConfigureAwait(false);
 
                     if (duplicate)
                     {
@@ -201,10 +201,10 @@ namespace crm_api.Services
                     entity.IsActive = dto.IsActive.Value;
                 }
 
-                await _unitOfWork.PermissionDefinitions.UpdateAsync(entity);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.PermissionDefinitions.UpdateAsync(entity).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
-                return await GetByIdAsync(entity.Id);
+                return await GetByIdAsync(entity.Id).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -250,7 +250,7 @@ namespace crm_api.Services
                 var existingAll = await _unitOfWork.PermissionDefinitions.Query()
                     .IgnoreQueryFilters()
                     .Where(x => distinctCodes.Contains(x.Code))
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 var existingByCode = existingAll
                     .GroupBy(x => x.Code, StringComparer.OrdinalIgnoreCase)
@@ -298,7 +298,7 @@ namespace crm_api.Services
 
                         if (changed)
                         {
-                            await _unitOfWork.PermissionDefinitions.UpdateAsync(entity);
+                            await _unitOfWork.PermissionDefinitions.UpdateAsync(entity).ConfigureAwait(false);
                             updated++;
                         }
 
@@ -315,13 +315,13 @@ namespace crm_api.Services
                         IsActive = item.IsActive
                     };
 
-                    await _unitOfWork.PermissionDefinitions.AddAsync(newEntity);
+                    await _unitOfWork.PermissionDefinitions.AddAsync(newEntity).ConfigureAwait(false);
                     created++;
                 }
 
 if (created > 0 || updated > 0 || reactivated > 0)
                 {
-                    await _unitOfWork.SaveChangesAsync();
+                    await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
                 }
 
                 return ApiResponse<PermissionDefinitionSyncResultDto>.SuccessResult(
@@ -347,7 +347,7 @@ if (created > 0 || updated > 0 || reactivated > 0)
         {
             try
             {
-                var exists = await _unitOfWork.PermissionDefinitions.ExistsAsync(id);
+                var exists = await _unitOfWork.PermissionDefinitions.ExistsAsync(id).ConfigureAwait(false);
                 if (!exists)
                 {
                     return ApiResponse<bool>.ErrorResult(
@@ -356,8 +356,8 @@ if (created > 0 || updated > 0 || reactivated > 0)
                         StatusCodes.Status404NotFound);
                 }
 
-                await _unitOfWork.PermissionDefinitions.SoftDeleteAsync(id);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.PermissionDefinitions.SoftDeleteAsync(id).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 return ApiResponse<bool>.SuccessResult(true, _localizationService.GetLocalizedString("General.OperationSuccessful"));
             }

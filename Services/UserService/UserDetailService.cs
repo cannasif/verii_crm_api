@@ -29,7 +29,7 @@ namespace crm_api.Services
         {
             try
             {
-                var entity = await _unitOfWork.UserDetails.GetByIdAsync(id);
+                var entity = await _unitOfWork.UserDetails.GetByIdAsync(id).ConfigureAwait(false);
                 if (entity == null || entity.IsDeleted)
                 {
                     return ApiResponse<UserDetailDto>.ErrorResult(
@@ -44,7 +44,7 @@ namespace crm_api.Services
                     .Include(u => u.CreatedByUser)
                     .Include(u => u.UpdatedByUser)
                     .Include(u => u.DeletedByUser)
-                    .FirstOrDefaultAsync();
+                    .FirstOrDefaultAsync().ConfigureAwait(false);
 
                 var dto = _mapper.Map<UserDetailDto>(entityWithNav ?? entity);
                 return ApiResponse<UserDetailDto>.SuccessResult(dto, _localizationService.GetLocalizedString("UserDetailService.UserDetailRetrievedSuccessfully"));
@@ -68,7 +68,7 @@ namespace crm_api.Services
                     .Include(u => u.CreatedByUser)
                     .Include(u => u.UpdatedByUser)
                     .Include(u => u.DeletedByUser)
-                    .FirstOrDefaultAsync();
+                    .FirstOrDefaultAsync().ConfigureAwait(false);
 
                 var dto = _mapper.Map<UserDetailDto>(entity);
                 return ApiResponse<UserDetailDto>.SuccessResult(dto, _localizationService.GetLocalizedString("UserDetailService.UserDetailRetrievedSuccessfully"));
@@ -89,7 +89,7 @@ namespace crm_api.Services
                 var entities = await _unitOfWork.UserDetails.Query()
                     .AsNoTracking()
                     .Where(x => !x.IsDeleted)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 var dtos = _mapper.Map<IEnumerable<UserDetailDto>>(entities);
                 return ApiResponse<IEnumerable<UserDetailDto>>.SuccessResult(dtos, _localizationService.GetLocalizedString("UserDetailService.UserDetailRetrievedSuccessfully"));
@@ -123,10 +123,10 @@ namespace crm_api.Services
 
                 query = query.ApplySorting(sortBy, request.SortDirection);
 
-                var totalCount = await query.CountAsync();
+                var totalCount = await query.CountAsync().ConfigureAwait(false);
                 var items = await query
                     .ApplyPagination(request.PageNumber, request.PageSize)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 var dtos = _mapper.Map<List<UserDetailDto>>(items);
                 var result = new PagedResponse<UserDetailDto>
@@ -153,7 +153,7 @@ namespace crm_api.Services
             try
             {
                 // Check if user exists
-                var user = await _unitOfWork.Users.GetByIdAsync(dto.UserId);
+                var user = await _unitOfWork.Users.GetByIdAsync(dto.UserId).ConfigureAwait(false);
                 if (user == null || user.IsDeleted)
                 {
                     return ApiResponse<UserDetailDto>.ErrorResult(
@@ -166,7 +166,7 @@ namespace crm_api.Services
                 var existingDetail = await _unitOfWork.UserDetails.Query()
                     .AsNoTracking()
                     .Where(x => !x.IsDeleted)
-                    .FirstOrDefaultAsync(x => x.UserId == dto.UserId && !x.IsDeleted);
+                    .FirstOrDefaultAsync(x => x.UserId == dto.UserId && !x.IsDeleted).ConfigureAwait(false);
 
                 if (existingDetail != null)
                 {
@@ -177,8 +177,8 @@ namespace crm_api.Services
                 }
 
                 var entity = _mapper.Map<UserDetail>(dto);
-                await _unitOfWork.UserDetails.AddAsync(entity);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.UserDetails.AddAsync(entity).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 // Reload with navigation properties for mapping
                 var entityWithNav = await _unitOfWork.UserDetails.Query()
@@ -186,7 +186,7 @@ namespace crm_api.Services
                     .Include(u => u.CreatedByUser)
                     .Include(u => u.UpdatedByUser)
                     .Include(u => u.DeletedByUser)
-                    .FirstOrDefaultAsync(u => u.Id == entity.Id && !u.IsDeleted);
+                    .FirstOrDefaultAsync(u => u.Id == entity.Id && !u.IsDeleted).ConfigureAwait(false);
 
                 var result = _mapper.Map<UserDetailDto>(entityWithNav ?? entity);
                 return ApiResponse<UserDetailDto>.SuccessResult(result, _localizationService.GetLocalizedString("UserDetailService.UserDetailCreatedSuccessfully"));
@@ -204,7 +204,7 @@ namespace crm_api.Services
         {
             try
             {
-                var entity = await _unitOfWork.UserDetails.GetByIdAsync(id);
+                var entity = await _unitOfWork.UserDetails.GetByIdAsync(id).ConfigureAwait(false);
                 if (entity == null || entity.IsDeleted)
                 {
                     return ApiResponse<UserDetailDto>.ErrorResult(
@@ -218,14 +218,14 @@ namespace crm_api.Services
                     (string.IsNullOrEmpty(dto.ProfilePictureUrl) || entity.ProfilePictureUrl != dto.ProfilePictureUrl))
                 {
                     // Delete old profile picture before updating
-                    await _fileUploadService.DeleteProfilePictureAsync(entity.ProfilePictureUrl);
+                    await _fileUploadService.DeleteProfilePictureAsync(entity.ProfilePictureUrl).ConfigureAwait(false);
                 }
 
                 _mapper.Map(dto, entity);
                 entity.UpdatedDate = DateTime.UtcNow;
                 
-                await _unitOfWork.UserDetails.UpdateAsync(entity);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.UserDetails.UpdateAsync(entity).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 // Reload with navigation properties for mapping
                 var entityWithNav = await _unitOfWork.UserDetails.Query()
@@ -233,7 +233,7 @@ namespace crm_api.Services
                     .Include(u => u.CreatedByUser)
                     .Include(u => u.UpdatedByUser)
                     .Include(u => u.DeletedByUser)
-                    .FirstOrDefaultAsync(u => u.Id == entity.Id && !u.IsDeleted);
+                    .FirstOrDefaultAsync(u => u.Id == entity.Id && !u.IsDeleted).ConfigureAwait(false);
 
                 var result = _mapper.Map<UserDetailDto>(entityWithNav ?? entity);
                 return ApiResponse<UserDetailDto>.SuccessResult(result, _localizationService.GetLocalizedString("UserDetailService.UserDetailUpdatedSuccessfully"));
@@ -251,7 +251,7 @@ namespace crm_api.Services
         {
             try
             {
-                var entity = await _unitOfWork.UserDetails.GetByIdAsync(id);
+                var entity = await _unitOfWork.UserDetails.GetByIdAsync(id).ConfigureAwait(false);
                 if (entity == null || entity.IsDeleted)
                 {
                     return ApiResponse<bool>.ErrorResult(
@@ -263,13 +263,13 @@ namespace crm_api.Services
                 // Delete profile picture if exists
                 if (!string.IsNullOrEmpty(entity.ProfilePictureUrl))
                 {
-                    await _fileUploadService.DeleteProfilePictureAsync(entity.ProfilePictureUrl);
+                    await _fileUploadService.DeleteProfilePictureAsync(entity.ProfilePictureUrl).ConfigureAwait(false);
                 }
 
                 entity.IsDeleted = true;
                 entity.DeletedDate = DateTime.UtcNow;
-                await _unitOfWork.UserDetails.UpdateAsync(entity);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.UserDetails.UpdateAsync(entity).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 return ApiResponse<bool>.SuccessResult(true, _localizationService.GetLocalizedString("UserDetailService.UserDetailDeletedSuccessfully"));
             }
@@ -287,7 +287,7 @@ namespace crm_api.Services
             try
             {
                 // Check if user exists
-                var user = await _unitOfWork.Users.GetByIdAsync(userId);
+                var user = await _unitOfWork.Users.GetByIdAsync(userId).ConfigureAwait(false);
                 if (user == null || user.IsDeleted)
                 {
                     return ApiResponse<UserDetailDto>.ErrorResult(
@@ -297,7 +297,7 @@ namespace crm_api.Services
                 }
 
                 // Upload the file
-                var uploadResult = await _fileUploadService.UploadProfilePictureAsync(file, userId);
+                var uploadResult = await _fileUploadService.UploadProfilePictureAsync(file, userId).ConfigureAwait(false);
                 if (!uploadResult.Success)
                 {
                     return ApiResponse<UserDetailDto>.ErrorResult(
@@ -310,7 +310,7 @@ namespace crm_api.Services
                 var userDetail = await _unitOfWork.UserDetails.Query()
                     .AsNoTracking()
                     .Where(x => !x.IsDeleted)
-                    .FirstOrDefaultAsync(x => x.UserId == userId && !x.IsDeleted);
+                    .FirstOrDefaultAsync(x => x.UserId == userId && !x.IsDeleted).ConfigureAwait(false);
 
                 if (userDetail == null)
                 {
@@ -322,23 +322,23 @@ namespace crm_api.Services
                         CreatedDate = DateTime.UtcNow,
                         IsDeleted = false
                     };
-                    await _unitOfWork.UserDetails.AddAsync(userDetail);
+                    await _unitOfWork.UserDetails.AddAsync(userDetail).ConfigureAwait(false);
                 }
                 else
                 {
                     // Delete old profile picture if exists
                     if (!string.IsNullOrEmpty(userDetail.ProfilePictureUrl))
                     {
-                        await _fileUploadService.DeleteProfilePictureAsync(userDetail.ProfilePictureUrl);
+                        await _fileUploadService.DeleteProfilePictureAsync(userDetail.ProfilePictureUrl).ConfigureAwait(false);
                     }
 
                     // Update existing user detail
                     userDetail.ProfilePictureUrl = uploadResult.Data;
                     userDetail.UpdatedDate = DateTime.UtcNow;
-                    await _unitOfWork.UserDetails.UpdateAsync(userDetail);
+                    await _unitOfWork.UserDetails.UpdateAsync(userDetail).ConfigureAwait(false);
                 }
 
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 var result = _mapper.Map<UserDetailDto>(userDetail);
                 return ApiResponse<UserDetailDto>.SuccessResult(result, _localizationService.GetLocalizedString("UserDetailService.ProfilePictureUploadedSuccessfully"));

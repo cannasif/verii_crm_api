@@ -39,7 +39,7 @@ namespace crm_api.Services
                 var user = await _unitOfWork.Users.Query()
                     .AsNoTracking()
                     .Include(x => x.RoleNavigation)
-                    .FirstOrDefaultAsync(x => x.Id == userId && !x.IsDeleted);
+                    .FirstOrDefaultAsync(x => x.Id == userId && !x.IsDeleted).ConfigureAwait(false);
 
                 if (user == null)
                 {
@@ -55,7 +55,7 @@ namespace crm_api.Services
                     .Include(x => x.PermissionGroup)
                     .ThenInclude(x => x.GroupPermissions.Where(gp => !gp.IsDeleted))
                     .ThenInclude(x => x.PermissionDefinition)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 var roleTitle = user.RoleNavigation?.Title ?? "User";
                 var isSystemAdmin = userGroupLinks.Any(x => x.PermissionGroup.IsSystemAdmin);

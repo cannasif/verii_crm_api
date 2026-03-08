@@ -49,11 +49,11 @@ namespace crm_api.Services
 
                 query = query.ApplySorting(sortBy, request.SortDirection);
 
-                var totalCount = await query.CountAsync();
+                var totalCount = await query.CountAsync().ConfigureAwait(false);
 
                 var items = await query
                     .ApplyPagination(request.PageNumber, request.PageSize)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 var dtos = items.Select(x => _mapper.Map<UserSessionDto>(x)).ToList();
 
@@ -80,7 +80,7 @@ namespace crm_api.Services
         {
             try
             {
-                var item = await _uow.UserSessions.GetByIdAsync(id);
+                var item = await _uow.UserSessions.GetByIdAsync(id).ConfigureAwait(false);
                 if (item == null) return ApiResponse<UserSessionDto>.ErrorResult(
                     _loc.GetLocalizedString("UserSessionService.UserSessionNotFound"),
                     _loc.GetLocalizedString("UserSessionService.UserSessionNotFound"),
@@ -92,7 +92,7 @@ namespace crm_api.Services
                     .Include(u => u.CreatedByUser)
                     .Include(u => u.UpdatedByUser)
                     .Include(u => u.DeletedByUser)
-                    .FirstOrDefaultAsync(u => u.Id == id && !u.IsDeleted);
+                    .FirstOrDefaultAsync(u => u.Id == id && !u.IsDeleted).ConfigureAwait(false);
 
                 var dto = _mapper.Map<UserSessionDto>(itemWithNav ?? item);
                 return ApiResponse<UserSessionDto>.SuccessResult(dto, _loc.GetLocalizedString("UserSessionService.UserSessionRetrieved"));
@@ -111,8 +111,8 @@ namespace crm_api.Services
             try
             {
                 var entity = _mapper.Map<UserSession>(dto);
-                await _uow.UserSessions.AddAsync(entity);
-                await _uow.SaveChangesAsync();
+                await _uow.UserSessions.AddAsync(entity).ConfigureAwait(false);
+                await _uow.SaveChangesAsync().ConfigureAwait(false);
 
                 // Reload with navigation properties for mapping
                 var itemWithNav = await _uow.UserSessions.Query()
@@ -120,7 +120,7 @@ namespace crm_api.Services
                     .Include(u => u.CreatedByUser)
                     .Include(u => u.UpdatedByUser)
                     .Include(u => u.DeletedByUser)
-                    .FirstOrDefaultAsync(u => u.Id == entity.Id && !u.IsDeleted);
+                    .FirstOrDefaultAsync(u => u.Id == entity.Id && !u.IsDeleted).ConfigureAwait(false);
 
                 var outDto = _mapper.Map<UserSessionDto>(itemWithNav ?? entity);
                 return ApiResponse<UserSessionDto>.SuccessResult(outDto, _loc.GetLocalizedString("UserSessionService.UserSessionCreated"));
@@ -138,14 +138,14 @@ namespace crm_api.Services
         {
             try
             {
-                var entity = await _uow.UserSessions.GetByIdAsync(id);
+                var entity = await _uow.UserSessions.GetByIdAsync(id).ConfigureAwait(false);
                 if (entity == null) return ApiResponse<object>.ErrorResult(
                     _loc.GetLocalizedString("UserSessionService.UserSessionNotFound"),
                     _loc.GetLocalizedString("UserSessionService.UserSessionNotFound"),
                     StatusCodes.Status404NotFound);
                 entity.RevokedAt = DateTime.UtcNow;
-                await _uow.UserSessions.UpdateAsync(entity);
-                await _uow.SaveChangesAsync();
+                await _uow.UserSessions.UpdateAsync(entity).ConfigureAwait(false);
+                await _uow.SaveChangesAsync().ConfigureAwait(false);
                 return ApiResponse<object>.SuccessResult(null, _loc.GetLocalizedString("UserSessionService.UserSessionRevoked"));
             }
             catch (Exception ex)
@@ -161,13 +161,13 @@ namespace crm_api.Services
         {
             try
             {
-                var entity = await _uow.UserSessions.GetByIdAsync(id);
+                var entity = await _uow.UserSessions.GetByIdAsync(id).ConfigureAwait(false);
                 if (entity == null) return ApiResponse<object>.ErrorResult(
                     _loc.GetLocalizedString("UserSessionService.UserSessionNotFound"),
                     _loc.GetLocalizedString("UserSessionService.UserSessionNotFound"),
                     StatusCodes.Status404NotFound);
-                await _uow.UserSessions.SoftDeleteAsync(id);
-                await _uow.SaveChangesAsync();
+                await _uow.UserSessions.SoftDeleteAsync(id).ConfigureAwait(false);
+                await _uow.SaveChangesAsync().ConfigureAwait(false);
                 return ApiResponse<object>.SuccessResult(null, _loc.GetLocalizedString("UserSessionService.UserSessionDeleted"));
             }
             catch (Exception ex)
@@ -183,16 +183,16 @@ namespace crm_api.Services
         {
             try
             {
-                var activeSessions = await _uow.UserSessions.FindAsync(s => s.UserId == userId && s.RevokedAt == null);
+                var activeSessions = await _uow.UserSessions.FindAsync(s => s.UserId == userId && s.RevokedAt == null).ConfigureAwait(false);
                 var sessionsList = activeSessions.ToList();
                 if (sessionsList != null && sessionsList.Any())
                 {
                     foreach (var session in sessionsList)
                     {
                         session.RevokedAt = DateTime.UtcNow;
-                        await _uow.UserSessions.UpdateAsync(session);
+                        await _uow.UserSessions.UpdateAsync(session).ConfigureAwait(false);
                     }
-                    await _uow.SaveChangesAsync();
+                    await _uow.SaveChangesAsync().ConfigureAwait(false);
                 }
                 return ApiResponse<object>.SuccessResult(null, _loc.GetLocalizedString("UserSessionService.UserSessionRevoked"));
             }

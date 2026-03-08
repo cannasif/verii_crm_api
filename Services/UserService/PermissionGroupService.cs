@@ -35,8 +35,8 @@ namespace crm_api.Services
                     .ApplyFilters(request.Filters, request.FilterLogic)
                     .ApplySorting(request.SortBy ?? nameof(PermissionGroup.Id), request.SortDirection);
 
-                var totalCount = await query.CountAsync();
-                var items = await query.ApplyPagination(request.PageNumber, request.PageSize).ToListAsync();
+                var totalCount = await query.CountAsync().ConfigureAwait(false);
+                var items = await query.ApplyPagination(request.PageNumber, request.PageSize).ToListAsync().ConfigureAwait(false);
 
                 return ApiResponse<PagedResponse<PermissionGroupDto>>.SuccessResult(
                     new PagedResponse<PermissionGroupDto>
@@ -68,7 +68,7 @@ namespace crm_api.Services
                     .Include(x => x.DeletedByUser)
                     .Include(x => x.GroupPermissions.Where(gp => !gp.IsDeleted))
                     .ThenInclude(x => x.PermissionDefinition)
-                    .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
+                    .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted).ConfigureAwait(false);
 
                 if (entity == null)
                 {
@@ -97,7 +97,7 @@ namespace crm_api.Services
             {
                 var duplicate = await _unitOfWork.PermissionGroups.Query()
                     .AsNoTracking()
-                    .AnyAsync(x => !x.IsDeleted && x.Name == dto.Name);
+                    .AnyAsync(x => !x.IsDeleted && x.Name == dto.Name).ConfigureAwait(false);
 
                 if (duplicate)
                 {
@@ -115,19 +115,19 @@ namespace crm_api.Services
                     IsActive = dto.IsActive
                 };
 
-                await _unitOfWork.PermissionGroups.AddAsync(entity);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.PermissionGroups.AddAsync(entity).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 if (dto.PermissionDefinitionIds.Count > 0)
                 {
-                    var linkResult = await SetPermissionsInternalAsync(entity.Id, dto.PermissionDefinitionIds);
+                    var linkResult = await SetPermissionsInternalAsync(entity.Id, dto.PermissionDefinitionIds).ConfigureAwait(false);
                     if (!linkResult.Success)
                     {
                         return ApiResponse<PermissionGroupDto>.ErrorResult(linkResult.Message, linkResult.ExceptionMessage, linkResult.StatusCode);
                     }
                 }
 
-                return await GetByIdAsync(entity.Id);
+                return await GetByIdAsync(entity.Id).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -142,7 +142,7 @@ namespace crm_api.Services
         {
             try
             {
-                var entity = await _unitOfWork.PermissionGroups.GetByIdForUpdateAsync(id);
+                var entity = await _unitOfWork.PermissionGroups.GetByIdForUpdateAsync(id).ConfigureAwait(false);
                 if (entity == null)
                 {
                     return ApiResponse<PermissionGroupDto>.ErrorResult(
@@ -163,7 +163,7 @@ namespace crm_api.Services
                 {
                     var duplicate = await _unitOfWork.PermissionGroups.Query()
                         .AsNoTracking()
-                        .AnyAsync(x => !x.IsDeleted && x.Id != id && x.Name == dto.Name);
+                        .AnyAsync(x => !x.IsDeleted && x.Id != id && x.Name == dto.Name).ConfigureAwait(false);
 
                     if (duplicate)
                     {
@@ -191,10 +191,10 @@ namespace crm_api.Services
                     entity.IsActive = dto.IsActive.Value;
                 }
 
-                await _unitOfWork.PermissionGroups.UpdateAsync(entity);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.PermissionGroups.UpdateAsync(entity).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
-                return await GetByIdAsync(entity.Id);
+                return await GetByIdAsync(entity.Id).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -207,7 +207,7 @@ namespace crm_api.Services
 
         public async Task<ApiResponse<PermissionGroupDto>> SetPermissionsAsync(long id, SetPermissionGroupPermissionsDto dto)
         {
-            var group = await _unitOfWork.PermissionGroups.GetByIdAsync(id);
+            var group = await _unitOfWork.PermissionGroups.GetByIdAsync(id).ConfigureAwait(false);
             if (group != null && group.IsSystemAdmin)
             {
                 return ApiResponse<PermissionGroupDto>.ErrorResult(
@@ -216,20 +216,20 @@ namespace crm_api.Services
                     StatusCodes.Status403Forbidden);
             }
 
-            var result = await SetPermissionsInternalAsync(id, dto.PermissionDefinitionIds);
+            var result = await SetPermissionsInternalAsync(id, dto.PermissionDefinitionIds).ConfigureAwait(false);
             if (!result.Success)
             {
                 return ApiResponse<PermissionGroupDto>.ErrorResult(result.Message, result.ExceptionMessage, result.StatusCode);
             }
 
-            return await GetByIdAsync(id);
+            return await GetByIdAsync(id).ConfigureAwait(false);
         }
 
         public async Task<ApiResponse<bool>> SoftDeleteAsync(long id)
         {
             try
             {
-                var entity = await _unitOfWork.PermissionGroups.GetByIdAsync(id);
+                var entity = await _unitOfWork.PermissionGroups.GetByIdAsync(id).ConfigureAwait(false);
                 if (entity == null)
                 {
                     return ApiResponse<bool>.ErrorResult(
@@ -246,8 +246,8 @@ namespace crm_api.Services
                         StatusCodes.Status403Forbidden);
                 }
 
-                await _unitOfWork.PermissionGroups.SoftDeleteAsync(id);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.PermissionGroups.SoftDeleteAsync(id).ConfigureAwait(false);
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                 return ApiResponse<bool>.SuccessResult(true, _localizationService.GetLocalizedString("General.OperationSuccessful"));
             }
@@ -264,7 +264,7 @@ namespace crm_api.Services
         {
             try
             {
-                var group = await _unitOfWork.PermissionGroups.GetByIdAsync(groupId);
+                var group = await _unitOfWork.PermissionGroups.GetByIdAsync(groupId).ConfigureAwait(false);
                 if (group == null)
                 {
                     return ApiResponse<bool>.ErrorResult(
@@ -278,7 +278,7 @@ namespace crm_api.Services
                 {
                     var validCount = await _unitOfWork.PermissionDefinitions.Query()
                         .AsNoTracking()
-                        .CountAsync(x => !x.IsDeleted && distinctPermissionIds.Contains(x.Id));
+                        .CountAsync(x => !x.IsDeleted && distinctPermissionIds.Contains(x.Id)).ConfigureAwait(false);
 
                     if (validCount != distinctPermissionIds.Count)
                     {
@@ -292,11 +292,11 @@ namespace crm_api.Services
                 var currentLinks = await _unitOfWork.PermissionGroupPermissions
                     .Query(tracking: true, ignoreQueryFilters: true)
                     .Where(x => x.PermissionGroupId == groupId)
-                    .ToListAsync();
+                    .ToListAsync().ConfigureAwait(false);
 
                 foreach (var link in currentLinks.Where(x => !x.IsDeleted && !distinctPermissionIds.Contains(x.PermissionDefinitionId)))
                 {
-                    await _unitOfWork.PermissionGroupPermissions.SoftDeleteAsync(link.Id);
+                    await _unitOfWork.PermissionGroupPermissions.SoftDeleteAsync(link.Id).ConfigureAwait(false);
                 }
 
                 foreach (var permissionId in distinctPermissionIds)
@@ -308,7 +308,7 @@ namespace crm_api.Services
                         {
                             PermissionGroupId = groupId,
                             PermissionDefinitionId = permissionId
-                        });
+                        }).ConfigureAwait(false);
                         continue;
                     }
 
@@ -317,11 +317,11 @@ namespace crm_api.Services
                         existing.IsDeleted = false;
                         existing.DeletedDate = null;
                         existing.DeletedBy = null;
-                        await _unitOfWork.PermissionGroupPermissions.UpdateAsync(existing);
+                        await _unitOfWork.PermissionGroupPermissions.UpdateAsync(existing).ConfigureAwait(false);
                     }
                 }
 
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
                 return ApiResponse<bool>.SuccessResult(true, _localizationService.GetLocalizedString("General.OperationSuccessful"));
             }
             catch (Exception ex)
