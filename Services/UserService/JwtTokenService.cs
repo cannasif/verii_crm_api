@@ -20,15 +20,17 @@ namespace crm_api.Services
             _localizationService = localizationService;
         }
 
-        public ApiResponse<string> GenerateToken(User user)
+        public ApiResponse<string> GenerateToken(User user, Guid sessionId)
         {
             try
             {
                 var claims = new[]
                 {
+                    new Claim(JwtRegisteredClaimNames.Jti, sessionId.ToString()),
                     new Claim(ClaimTypes.Name, user.Username),
                     new Claim(ClaimTypes.Email, user.Email),
                     new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                    new Claim(ClaimTypes.Sid, sessionId.ToString()),
                     new Claim("firstName", user.FirstName ?? ""),
                     new Claim("lastName", user.LastName ?? ""),
                     new Claim(ClaimTypes.Role, user.RoleNavigation?.Title ?? "User"),
