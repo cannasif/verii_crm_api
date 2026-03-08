@@ -52,7 +52,6 @@ namespace crm_api.Repositories
         public async Task<T?> GetByIdAsync(long id)
         {
             return await _dbSet
-                .Where(e => !e.IsDeleted)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(e => e.Id == id);
         }
@@ -60,7 +59,6 @@ namespace crm_api.Repositories
         public async Task<T?> GetByIdWithAuditUsersAsync(long id)
         {
             return await _dbSet
-                .Where(e => !e.IsDeleted)
                 .Include(e => e.CreatedByUser)
                 .Include(e => e.UpdatedByUser)
                 .Include(e => e.DeletedByUser)
@@ -81,7 +79,6 @@ namespace crm_api.Repositories
         public async Task<IEnumerable<T>> GetAllAsync()
         {
             return await _dbSet
-                .Where(e => !e.IsDeleted)
                 .AsNoTracking()
                 .ToListAsync();
         }
@@ -89,7 +86,6 @@ namespace crm_api.Repositories
         public async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> expression)
         {
             return await _dbSet
-                .Where(e => !e.IsDeleted)
                 .Where(expression)
                 .AsNoTracking()
                 .ToListAsync();
@@ -98,7 +94,6 @@ namespace crm_api.Repositories
         public async Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> expression)
         {
             return await _dbSet
-                .Where(e => !e.IsDeleted)
                 .Where(expression)
                 .AsNoTracking()
                 .FirstOrDefaultAsync();
@@ -189,18 +184,17 @@ namespace crm_api.Repositories
 
         public async Task<int> CountAsync()
         {
-            return await _dbSet.CountAsync(e => !e.IsDeleted);
+            return await _dbSet.CountAsync();
         }
 
         public async Task<int> CountAsync(Expression<Func<T, bool>> expression)
         {
-            return await _dbSet.Where(e => !e.IsDeleted).CountAsync(expression);
+            return await _dbSet.CountAsync(expression);
         }
 
         public async Task<IEnumerable<T>> GetPagedAsync(int pageNumber, int pageSize)
         {
             return await _dbSet
-                .Where(e => !e.IsDeleted)
                 .AsNoTracking()
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
@@ -210,7 +204,6 @@ namespace crm_api.Repositories
         public async Task<IEnumerable<T>> GetPagedAsync(int pageNumber, int pageSize, Expression<Func<T, bool>> filter)
         {
             return await _dbSet
-                .Where(e => !e.IsDeleted)
                 .Where(filter)
                 .AsNoTracking()
                 .Skip((pageNumber - 1) * pageSize)
