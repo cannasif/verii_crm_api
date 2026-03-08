@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using System.Globalization;
 using Microsoft.AspNetCore.Localization;
@@ -189,6 +190,7 @@ builder.Services.AddScoped<ISalesmen360Service, Salesmen360Service>();
 builder.Services.AddScoped<IRevenueQualityService, RevenueQualityService>();
 builder.Services.AddScoped<INextBestActionService, NextBestActionService>();
 builder.Services.AddScoped<IUserSessionService, UserSessionService>();
+builder.Services.AddScoped<IUserSessionCacheService, UserSessionCacheService>();
 builder.Services.AddScoped<IUserDiscountLimitService, UserDiscountLimitService>();
 builder.Services.AddScoped<IUserDetailService, UserDetailService>();
 
@@ -381,59 +383,46 @@ builder.Services.AddAuthentication(options =>
         },
         OnTokenValidated = async context =>
         {
-            var db = context.HttpContext.RequestServices.GetRequiredService<CmsDbContext>();
             var claims = context.Principal?.Claims;
-            var userId = claims?.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
-
-            if (userId == null)
+            var userIdClaim = claims?.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            if (!long.TryParse(userIdClaim, out var userId))
             {
                 context.Fail("Token geçersiz: eksik kullanıcı ID");
                 return;
             }
-
-            var authHeader = context.HttpContext.Request.Headers["Authorization"].FirstOrDefault();
-            var accessToken = context.HttpContext.Request.Query["access_token"].FirstOrDefault();
-
-            string? rawToken = null;
-            if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer "))
+            var sessionClaim = claims?.FirstOrDefault(c => c.Type == ClaimTypes.Sid)?.Value
+                ?? claims?.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti)?.Value;
+            if (!Guid.TryParse(sessionClaim, out var sessionId))
             {
-                rawToken = authHeader.Substring("Bearer ".Length).Trim();
-            }
-            else if (!string.IsNullOrEmpty(accessToken))
-            {
-                rawToken = accessToken;
-            }
-
-            string? tokenHash = null;
-            if (!string.IsNullOrEmpty(rawToken))
-            {
-                using var sha256Hash = System.Security.Cryptography.SHA256.Create();
-                var bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(rawToken));
-                var builderStr = new StringBuilder();
-                for (int i = 0; i < bytes.Length; i++)
-                {
-                    builderStr.Append(bytes[i].ToString("x2"));
-                }
-                tokenHash = builderStr.ToString();
+                context.Fail("Token gecersiz: eksik oturum ID");
+                return;
             }
 
             try
             {
-                var session = await db.UserSessions
-                    .AsNoTracking()
-                    .Where(s => s.UserId.ToString() == userId
-                        && s.RevokedAt == null
-                        && (tokenHash != null && s.Token == tokenHash))
-                    .FirstOrDefaultAsync(context.HttpContext.RequestAborted);
+                var cache = context.HttpContext.RequestServices.GetRequiredService<IMemoryCache>();
+                var sessionCacheService = context.HttpContext.RequestServices.GetRequiredService<IUserSessionCacheService>();
+                var cacheKey = sessionCacheService.GetCacheKey(sessionId);
 
-                if (session == null)
+                if (cache.TryGetValue<long>(cacheKey, out var cachedUserId))
                 {
-                    context.Fail("Token geçersiz veya oturum kapandı");
+                    if (cachedUserId != userId)
+                    {
+                        context.Fail("Session expired or invalid.");
+                    }
+
+                    return;
+                }
+
+                var restored = await sessionCacheService.RestoreSessionAsync(sessionId, userId, context.HttpContext.RequestAborted);
+                if (!restored)
+                {
+                    context.Fail("Session expired or invalid.");
                 }
             }
             catch (Exception ex)
             {
-                context.Fail($"Session kontrolü sırasında hata: {ex.Message}");
+                context.Fail($"Session validation failed: {ex.Message}");
             }
         }
     };
