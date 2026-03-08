@@ -16,10 +16,11 @@ namespace crm_api.Services
         private readonly IUnitOfWork _uow;
         private readonly IMapper _mapper;
         private readonly ILocalizationService _loc;
+        private readonly IUserSessionCacheService _userSessionCacheService;
 
-        public UserSessionService(IUnitOfWork uow, IMapper mapper, ILocalizationService loc)
+        public UserSessionService(IUnitOfWork uow, IMapper mapper, ILocalizationService loc, IUserSessionCacheService userSessionCacheService)
         {
-            _uow = uow; _mapper = mapper; _loc = loc;
+            _uow = uow; _mapper = mapper; _loc = loc; _userSessionCacheService = userSessionCacheService;
         }
 
         public async Task<ApiResponse<PagedResponse<UserSessionDto>>> GetAllSessionsAsync(PagedRequest request)
@@ -146,6 +147,7 @@ namespace crm_api.Services
                 entity.RevokedAt = DateTime.UtcNow;
                 await _uow.UserSessions.UpdateAsync(entity).ConfigureAwait(false);
                 await _uow.SaveChangesAsync().ConfigureAwait(false);
+                _userSessionCacheService.RemoveSession(entity.SessionId);
                 return ApiResponse<object>.SuccessResult(null, _loc.GetLocalizedString("UserSessionService.UserSessionRevoked"));
             }
             catch (Exception ex)
@@ -168,6 +170,7 @@ namespace crm_api.Services
                     StatusCodes.Status404NotFound);
                 await _uow.UserSessions.SoftDeleteAsync(id).ConfigureAwait(false);
                 await _uow.SaveChangesAsync().ConfigureAwait(false);
+                _userSessionCacheService.RemoveSession(entity.SessionId);
                 return ApiResponse<object>.SuccessResult(null, _loc.GetLocalizedString("UserSessionService.UserSessionDeleted"));
             }
             catch (Exception ex)
@@ -191,6 +194,7 @@ namespace crm_api.Services
                     {
                         session.RevokedAt = DateTime.UtcNow;
                         await _uow.UserSessions.UpdateAsync(session).ConfigureAwait(false);
+                        _userSessionCacheService.RemoveSession(session.SessionId);
                     }
                     await _uow.SaveChangesAsync().ConfigureAwait(false);
                 }
