@@ -34,8 +34,8 @@ namespace crm_api.Services
                 if (request == null || request.Count == 0)
                 {
                     return ApiResponse<List<ActivityImageDto>>.ErrorResult(
-                        "At least one image is required.",
-                        "At least one image is required.",
+                        _localizationService.GetLocalizedString("ActivityImageService.AtLeastOneImageRequired"),
+                        _localizationService.GetLocalizedString("ActivityImageService.AtLeastOneImageRequired"),
                         StatusCodes.Status400BadRequest);
                 }
 
@@ -48,8 +48,8 @@ namespace crm_api.Services
                 if (existingActivityIds.Count != activityIds.Count)
                 {
                     return ApiResponse<List<ActivityImageDto>>.ErrorResult(
-                        "One or more activities were not found.",
-                        "One or more activities were not found.",
+                        _localizationService.GetLocalizedString("ActivityImageService.ActivitiesNotFound"),
+                        _localizationService.GetLocalizedString("ActivityImageService.ActivitiesNotFound"),
                         StatusCodes.Status400BadRequest);
                 }
 
@@ -65,7 +65,9 @@ namespace crm_api.Services
                 await _unitOfWork.SaveChangesAsync();
 
                 var response = entities.Select(x => _mapper.Map<ActivityImageDto>(x)).ToList();
-                return ApiResponse<List<ActivityImageDto>>.SuccessResult(response, "Activity images created.");
+                return ApiResponse<List<ActivityImageDto>>.SuccessResult(
+                    response,
+                    _localizationService.GetLocalizedString("ActivityImageService.ActivityImagesCreated"));
             }
             catch (Exception ex)
             {
@@ -83,8 +85,8 @@ namespace crm_api.Services
                 if (files == null || files.Count == 0)
                 {
                     return ApiResponse<List<ActivityImageDto>>.ErrorResult(
-                        "At least one image file is required.",
-                        "At least one image file is required.",
+                        _localizationService.GetLocalizedString("ActivityImageService.AtLeastOneImageFileRequired"),
+                        _localizationService.GetLocalizedString("ActivityImageService.AtLeastOneImageFileRequired"),
                         StatusCodes.Status400BadRequest);
                 }
 
@@ -94,8 +96,8 @@ namespace crm_api.Services
                 if (!activityExists)
                 {
                     return ApiResponse<List<ActivityImageDto>>.ErrorResult(
-                        "Activity not found.",
-                        "Activity not found.",
+                        _localizationService.GetLocalizedString("ActivityImageService.ActivityNotFound"),
+                        _localizationService.GetLocalizedString("ActivityImageService.ActivityNotFound"),
                         StatusCodes.Status404NotFound);
                 }
 
@@ -115,7 +117,7 @@ namespace crm_api.Services
                     {
                         await _unitOfWork.RollbackTransactionAsync();
                         return ApiResponse<List<ActivityImageDto>>.ErrorResult(
-                            uploadResult.Message ?? "File upload failed.",
+                            uploadResult.Message ?? _localizationService.GetLocalizedString("ActivityImageService.FileUploadFailed"),
                             uploadResult.ExceptionMessage,
                             uploadResult.StatusCode);
                     }
@@ -135,7 +137,9 @@ namespace crm_api.Services
                 await _unitOfWork.SaveChangesAsync();
                 await _unitOfWork.CommitTransactionAsync();
 
-                return ApiResponse<List<ActivityImageDto>>.SuccessResult(uploaded, "Activity images uploaded.");
+                return ApiResponse<List<ActivityImageDto>>.SuccessResult(
+                    uploaded,
+                    _localizationService.GetLocalizedString("ActivityImageService.ActivityImagesUploaded"));
             }
             catch (Exception ex)
             {
@@ -157,8 +161,8 @@ namespace crm_api.Services
                 if (!activityExists)
                 {
                     return ApiResponse<List<ActivityImageDto>>.ErrorResult(
-                        "Activity not found.",
-                        "Activity not found.",
+                        _localizationService.GetLocalizedString("ActivityImageService.ActivityNotFound"),
+                        _localizationService.GetLocalizedString("ActivityImageService.ActivityNotFound"),
                         StatusCodes.Status404NotFound);
                 }
 
@@ -172,7 +176,9 @@ namespace crm_api.Services
                     .ToListAsync();
 
                 var response = items.Select(x => _mapper.Map<ActivityImageDto>(x)).ToList();
-                return ApiResponse<List<ActivityImageDto>>.SuccessResult(response, "Activity images retrieved.");
+                return ApiResponse<List<ActivityImageDto>>.SuccessResult(
+                    response,
+                    _localizationService.GetLocalizedString("ActivityImageService.ActivityImagesRetrieved"));
             }
             catch (Exception ex)
             {
@@ -191,8 +197,8 @@ namespace crm_api.Services
                 if (entity == null || entity.IsDeleted)
                 {
                     return ApiResponse<ActivityImageDto>.ErrorResult(
-                        "Activity image not found.",
-                        "Activity image not found.",
+                        _localizationService.GetLocalizedString("ActivityImageService.ActivityImageNotFound"),
+                        _localizationService.GetLocalizedString("ActivityImageService.ActivityImageNotFound"),
                         StatusCodes.Status404NotFound);
                 }
 
@@ -202,8 +208,8 @@ namespace crm_api.Services
                 if (!activityExists)
                 {
                     return ApiResponse<ActivityImageDto>.ErrorResult(
-                        "Activity not found.",
-                        "Activity not found.",
+                        _localizationService.GetLocalizedString("ActivityImageService.ActivityNotFound"),
+                        _localizationService.GetLocalizedString("ActivityImageService.ActivityNotFound"),
                         StatusCodes.Status400BadRequest);
                 }
 
@@ -214,7 +220,9 @@ namespace crm_api.Services
                 await _unitOfWork.SaveChangesAsync();
 
                 var response = _mapper.Map<ActivityImageDto>(entity);
-                return ApiResponse<ActivityImageDto>.SuccessResult(response, "Activity image updated.");
+                return ApiResponse<ActivityImageDto>.SuccessResult(
+                    response,
+                    _localizationService.GetLocalizedString("ActivityImageService.ActivityImageUpdated"));
             }
             catch (Exception ex)
             {
@@ -233,8 +241,8 @@ namespace crm_api.Services
                 if (entity == null || entity.IsDeleted)
                 {
                     return ApiResponse<object>.ErrorResult(
-                        "Activity image not found.",
-                        "Activity image not found.",
+                        _localizationService.GetLocalizedString("ActivityImageService.ActivityImageNotFound"),
+                        _localizationService.GetLocalizedString("ActivityImageService.ActivityImageNotFound"),
                         StatusCodes.Status404NotFound);
                 }
 
@@ -246,7 +254,9 @@ namespace crm_api.Services
                     await _fileUploadService.DeleteActivityImageAsync(entity.ResimUrl);
                 }
 
-                return ApiResponse<object>.SuccessResult(null, "Activity image deleted.");
+                return ApiResponse<object>.SuccessResult(
+                    null,
+                    _localizationService.GetLocalizedString("ActivityImageService.ActivityImageDeleted"));
             }
             catch (Exception ex)
             {
