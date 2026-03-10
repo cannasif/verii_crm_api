@@ -2,6 +2,7 @@ using crm_api.DTOs;
 using crm_api.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 
 namespace crm_api.Controllers
 {
@@ -12,13 +13,16 @@ namespace crm_api.Controllers
     {
         private readonly IUserService _userService;
         private readonly IOutlookEntegrationService _outlookEntegrationService;
+        private readonly IConfiguration _configuration;
 
         public OutlookEntegrationController(
             IUserService userService,
-            IOutlookEntegrationService outlookEntegrationService)
+            IOutlookEntegrationService outlookEntegrationService,
+            IConfiguration configuration)
         {
             _userService = userService;
             _outlookEntegrationService = outlookEntegrationService;
+            _configuration = configuration;
         }
 
         [HttpGet("authorize-url")]
@@ -41,24 +45,14 @@ namespace crm_api.Controllers
 
         [AllowAnonymous]
         [HttpGet("callback")]
-        public async Task<ActionResult<ApiResponse<bool>>> Callback(
-            [FromQuery] long userId,
-            [FromQuery] string code,
-            [FromQuery] string state,
+        public async Task<IActionResult> Callback(
+            [FromQuery] string? code,
+            [FromQuery] string? state,
+            [FromQuery] string? error,
             CancellationToken cancellationToken)
         {
-            if (userId <= 0)
-            {
-                var invalid = ApiResponse<bool>.ErrorResult(
-                    "UserId is required.",
-                    "UserId is required.",
-                    StatusCodes.Status400BadRequest);
-
-                return StatusCode(invalid.StatusCode, invalid);
-            }
-
-            var response = await _outlookEntegrationService.HandleOAuthCallbackAsync(userId, code, state, cancellationToken);
-            return StatusCode(response.StatusCode, response);
+            var response = await _outlookEntegrationService.HandleOAuthCallbackAsync(code, state, error, cancellationToken);
+            return Redirect(BuildFrontendRedirect(response.Success, response.Success ? null : response.ExceptionMessage ?? response.Message));
         }
 
         [HttpGet("status")]
@@ -196,6 +190,27 @@ namespace crm_api.Controllers
 
             var response = await _outlookEntegrationService.GetLogsAsync(currentUserIdResult.Data, query, cancellationToken);
             return StatusCode(response.StatusCode, response);
+        }
+
+        private string BuildFrontendRedirect(bool connected, string? error = null)
+        {
+            var baseUrl = _configuration["FrontendSettings:BaseUrl"]?.TrimEnd('/');
+            var callbackPath = "/settings/integrations/outlook";
+            var redirectBase = string.IsNullOrWhiteSpace(baseUrl)
+                ? callbackPath
+                : $"{baseUrl}{callbackPath}";
+
+            var query = new Dictionary<string, string?>
+            {
+                ["connected"] = connected ? "1" : "0",
+            };
+
+            if (!connected && !string.IsNullOrWhiteSpace(error))
+            {
+                query["error"] = error.Length > 200 ? error[..200] : error;
+            }
+
+            return QueryHelpers.AddQueryString(redirectBase, query!);
         }
     }
 }
