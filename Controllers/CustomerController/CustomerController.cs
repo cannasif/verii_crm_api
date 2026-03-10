@@ -1,5 +1,7 @@
 using crm_api.DTOs;
 using crm_api.Interfaces;
+using Hangfire;
+using Infrastructure.BackgroundJobs.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 
@@ -11,10 +13,12 @@ namespace crm_api.Controllers
     public class CustomerController : ControllerBase
     {
         private readonly ICustomerService _customerService;
+        private readonly IBackgroundJobClient _backgroundJobClient;
 
-        public CustomerController(ICustomerService customerService)
+        public CustomerController(ICustomerService customerService, IBackgroundJobClient backgroundJobClient)
         {
             _customerService = customerService;
+            _backgroundJobClient = backgroundJobClient;
         }
 
         [HttpGet]
@@ -80,6 +84,25 @@ namespace crm_api.Controllers
         {
             var result = await _customerService.MergeCustomersAsync(request);
             return StatusCode(result.StatusCode, result);
+        }
+
+        [HttpPost("sync")]
+        public IActionResult TriggerSync()
+        {
+            var jobId = _backgroundJobClient.Enqueue<ICustomerSyncJob>(job => job.ExecuteAsync());
+
+            return Ok(new ApiResponse<CustomerSyncTriggerResponseDto>
+            {
+                Success = true,
+                Message = "Customer sync queued successfully.",
+                Data = new CustomerSyncTriggerResponseDto
+                {
+                    JobId = jobId,
+                    Queue = "default",
+                    EnqueuedAtUtc = DateTime.UtcNow
+                },
+                StatusCode = StatusCodes.Status200OK
+            });
         }
     }
 }
