@@ -10,6 +10,7 @@ namespace crm_api.DTOs
         public string Message { get; set; } = string.Empty;
         public string ExceptionMessage { get; set; } = string.Empty;
         public T? Data { get; set; }
+        public object? Details { get; set; }
         public List<string> Errors { get; set; } = new List<string>();
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
         public int StatusCode { get; set; } = 200;
@@ -45,7 +46,7 @@ namespace crm_api.DTOs
         }
 
         // Preferred signature (message, exceptionMessage, statusCode)
-        public static ApiResponse<T> ErrorResult(string message, string? exceptionMessage = null,int statusCode = 500)
+        public static ApiResponse<T> ErrorResult(string message, string? exceptionMessage = null,int statusCode = 500, object? details = null)
         {
             return new ApiResponse<T>
             {
@@ -53,6 +54,7 @@ namespace crm_api.DTOs
                 Message = message,
                 StatusCode = statusCode,
                 ExceptionMessage = exceptionMessage ?? string.Empty,
+                Details = details,
                 ClassName = $"ApiResponse<{GetGenericTypeDisplayName(typeof(T))}>"
             };
         }

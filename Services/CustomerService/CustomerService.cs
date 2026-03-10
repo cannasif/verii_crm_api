@@ -1237,6 +1237,8 @@ namespace crm_api.Services
                     (!string.IsNullOrWhiteSpace(customerCode) && c.BranchCode == branchCode && !string.IsNullOrWhiteSpace(c.CustomerCode)))
                 .Select(c => new
                 {
+                    c.Id,
+                    c.CustomerName,
                     c.TaxNumber,
                     c.TcknNumber,
                     c.CustomerCode,
@@ -1244,17 +1246,65 @@ namespace crm_api.Services
                 })
                 .ToListAsync().ConfigureAwait(false);
 
-            var isDuplicate = duplicateCandidates.Any(c =>
-                (!string.IsNullOrWhiteSpace(tax) && NormalizeDigits(c.TaxNumber) == tax) ||
-                (!string.IsNullOrWhiteSpace(tckn) && NormalizeDigits(c.TcknNumber) == tckn) ||
-                (!string.IsNullOrWhiteSpace(customerCode) && c.BranchCode == branchCode && NormalizeText(c.CustomerCode) == customerCode));
+            var conflicts = duplicateCandidates
+                .SelectMany(c =>
+                {
+                    var result = new List<CustomerDuplicateConflictDto>();
 
-            if (isDuplicate)
+                    if (!string.IsNullOrWhiteSpace(tax) && NormalizeDigits(c.TaxNumber) == tax)
+                    {
+                        result.Add(new CustomerDuplicateConflictDto
+                        {
+                            CustomerId = c.Id,
+                            CustomerName = c.CustomerName,
+                            Field = "TaxNumber",
+                            Value = c.TaxNumber ?? string.Empty,
+                            BranchCode = c.BranchCode
+                        });
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(tckn) && NormalizeDigits(c.TcknNumber) == tckn)
+                    {
+                        result.Add(new CustomerDuplicateConflictDto
+                        {
+                            CustomerId = c.Id,
+                            CustomerName = c.CustomerName,
+                            Field = "TcknNumber",
+                            Value = c.TcknNumber ?? string.Empty,
+                            BranchCode = c.BranchCode
+                        });
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(customerCode) &&
+                        c.BranchCode == branchCode &&
+                        NormalizeText(c.CustomerCode) == customerCode)
+                    {
+                        result.Add(new CustomerDuplicateConflictDto
+                        {
+                            CustomerId = c.Id,
+                            CustomerName = c.CustomerName,
+                            Field = "CustomerCode",
+                            Value = c.CustomerCode ?? string.Empty,
+                            BranchCode = c.BranchCode
+                        });
+                    }
+
+                    return result;
+                })
+                .OrderBy(c => c.CustomerId)
+                .ThenBy(c => c.Field)
+                .ToList();
+
+            if (conflicts.Count > 0)
             {
                 return ApiResponse<CustomerGetDto>.ErrorResult(
                     _localizationService.GetLocalizedString("CustomerService.DuplicateCustomer"),
                     _localizationService.GetLocalizedString("CustomerService.DuplicateCustomer"),
-                    StatusCodes.Status409Conflict);
+                    StatusCodes.Status409Conflict,
+                    new CustomerDuplicateConflictListDto
+                    {
+                        Conflicts = conflicts
+                    });
             }
 
             return null;

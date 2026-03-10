@@ -188,4 +188,18 @@ namespace crm_api.DTOs
 
         public bool PreferMasterValues { get; set; } = true;
     }
+
+    public class CustomerDuplicateConflictDto
+    {
+        public long CustomerId { get; set; }
+        public string CustomerName { get; set; } = string.Empty;
+        public string Field { get; set; } = string.Empty;
+        public string Value { get; set; } = string.Empty;
+        public short? BranchCode { get; set; }
+    }
+
+    public class CustomerDuplicateConflictListDto
+    {
+        public List<CustomerDuplicateConflictDto> Conflicts { get; set; } = new();
+    }
 }
