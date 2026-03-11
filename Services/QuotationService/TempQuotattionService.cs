@@ -123,6 +123,16 @@ namespace crm_api.Services
         {
             try
             {
+                var customerExists = await _unitOfWork.Customers.Query()
+                    .AnyAsync(c => c.Id == dto.CustomerId && !c.IsDeleted).ConfigureAwait(false);
+                if (!customerExists)
+                {
+                    return ApiResponse<TempQuotattionGetDto>.ErrorResult(
+                        _localizationService.GetLocalizedString("CustomerService.CustomerNotFound"),
+                        _localizationService.GetLocalizedString("CustomerService.CustomerNotFound"),
+                        StatusCodes.Status404NotFound);
+                }
+
                 var entity = _mapper.Map<TempQuotattion>(dto);
                 entity.CreatedDate = DateTime.UtcNow;
                 entity.OfferDate = DateTime.UtcNow;
@@ -161,6 +171,16 @@ namespace crm_api.Services
                     return ApiResponse<TempQuotattionGetDto>.ErrorResult(
                         _localizationService.GetLocalizedString("TempQuotattionService.TempQuotattionNotFound"),
                         _localizationService.GetLocalizedString("TempQuotattionService.TempQuotattionNotFound"),
+                        StatusCodes.Status404NotFound);
+                }
+
+                var customerExists = await _unitOfWork.Customers.Query()
+                    .AnyAsync(c => c.Id == dto.CustomerId && !c.IsDeleted).ConfigureAwait(false);
+                if (!customerExists)
+                {
+                    return ApiResponse<TempQuotattionGetDto>.ErrorResult(
+                        _localizationService.GetLocalizedString("CustomerService.CustomerNotFound"),
+                        _localizationService.GetLocalizedString("CustomerService.CustomerNotFound"),
                         StatusCodes.Status404NotFound);
                 }
 
@@ -838,6 +858,36 @@ namespace crm_api.Services
                         StatusCodes.Status404NotFound);
                 }
 
+                var existingLine = await _unitOfWork.TempQuotattionExchangeLines.Query()
+                    .FirstOrDefaultAsync(x => x.TempQuotattionId == dto.TempQuotattionId
+                        && x.Currency == dto.Currency).ConfigureAwait(false);
+
+                if (existingLine != null)
+                {
+                    if (!existingLine.IsDeleted)
+                    {
+                        return ApiResponse<TempQuotattionExchangeLineGetDto>.ErrorResult(
+                            _localizationService.GetLocalizedString("TempQuotattionService.ExchangeLineAlreadyExists"),
+                            _localizationService.GetLocalizedString("TempQuotattionService.ExchangeLineAlreadyExists"),
+                            StatusCodes.Status400BadRequest);
+                    }
+
+                    existingLine.IsDeleted = false;
+                    existingLine.DeletedDate = null;
+                    existingLine.DeletedBy = null;
+                    existingLine.ExchangeRate = dto.ExchangeRate;
+                    existingLine.ExchangeRateDate = dto.ExchangeRateDate;
+                    existingLine.IsManual = dto.IsManual;
+                    existingLine.UpdatedDate = DateTime.UtcNow;
+
+                    await _unitOfWork.TempQuotattionExchangeLines.UpdateAsync(existingLine).ConfigureAwait(false);
+                    await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
+
+                    return ApiResponse<TempQuotattionExchangeLineGetDto>.SuccessResult(
+                        _mapper.Map<TempQuotattionExchangeLineGetDto>(existingLine),
+                        _localizationService.GetLocalizedString("TempQuotattionService.TempQuotattionExchangeLineCreated"));
+                }
+
                 var entity = _mapper.Map<TempQuotattionExchangeLine>(dto);
                 entity.CreatedDate = DateTime.UtcNow;
 
@@ -868,6 +918,19 @@ namespace crm_api.Services
                         _localizationService.GetLocalizedString("TempQuotattionService.TempQuotattionExchangeLineNotFound"),
                         _localizationService.GetLocalizedString("TempQuotattionService.TempQuotattionExchangeLineNotFound"),
                         StatusCodes.Status404NotFound);
+                }
+
+                var currencyExists = await _unitOfWork.TempQuotattionExchangeLines.Query()
+                    .AnyAsync(x => x.TempQuotattionId == entity.TempQuotattionId
+                        && x.Currency == dto.Currency
+                        && x.Id != exchangeLineId
+                        && !x.IsDeleted).ConfigureAwait(false);
+                if (currencyExists)
+                {
+                    return ApiResponse<TempQuotattionExchangeLineGetDto>.ErrorResult(
+                        _localizationService.GetLocalizedString("TempQuotattionService.ExchangeLineAlreadyExists"),
+                        _localizationService.GetLocalizedString("TempQuotattionService.ExchangeLineAlreadyExists"),
+                        StatusCodes.Status400BadRequest);
                 }
 
                 _mapper.Map(dto, entity);

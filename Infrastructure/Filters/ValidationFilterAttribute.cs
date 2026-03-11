@@ -28,8 +28,8 @@ namespace crm_api.Infrastructure.Filters
                     .ToList();
 
                 var response = ApiResponse<object>.ErrorResult(
-                    _localizationService.GetLocalizedString("General.ValidationError"),
-                    _localizationService.GetLocalizedString("General.ValidationError"),
+                    _localizationService.GetLocalizedString("General.RequiredFieldsNotFilled"),
+                    _localizationService.GetLocalizedString("General.RequiredFieldsNotFilled"),
                     StatusCodes.Status400BadRequest);
 
                 response.Errors = errors;

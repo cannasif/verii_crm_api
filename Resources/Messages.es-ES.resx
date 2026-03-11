@@ -131,6 +131,9 @@
   <data name="General.ValidationError" xml:space="preserve">
     <value>Ocurrió un error de validación.</value>
   </data>
+  <data name="General.RequiredFieldsNotFilled" xml:space="preserve">
+    <value>Los campos obligatorios no están completados.</value>
+  </data>
   <data name="General.InternalServerError" xml:space="preserve">
     <value>Ocurrió un error interno del server.</value>
   </data>
@@ -3233,6 +3236,9 @@
   </data>
   <data name="TempQuotattionService.NoLineToCreate" xml:space="preserve">
     <value>No hay línea para crear.</value>
+  </data>
+  <data name="TempQuotattionService.ExchangeLineAlreadyExists" xml:space="preserve">
+    <value>Esta moneda ya está definida para este presupuesto.</value>
   </data>
   <data name="SalesTypeCreateDtoValidator.SalesTypeRequired" xml:space="preserve">
     <value>El tipo de venta es obligatorio.</value>

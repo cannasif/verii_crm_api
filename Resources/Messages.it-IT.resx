@@ -131,6 +131,9 @@
   <data name="General.ValidationError" xml:space="preserve">
     <value>Si è verificato un errore di convalida.</value>
   </data>
+  <data name="General.RequiredFieldsNotFilled" xml:space="preserve">
+    <value>I campi obbligatori non sono stati compilati.</value>
+  </data>
   <data name="General.InternalServerError" xml:space="preserve">
     <value>Si è verificato un errore interno del server.</value>
   </data>
@@ -3233,6 +3236,9 @@
   </data>
   <data name="TempQuotattionService.NoLineToCreate" xml:space="preserve">
     <value>Nessuna riga da creare.</value>
+  </data>
+  <data name="TempQuotattionService.ExchangeLineAlreadyExists" xml:space="preserve">
+    <value>Questa valuta è già definita per questo preventivo.</value>
   </data>
   <data name="SalesTypeCreateDtoValidator.SalesTypeRequired" xml:space="preserve">
     <value>Il tipo di vendita è obbligatorio.</value>

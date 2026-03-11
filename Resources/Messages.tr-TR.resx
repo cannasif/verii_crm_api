@@ -182,6 +182,9 @@
   <data name="General.ValidationError" xml:space="preserve">
     <value>Doğrulama hatası oluştu.</value>
   </data>
+  <data name="General.RequiredFieldsNotFilled" xml:space="preserve">
+    <value>Zorunlu alanlar doldurulmadı.</value>
+  </data>
   <data name="General.RecordAlreadyExists" xml:space="preserve">
     <value>Bu kayıt zaten mevcut.</value>
   </data>
@@ -3716,6 +3719,9 @@
   </data>
   <data name="TempQuotattionService.NoLineToCreate" xml:space="preserve">
     <value>Oluşturulacak satır yok.</value>
+  </data>
+  <data name="TempQuotattionService.ExchangeLineAlreadyExists" xml:space="preserve">
+    <value>Bu teklif için bu para birimi zaten tanımlı.</value>
   </data>
   <!-- #endregion TempQuotattionService -->
   <data name="CustomerService.ConflictingCustomerMatches" xml:space="preserve">

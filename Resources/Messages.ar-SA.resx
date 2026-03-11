@@ -131,6 +131,9 @@
   <data name="General.ValidationError" xml:space="preserve">
     <value>حدث خطأ في التحقق.</value>
   </data>
+  <data name="General.RequiredFieldsNotFilled" xml:space="preserve">
+    <value>لم يتم ملء الحقول المطلوبة.</value>
+  </data>
   <data name="General.InternalServerError" xml:space="preserve">
     <value>حدث خطأ داخلي في الخادم.</value>
   </data>
@@ -3233,6 +3236,9 @@
   </data>
   <data name="TempQuotattionService.NoLineToCreate" xml:space="preserve">
     <value>لا يوجد سطر لإنشائه.</value>
+  </data>
+  <data name="TempQuotattionService.ExchangeLineAlreadyExists" xml:space="preserve">
+    <value>هذه العملة معرفة بالفعل لهذا العرض.</value>
   </data>
   <data name="SalesTypeCreateDtoValidator.SalesTypeRequired" xml:space="preserve">
     <value>نوع المبيعات مطلوب.</value>

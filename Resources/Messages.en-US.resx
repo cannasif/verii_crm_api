@@ -131,6 +131,9 @@
   <data name="General.ValidationError" xml:space="preserve">
     <value>Validation error occurred.</value>
   </data>
+  <data name="General.RequiredFieldsNotFilled" xml:space="preserve">
+    <value>Required fields are not filled.</value>
+  </data>
   <data name="General.RecordAlreadyExists" xml:space="preserve">
     <value>This record already exists.</value>
   </data>
@@ -3550,6 +3553,9 @@
   </data>
   <data name="TempQuotattionService.NoLineToCreate" xml:space="preserve">
     <value>No line to create.</value>
+  </data>
+  <data name="TempQuotattionService.ExchangeLineAlreadyExists" xml:space="preserve">
+    <value>This currency is already defined for this quotation.</value>
   </data>
   <data name="SalesTypeCreateDtoValidator.SalesTypeRequired" xml:space="preserve">
     <value>Sales type is required.</value>

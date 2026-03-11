@@ -131,6 +131,9 @@
   <data name="General.ValidationError" xml:space="preserve">
     <value>Une erreur de validation s'est produite.</value>
   </data>
+  <data name="General.RequiredFieldsNotFilled" xml:space="preserve">
+    <value>Les champs obligatoires ne sont pas remplis.</value>
+  </data>
   <data name="General.InternalServerError" xml:space="preserve">
     <value>Une erreur interne du serveur s'est produite.</value>
   </data>
@@ -3230,6 +3233,9 @@
   </data>
   <data name="TempQuotattionService.NoLineToCreate" xml:space="preserve">
     <value>Aucune ligne à créer.</value>
+  </data>
+  <data name="TempQuotattionService.ExchangeLineAlreadyExists" xml:space="preserve">
+    <value>Cette devise est déjà définie pour ce devis.</value>
   </data>
   <data name="SalesTypeCreateDtoValidator.SalesTypeRequired" xml:space="preserve">
     <value>Le type de vente est requis.</value>
