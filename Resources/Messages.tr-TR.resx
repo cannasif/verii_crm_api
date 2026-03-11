@@ -132,6 +132,18 @@
   <data name="AuthSessionNotFound" xml:space="preserve">
     <value>Oturum bulunamadı.</value>
   </data>
+  <data name="Auth.TokenInvalidMissingUserId" xml:space="preserve">
+    <value>Token geçersiz: eksik kullanıcı ID.</value>
+  </data>
+  <data name="Auth.TokenInvalidMissingSessionId" xml:space="preserve">
+    <value>Token geçersiz: eksik oturum ID.</value>
+  </data>
+  <data name="Auth.SessionExpiredOrInvalid" xml:space="preserve">
+    <value>Oturum süresi doldu veya geçersiz.</value>
+  </data>
+  <data name="Auth.SessionValidationFailed" xml:space="preserve">
+    <value>Oturum doğrulaması başarısız: {0}</value>
+  </data>
   <data name="DataRetrievedSuccessfully" xml:space="preserve">
     <value>Veriler başarıyla getirildi.</value>
   </data>
@@ -175,6 +187,81 @@
   </data>
   <data name="General.InternalServerError" xml:space="preserve">
     <value>Dahili sunucu hatası oluştu.</value>
+  </data>
+  <data name="General.JwtSecretRequired" xml:space="preserve">
+    <value>JWT gizli anahtarı yapılandırılmamış.</value>
+  </data>
+  <data name="General.NotSpecified" xml:space="preserve">
+    <value>Belirtilmedi.</value>
+  </data>
+  <data name="General.Unknown" xml:space="preserve">
+    <value>Bilinmeyen</value>
+  </data>
+  <data name="StockSyncJob.ErpFetchFailed" xml:space="preserve">
+    <value>ERP stok verisi alınamadı.</value>
+  </data>
+  <data name="CustomerSyncJob.ErpFetchFailed" xml:space="preserve">
+    <value>ERP müşteri verisi alınamadı.</value>
+  </data>
+  <data name="CustomerService.ImageUploadFailed" xml:space="preserve">
+    <value>Müşteri görseli yüklenemedi.</value>
+  </data>
+  <data name="ReportBuilderController.Ok" xml:space="preserve">
+    <value>Tamam</value>
+  </data>
+  <data name="ReportBuilderController.ObjectNotFoundOrNoColumns" xml:space="preserve">
+    <value>Nesne bulunamadı veya sütun yok.</value>
+  </data>
+  <data name="ReportBuilderController.Error" xml:space="preserve">
+    <value>Hata</value>
+  </data>
+  <data name="OutlookEntegrationService.TokenRequestFailed" xml:space="preserve">
+    <value>Outlook token isteği başarısız.</value>
+  </data>
+  <data name="OutlookEntegrationService.TokenResponseInvalid" xml:space="preserve">
+    <value>Outlook token yanıtı geçersiz.</value>
+  </data>
+  <data name="OutlookEntegrationService.RedirectUriNotResolved" xml:space="preserve">
+    <value>Outlook yönlendirme URI'si çözümlenemedi.</value>
+  </data>
+  <data name="GoogleGmailApiService.OAuthNotConfigured" xml:space="preserve">
+    <value>Google OAuth ayarları yapılandırılmamış.</value>
+  </data>
+  <data name="GoogleGmailApiService.AccountNotConnected" xml:space="preserve">
+    <value>Google hesabınız bağlı değil.</value>
+  </data>
+  <data name="GoogleGmailApiService.MailSendScopeMissing" xml:space="preserve">
+    <value>Google hesabınızda mail gönderme yetkisi yok. Lütfen yeniden bağlanın.</value>
+  </data>
+  <data name="GoogleGmailApiService.TokenInvalidOrExpired" xml:space="preserve">
+    <value>Google token geçersiz veya süresi dolmuş. Lütfen tekrar bağlanın.</value>
+  </data>
+  <data name="GoogleGmailApiService.MailSentSuccessfully" xml:space="preserve">
+    <value>Mail başarıyla gönderildi.</value>
+  </data>
+  <data name="GoogleGmailApiService.CustomerIdRequired" xml:space="preserve">
+    <value>Müşteri ID zorunludur.</value>
+  </data>
+  <data name="GoogleGmailApiService.MailSubjectRequired" xml:space="preserve">
+    <value>Mail konusu zorunludur.</value>
+  </data>
+  <data name="GoogleGmailApiService.MailBodyRequired" xml:space="preserve">
+    <value>Mail içeriği zorunludur.</value>
+  </data>
+  <data name="GoogleGmailApiService.InsufficientMailScope" xml:space="preserve">
+    <value>Google Mail yetkisi yetersiz. Lütfen Google bağlantısını kaldırıp tekrar bağlayın.</value>
+  </data>
+  <data name="GoogleGmailApiService.GmailApiNotEnabled" xml:space="preserve">
+    <value>Gmail API bu Google projesinde aktif değil. Lütfen Google Cloud Console üzerinden Gmail API'yi etkinleştirip birkaç dakika sonra tekrar deneyin.</value>
+  </data>
+  <data name="GoogleGmailApiService.MailSendFailed" xml:space="preserve">
+    <value>Mail gönderilemedi.</value>
+  </data>
+  <data name="GoogleGmailApiService.MailSentButLogFailed" xml:space="preserve">
+    <value>Mail gönderildi ancak kayıt oluşturulamadı.</value>
+  </data>
+  <data name="MailJob.EmailSendFailed" xml:space="preserve">
+    <value>E-posta gönderilemedi: {0}</value>
   </data>
   <data name="General.Unauthorized" xml:space="preserve">
     <value>Yetkisiz erişim.</value>
@@ -3542,9 +3629,178 @@
   <data name="QuotationService.ApprovalScopeUsersRetrieved" xml:space="preserve">
     <value>Onay kapsamındaki kullanıcılar getirildi.</value>
   </data>
+  <!-- #region TempQuotattionService -->
+  <data name="TempQuotattionService.TempQuotattionsRetrieved" xml:space="preserve">
+    <value>Geçici teklifler başarıyla getirildi.</value>
+  </data>
+  <data name="TempQuotattionService.InternalServerError" xml:space="preserve">
+    <value>Sunucu hatası oluştu.</value>
+  </data>
+  <data name="TempQuotattionService.TempQuotattionNotFound" xml:space="preserve">
+    <value>Geçici teklif bulunamadı.</value>
+  </data>
+  <data name="TempQuotattionService.TempQuotattionRetrieved" xml:space="preserve">
+    <value>Geçici teklif başarıyla getirildi.</value>
+  </data>
+  <data name="TempQuotattionService.TempQuotattionCreated" xml:space="preserve">
+    <value>Geçici teklif başarıyla oluşturuldu.</value>
+  </data>
+  <data name="TempQuotattionService.TempQuotattionUpdated" xml:space="preserve">
+    <value>Geçici teklif başarıyla güncellendi.</value>
+  </data>
+  <data name="TempQuotattionService.TempQuotattionApproved" xml:space="preserve">
+    <value>Geçici teklif onaylandı.</value>
+  </data>
+  <data name="TempQuotattionService.TempQuotattionDeleted" xml:space="preserve">
+    <value>Geçici teklif başarıyla silindi.</value>
+  </data>
+  <data name="TempQuotattionService.RevisionCreated" xml:space="preserve">
+    <value>Geçici teklif revizyonu oluşturuldu.</value>
+  </data>
+  <data name="TempQuotattionService.AlreadyConvertedToQuotation" xml:space="preserve">
+    <value>Geçici teklif zaten gerçek teklife dönüştürülmüş.</value>
+  </data>
+  <data name="TempQuotattionService.TempQuotattionLinesNotFound" xml:space="preserve">
+    <value>Geçici teklif satırları bulunamadı.</value>
+  </data>
+  <data name="TempQuotattionService.SalesTypeNotFoundForOfferType" xml:space="preserve">
+    <value>{0} için uygun satış tipi bulunamadı.</value>
+  </data>
+  <data name="TempQuotattionService.QuotationDocumentSerialTypeNotFound" xml:space="preserve">
+    <value>Koşullara uygun teklif belge seri tipi bulunamadı.</value>
+  </data>
+  <data name="TempQuotattionService.QuotationNumberGenerationFailed" xml:space="preserve">
+    <value>Teklif numarası oluşturulamadı.</value>
+  </data>
+  <data name="TempQuotattionService.ConvertedToQuotationSuccess" xml:space="preserve">
+    <value>Geçici teklif gerçek teklife dönüştürüldü.</value>
+  </data>
+  <data name="TempQuotattionService.TempQuotattionLinesRetrieved" xml:space="preserve">
+    <value>Geçici teklif satırları getirildi.</value>
+  </data>
+  <data name="TempQuotattionService.TempQuotattionLineNotFound" xml:space="preserve">
+    <value>Geçici teklif satırı bulunamadı.</value>
+  </data>
+  <data name="TempQuotattionService.TempQuotattionLineRetrieved" xml:space="preserve">
+    <value>Geçici teklif satırı getirildi.</value>
+  </data>
+  <data name="TempQuotattionService.TempQuotattionLinesCreated" xml:space="preserve">
+    <value>Geçici teklif satırları oluşturuldu.</value>
+  </data>
+  <data name="TempQuotattionService.TempQuotattionLineCreated" xml:space="preserve">
+    <value>Geçici teklif satırı oluşturuldu.</value>
+  </data>
+  <data name="TempQuotattionService.TempQuotattionLineUpdated" xml:space="preserve">
+    <value>Geçici teklif satırı güncellendi.</value>
+  </data>
+  <data name="TempQuotattionService.TempQuotattionLineDeleted" xml:space="preserve">
+    <value>Geçici teklif satırı silindi.</value>
+  </data>
+  <data name="TempQuotattionService.TempQuotattionExchangeLinesRetrieved" xml:space="preserve">
+    <value>Geçici teklif kur satırları getirildi.</value>
+  </data>
+  <data name="TempQuotattionService.TempQuotattionExchangeLineNotFound" xml:space="preserve">
+    <value>Geçici teklif kur satırı bulunamadı.</value>
+  </data>
+  <data name="TempQuotattionService.TempQuotattionExchangeLineRetrieved" xml:space="preserve">
+    <value>Geçici teklif kur satırı getirildi.</value>
+  </data>
+  <data name="TempQuotattionService.TempQuotattionExchangeLineCreated" xml:space="preserve">
+    <value>Geçici teklif kur satırı oluşturuldu.</value>
+  </data>
+  <data name="TempQuotattionService.TempQuotattionExchangeLineUpdated" xml:space="preserve">
+    <value>Geçici teklif kur satırı güncellendi.</value>
+  </data>
+  <data name="TempQuotattionService.TempQuotattionExchangeLineDeleted" xml:space="preserve">
+    <value>Geçici teklif kur satırı silindi.</value>
+  </data>
   <data name="TempQuotattionService.NoLineToCreate" xml:space="preserve">
     <value>Oluşturulacak satır yok.</value>
   </data>
+  <!-- #endregion TempQuotattionService -->
+  <data name="CustomerService.ConflictingCustomerMatches" xml:space="preserve">
+    <value>2 farklı müşteri bulundu. Önce eşleşmeleri düzelt, sonra kayıt at.</value>
+  </data>
+  <data name="CustomerService.ConflictingCustomerMatchesDetail" xml:space="preserve">
+    <value>Şirket email/telefon alanlarında farklı müşteri ID'leri bulundu. Bulunan müşteriler: {0}</value>
+  </data>
+  <data name="FileUploadService.NoFilesProvided" xml:space="preserve">
+    <value>Dosya sağlanmadı.</value>
+  </data>
+  <!-- #region OutlookEntegrationService -->
+  <data name="OutlookEntegrationService.OAuthNotConfigured" xml:space="preserve">
+    <value>Outlook OAuth yapılandırılmamış.</value>
+  </data>
+  <data name="OutlookEntegrationService.AuthorizeUrlCreated" xml:space="preserve">
+    <value>Outlook yetkilendirme URL'si oluşturuldu.</value>
+  </data>
+  <data name="OutlookEntegrationService.ConnectionFailed" xml:space="preserve">
+    <value>Outlook bağlantısı başarısız.</value>
+  </data>
+  <data name="OutlookEntegrationService.AccountConnected" xml:space="preserve">
+    <value>Outlook hesabı bağlandı.</value>
+  </data>
+  <data name="OutlookEntegrationService.StatusRetrieved" xml:space="preserve">
+    <value>Outlook entegrasyon durumu getirildi.</value>
+  </data>
+  <data name="OutlookEntegrationService.AlreadyDisconnected" xml:space="preserve">
+    <value>Outlook hesabı zaten bağlantısı kesilmiş.</value>
+  </data>
+  <data name="OutlookEntegrationService.ConnectionRemoved" xml:space="preserve">
+    <value>Outlook bağlantısı kaldırıldı.</value>
+  </data>
+  <data name="OutlookEntegrationService.TenantContextMissing" xml:space="preserve">
+    <value>Kiracı bağlamı eksik.</value>
+  </data>
+  <data name="OutlookEntegrationService.CustomerNotFound" xml:space="preserve">
+    <value>Müşteri bulunamadı.</value>
+  </data>
+  <data name="OutlookEntegrationService.ContactNotFound" xml:space="preserve">
+    <value>İletişim bulunamadı.</value>
+  </data>
+  <data name="OutlookEntegrationService.ContactNotBelongToCustomer" xml:space="preserve">
+    <value>İletişim seçilen müşteriye ait değil.</value>
+  </data>
+  <data name="OutlookEntegrationService.RecipientEmailRequired" xml:space="preserve">
+    <value>Alıcı e-posta adresi zorunludur.</value>
+  </data>
+  <data name="OutlookEntegrationService.NoRecipientEmailFound" xml:space="preserve">
+    <value>İstek/iletişim/müşteri üzerinde alıcı e-posta bulunamadı.</value>
+  </data>
+  <data name="OutlookEntegrationService.AccountNotConnected" xml:space="preserve">
+    <value>Outlook hesabınız bağlı değil.</value>
+  </data>
+  <data name="OutlookEntegrationService.MailSendScopeMissing" xml:space="preserve">
+    <value>Outlook hesabınızda mail gönderme yetkisi yok. Lütfen yeniden bağlanın.</value>
+  </data>
+  <data name="OutlookEntegrationService.TokenInvalidOrExpired" xml:space="preserve">
+    <value>Outlook token geçersiz veya süresi dolmuş. Lütfen tekrar bağlanın.</value>
+  </data>
+  <data name="OutlookEntegrationService.MailSendFailed" xml:space="preserve">
+    <value>Mail gönderilemedi.</value>
+  </data>
+  <data name="OutlookEntegrationService.MailSentSuccessfully" xml:space="preserve">
+    <value>Mail başarıyla gönderildi.</value>
+  </data>
+  <data name="OutlookEntegrationService.OutlookMailLogsRetrieved" xml:space="preserve">
+    <value>Outlook müşteri mail kayıtları getirildi.</value>
+  </data>
+  <data name="OutlookEntegrationService.CalendarSyncNotImplemented" xml:space="preserve">
+    <value>Outlook takvim senkronizasyonu henüz uygulanmadı.</value>
+  </data>
+  <data name="OutlookEntegrationService.IntegrationLogsRetrieved" xml:space="preserve">
+    <value>Outlook entegrasyon kayıtları getirildi.</value>
+  </data>
+  <data name="OutlookEntegrationService.CustomerIdRequired" xml:space="preserve">
+    <value>Müşteri ID zorunludur.</value>
+  </data>
+  <data name="OutlookEntegrationService.MailSubjectRequired" xml:space="preserve">
+    <value>Mail konusu zorunludur.</value>
+  </data>
+  <data name="OutlookEntegrationService.MailBodyRequired" xml:space="preserve">
+    <value>Mail içeriği zorunludur.</value>
+  </data>
+  <!-- #endregion OutlookEntegrationService -->
   <data name="SalesTypeCreateDtoValidator.SalesTypeRequired" xml:space="preserve">
     <value>Satış tipi zorunludur.</value>
   </data>
