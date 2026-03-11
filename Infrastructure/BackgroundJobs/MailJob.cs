@@ -21,19 +21,22 @@ namespace Infrastructure.BackgroundJobs
         private readonly IConfiguration _configuration;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IPdfReportDocumentGeneratorService _pdfReportDocumentGeneratorService;
+        private readonly ILocalizationService _localizationService;
 
         public MailJob(
             IMailService mailService,
             ILogger<MailJob> logger,
             IConfiguration configuration,
             IUnitOfWork unitOfWork,
-            IPdfReportDocumentGeneratorService pdfReportDocumentGeneratorService)
+            IPdfReportDocumentGeneratorService pdfReportDocumentGeneratorService,
+            ILocalizationService localizationService)
         {
             _mailService = mailService;
             _logger = logger;
             _configuration = configuration;
             _unitOfWork = unitOfWork;
             _pdfReportDocumentGeneratorService = pdfReportDocumentGeneratorService;
+            _localizationService = localizationService;
         }
 
         public async Task SendEmailAsync(string to, string subject, string body, bool isHtml = true, string? cc = null, string? bcc = null, List<string>? attachments = null)
@@ -51,7 +54,7 @@ namespace Infrastructure.BackgroundJobs
                 else
                 {
                     _logger.LogWarning($"MailJob: Failed to send email to {to}");
-                    throw new Exception($"Failed to send email to {to}");
+                    throw new Exception(_localizationService.GetLocalizedString("MailJob.EmailSendFailed", to));
                 }
             }
             catch (Exception ex)
@@ -76,7 +79,7 @@ namespace Infrastructure.BackgroundJobs
                 else
                 {
                     _logger.LogWarning($"MailJob: Failed to send email to {to}");
-                    throw new Exception($"Failed to send email to {to}");
+                    throw new Exception(_localizationService.GetLocalizedString("MailJob.EmailSendFailed", to));
                 }
             }
             catch (Exception ex)

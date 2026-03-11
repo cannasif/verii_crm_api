@@ -41,7 +41,7 @@ namespace Infrastructure.BackgroundJobs
             var erpResponse = await _erpService.GetStoksAsync(null);
             if (erpResponse == null || !erpResponse.Success)
             {
-                var message = erpResponse?.ExceptionMessage ?? erpResponse?.Message ?? "ERP stock fetch failed.";
+                var message = erpResponse?.ExceptionMessage ?? erpResponse?.Message ?? _localizationService.GetLocalizedString("StockSyncJob.ErpFetchFailed");
                 var ex = new InvalidOperationException(message);
                 await LogRecordFailureAsync("ERP_FETCH", ex);
                 _logger.LogWarning("Stock sync aborted: ERP fetch failed. Message: {Message}", message);

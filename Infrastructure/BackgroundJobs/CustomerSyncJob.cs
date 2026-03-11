@@ -41,7 +41,7 @@ namespace Infrastructure.BackgroundJobs
             var erpResponse = await _erpService.GetCarisAsync(null);
             if (erpResponse == null || !erpResponse.Success)
             {
-                var message = erpResponse?.ExceptionMessage ?? erpResponse?.Message ?? "ERP customer fetch failed.";
+                var message = erpResponse?.ExceptionMessage ?? erpResponse?.Message ?? _localizationService.GetLocalizedString("CustomerSyncJob.ErpFetchFailed");
                 var ex = new InvalidOperationException(message);
                 await LogRecordFailureAsync("ERP_FETCH", ex);
                 _logger.LogWarning("Customer sync aborted: ERP fetch failed. Message: {Message}", message);
