@@ -297,7 +297,7 @@ namespace crm_api.Services
 
                 return ApiResponse<TempQuotattionGetDto>.SuccessResult(
                     _mapper.Map<TempQuotattionGetDto>(createdRevision ?? revision),
-                    "Temp teklif revizyonu oluşturuldu.");
+                    _localizationService.GetLocalizedString("TempQuotattionService.RevisionCreated"));
             }
             catch (Exception ex)
             {
@@ -338,7 +338,7 @@ namespace crm_api.Services
 
                 if (entity.QuotationId.HasValue)
                 {
-                    return ApiResponse<long>.SuccessResult(entity.QuotationId.Value, "Temp teklif zaten gerçek teklife dönüştürülmüş.");
+                    return ApiResponse<long>.SuccessResult(entity.QuotationId.Value, _localizationService.GetLocalizedString("TempQuotattionService.AlreadyConvertedToQuotation"));
                 }
 
                 var customer = await _unitOfWork.Customers.Query()
@@ -349,8 +349,8 @@ namespace crm_api.Services
                 if (customer == null)
                 {
                     return ApiResponse<long>.ErrorResult(
-                        "Müşteri bulunamadı.",
-                        "Müşteri bulunamadı.",
+                        _localizationService.GetLocalizedString("CustomerService.CustomerNotFound"),
+                        _localizationService.GetLocalizedString("CustomerService.CustomerNotFound"),
                         StatusCodes.Status404NotFound);
                 }
 
@@ -363,8 +363,8 @@ namespace crm_api.Services
                 if (!lines.Any())
                 {
                     return ApiResponse<long>.ErrorResult(
-                        "Temp teklif satırları bulunamadı.",
-                        "Temp teklif satırları bulunamadı.",
+                        _localizationService.GetLocalizedString("TempQuotattionService.TempQuotattionLinesNotFound"),
+                        _localizationService.GetLocalizedString("TempQuotattionService.TempQuotattionLinesNotFound"),
                         StatusCodes.Status400BadRequest);
                 }
 
@@ -385,10 +385,8 @@ namespace crm_api.Services
 
                 if (salesTypeDefinition == null)
                 {
-                    return ApiResponse<long>.ErrorResult(
-                        "YURTICI için uygun satış tipi bulunamadı.",
-                        "YURTICI için uygun satış tipi bulunamadı.",
-                        StatusCodes.Status404NotFound);
+                    var msg = _localizationService.GetLocalizedString("TempQuotattionService.SalesTypeNotFoundForOfferType", defaultOfferType);
+                    return ApiResponse<long>.ErrorResult(msg, msg, StatusCodes.Status404NotFound);
                 }
 
                 var customerTypeId = customer.CustomerTypeId ?? 0;
@@ -436,17 +434,15 @@ namespace crm_api.Services
 
                 if (quotationDocumentSerialType == null)
                 {
-                    return ApiResponse<long>.ErrorResult(
-                        "Koşullara uygun teklif belge seri tipi bulunamadı.",
-                        "Koşullara uygun teklif belge seri tipi bulunamadı.",
-                        StatusCodes.Status404NotFound);
+                    var msg = _localizationService.GetLocalizedString("TempQuotattionService.QuotationDocumentSerialTypeNotFound");
+                    return ApiResponse<long>.ErrorResult(msg, msg, StatusCodes.Status404NotFound);
                 }
 
                 var documentSerialResult = await _documentSerialTypeService.GenerateDocumentSerialAsync(quotationDocumentSerialType.Id).ConfigureAwait(false);
                 if (!documentSerialResult.Success)
                 {
                     return ApiResponse<long>.ErrorResult(
-                        "Teklif numarası oluşturulamadı.",
+                        _localizationService.GetLocalizedString("TempQuotattionService.QuotationNumberGenerationFailed"),
                         documentSerialResult.Message,
                         StatusCodes.Status500InternalServerError);
                 }
@@ -518,7 +514,7 @@ namespace crm_api.Services
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
                 await _unitOfWork.CommitTransactionAsync().ConfigureAwait(false);
 
-                return ApiResponse<long>.SuccessResult(quotation.Id, "Temp teklif gerçek teklife dönüştürüldü.");
+                return ApiResponse<long>.SuccessResult(quotation.Id, _localizationService.GetLocalizedString("TempQuotattionService.ConvertedToQuotationSuccess"));
             }
             catch (Exception ex)
             {
