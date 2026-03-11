@@ -48,6 +48,13 @@ namespace crm_api.Controllers
             return StatusCode(result.StatusCode, result);
         }
 
+        [HttpGet("{id}/quick-quotations")]
+        public async Task<IActionResult> GetQuickQuotations(long id)
+        {
+            var result = await _customer360Service.GetQuickQuotationsAsync(id);
+            return StatusCode(result.StatusCode, result);
+        }
+
         [HttpPost("{id}/recommended-actions/execute")]
         public async Task<IActionResult> ExecuteRecommendedAction(long id, [FromBody] ExecuteRecommendedActionDto request)
         {
