@@ -31,7 +31,7 @@ namespace crm_api.Controllers
             {
                 return BadRequest(ApiResponse<object>.ErrorResult(
                     _localizationService.GetLocalizedString("FileUploadService.FileRequired"),
-                    "No files provided",
+                    _localizationService.GetLocalizedString("FileUploadService.NoFilesProvided"),
                     400));
             }
 

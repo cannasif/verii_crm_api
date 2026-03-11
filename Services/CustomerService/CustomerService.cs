@@ -503,8 +503,8 @@ namespace crm_api.Services
                         matchedDetails.Add($"telefon=>[{string.Join(", ", phoneMatchedIds.OrderBy(x => x))}]");
 
                     return ApiResponse<CustomerCreateFromMobileResultDto>.ErrorResult(
-                        "2 farklı müşteri bulundu. Önce eşleşmeleri düzelt, sonra kayıt at.",
-                        $"Şirket email/telefon alanlarında farklı müşteri ID'leri bulundu. Bulunan müşteriler: {string.Join(" | ", matchedDetails)}",
+                        _localizationService.GetLocalizedString("CustomerService.ConflictingCustomerMatches"),
+                        _localizationService.GetLocalizedString("CustomerService.ConflictingCustomerMatchesDetail", string.Join(" | ", matchedDetails)),
                         StatusCodes.Status409Conflict);
                 }
 
@@ -597,12 +597,12 @@ namespace crm_api.Services
                         }
                         else
                         {
-                            imageUploadError = uploadResult.Message ?? uploadResult.ExceptionMessage ?? "Customer image upload failed.";
+                            imageUploadError = uploadResult.Message ?? uploadResult.ExceptionMessage ?? _localizationService.GetLocalizedString("CustomerService.ImageUploadFailed");
                             _logger.LogWarning("mobileCreate: customer {CustomerId} created but image upload failed. Error: {Error}", customer.Id, imageUploadError);
                         }
                     }
 
-                    const string fallbackUnknownTitleName = "Bilinmeyen";
+                    var fallbackUnknownTitleName = _localizationService.GetLocalizedString("General.Unknown");
                     long? titleId = null;
                     var titleCreated = false;
                     var (contactFirstName, contactMiddleName, contactLastName) = resolveContactNames(request);
