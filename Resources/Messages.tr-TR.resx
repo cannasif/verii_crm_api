@@ -180,7 +180,7 @@
   
   
   <data name="General.ValidationError" xml:space="preserve">
-    <value>Doğrulama hatası oluştu.</value>
+    <value>Zorunlu alanlar doldurulmadı.</value>
   </data>
   <data name="General.RequiredFieldsNotFilled" xml:space="preserve">
     <value>Zorunlu alanlar doldurulmadı.</value>
@@ -2476,7 +2476,7 @@
     <value>İşlem başarılı.</value>
   </data>
   <data name="ValidationError" xml:space="preserve">
-    <value>Doğrulama hatası.</value>
+    <value>Zorunlu alanlar doldurulmadı.</value>
   </data>
   <data name="PasswordResetEmailSubject" xml:space="preserve">
     <value>Şifre Sıfırlama.</value>
