@@ -76,14 +76,34 @@ namespace crm_api.Services
                     { "role", "RoleNavigation.Title" }
                 };
 
-                var query = _uow.Users.Query()
+                IQueryable<User> query = _uow.Users.Query()
                     .AsNoTracking()
                     .Where(u => !u.IsDeleted)
                     .Include(u => u.RoleNavigation)
                     .Include(u => u.CreatedByUser)
                     .Include(u => u.UpdatedByUser)
-                    .Include(u => u.DeletedByUser)
-                    .ApplyFilters(request.Filters, request.FilterLogic, columnMapping);
+                    .Include(u => u.DeletedByUser);
+
+                var fullNameFilters = request.Filters
+                    .Where(f => string.Equals(f.Column, "fullName", StringComparison.OrdinalIgnoreCase)
+                        && string.Equals(f.Operator, "contains", StringComparison.OrdinalIgnoreCase)
+                        && !string.IsNullOrWhiteSpace(f.Value))
+                    .ToList();
+
+                foreach (var filter in fullNameFilters)
+                {
+                    var term = filter.Value.Trim();
+                    query = query.Where(u =>
+                        (((u.FirstName ?? string.Empty) + " " + (u.LastName ?? string.Empty)).Trim().Contains(term)) ||
+                        (string.IsNullOrWhiteSpace(((u.FirstName ?? string.Empty) + (u.LastName ?? string.Empty)))
+                            && (((u.Username ?? string.Empty).Contains(term)) || ((u.Email ?? string.Empty).Contains(term)))));
+                }
+
+                var remainingFilters = request.Filters
+                    .Where(f => !string.Equals(f.Column, "fullName", StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+                query = query.ApplyFilters(remainingFilters, request.FilterLogic, columnMapping);
 
                 var sortBy = request.SortBy ?? nameof(User.Id);
 
