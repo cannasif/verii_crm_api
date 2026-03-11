@@ -454,7 +454,7 @@ namespace crm_api.Services
                     var resetPasswordPath = _configuration["FrontendSettings:ResetPasswordPath"] ?? "/reset-password";
                     var resetLink = $"{frontendBaseUrl}{resetPasswordPath}?token={token}";
 
-                    var emailSubject = _localizationService.GetLocalizedString("PasswordResetEmailSubject") ?? "Password Reset Request";
+                    var emailSubject = _localizationService.GetLocalizedString("PasswordResetEmailSubject");
                     BackgroundJob.Enqueue<IMailJob>(job =>
                         job.SendPasswordResetEmailAsync(
                             user.Email,
