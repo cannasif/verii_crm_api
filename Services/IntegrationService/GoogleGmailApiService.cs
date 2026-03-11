@@ -42,6 +42,7 @@ namespace crm_api.Services
         private readonly IUserContextService _userContextService;
         private readonly IGoogleIntegrationLogService _googleIntegrationLogService;
         private readonly ILogger<GoogleGmailApiService> _logger;
+        private readonly ILocalizationService _localizationService;
 
         public GoogleGmailApiService(
             IUnitOfWork uow,
@@ -50,7 +51,8 @@ namespace crm_api.Services
             IHttpClientFactory httpClientFactory,
             IUserContextService userContextService,
             IGoogleIntegrationLogService googleIntegrationLogService,
-            ILogger<GoogleGmailApiService> logger)
+            ILogger<GoogleGmailApiService> logger,
+            ILocalizationService localizationService)
         {
             _uow = uow;
             _tenantGoogleOAuthSettingsService = tenantGoogleOAuthSettingsService;
@@ -59,6 +61,7 @@ namespace crm_api.Services
             _userContextService = userContextService;
             _googleIntegrationLogService = googleIntegrationLogService;
             _logger = logger;
+            _localizationService = localizationService;
         }
 
         public async Task<ApiResponse<GoogleCustomerMailSendResultDto>> SendCustomerMailAsync(
@@ -68,45 +71,35 @@ namespace crm_api.Services
         {
             if (dto.CustomerId <= 0)
             {
-                return ApiResponse<GoogleCustomerMailSendResultDto>.ErrorResult(
-                    "CustomerId is required.",
-                    "CustomerId is required.",
-                    StatusCodes.Status400BadRequest);
+                var msg = _localizationService.GetLocalizedString("GoogleGmailApiService.CustomerIdRequired");
+                return ApiResponse<GoogleCustomerMailSendResultDto>.ErrorResult(msg, msg, StatusCodes.Status400BadRequest);
             }
 
             if (string.IsNullOrWhiteSpace(dto.Subject))
             {
-                return ApiResponse<GoogleCustomerMailSendResultDto>.ErrorResult(
-                    "Mail subject is required.",
-                    "Mail subject is required.",
-                    StatusCodes.Status400BadRequest);
+                var msg = _localizationService.GetLocalizedString("GoogleGmailApiService.MailSubjectRequired");
+                return ApiResponse<GoogleCustomerMailSendResultDto>.ErrorResult(msg, msg, StatusCodes.Status400BadRequest);
             }
 
             if (string.IsNullOrWhiteSpace(dto.Body))
             {
-                return ApiResponse<GoogleCustomerMailSendResultDto>.ErrorResult(
-                    "Mail body is required.",
-                    "Mail body is required.",
-                    StatusCodes.Status400BadRequest);
+                var msg = _localizationService.GetLocalizedString("GoogleGmailApiService.MailBodyRequired");
+                return ApiResponse<GoogleCustomerMailSendResultDto>.ErrorResult(msg, msg, StatusCodes.Status400BadRequest);
             }
 
             var tenantId = _userContextService.GetCurrentTenantId() ?? Guid.Empty;
             if (tenantId == Guid.Empty)
             {
-                return ApiResponse<GoogleCustomerMailSendResultDto>.ErrorResult(
-                    "Tenant context is missing.",
-                    "Tenant context is missing.",
-                    StatusCodes.Status400BadRequest);
+                var msg = _localizationService.GetLocalizedString("OutlookEntegrationService.TenantContextMissing");
+                return ApiResponse<GoogleCustomerMailSendResultDto>.ErrorResult(msg, msg, StatusCodes.Status400BadRequest);
             }
 
             var customer = await _uow.Customers.Query(tracking: false)
                 .FirstOrDefaultAsync(x => x.Id == dto.CustomerId && !x.IsDeleted, cancellationToken).ConfigureAwait(false);
             if (customer == null)
             {
-                return ApiResponse<GoogleCustomerMailSendResultDto>.ErrorResult(
-                    "Customer not found.",
-                    "Customer not found.",
-                    StatusCodes.Status404NotFound);
+                var msg = _localizationService.GetLocalizedString("OutlookEntegrationService.CustomerNotFound");
+                return ApiResponse<GoogleCustomerMailSendResultDto>.ErrorResult(msg, msg, StatusCodes.Status404NotFound);
             }
 
             Contact? contact = null;
@@ -117,18 +110,14 @@ namespace crm_api.Services
 
                 if (contact == null)
                 {
-                    return ApiResponse<GoogleCustomerMailSendResultDto>.ErrorResult(
-                        "Contact not found.",
-                        "Contact not found.",
-                        StatusCodes.Status404NotFound);
+                    var msg = _localizationService.GetLocalizedString("OutlookEntegrationService.ContactNotFound");
+                    return ApiResponse<GoogleCustomerMailSendResultDto>.ErrorResult(msg, msg, StatusCodes.Status404NotFound);
                 }
 
                 if (contact.CustomerId != customer.Id)
                 {
-                    return ApiResponse<GoogleCustomerMailSendResultDto>.ErrorResult(
-                        "Contact does not belong to the selected customer.",
-                        "Contact does not belong to the selected customer.",
-                        StatusCodes.Status400BadRequest);
+                    var msg = _localizationService.GetLocalizedString("OutlookEntegrationService.ContactNotBelongToCustomer");
+                    return ApiResponse<GoogleCustomerMailSendResultDto>.ErrorResult(msg, msg, StatusCodes.Status400BadRequest);
                 }
             }
 
@@ -148,8 +137,8 @@ namespace crm_api.Services
             if (toRecipients.Count == 0)
             {
                 return ApiResponse<GoogleCustomerMailSendResultDto>.ErrorResult(
-                    "Recipient email is required.",
-                    "No recipient email found on request/contact/customer.",
+                    _localizationService.GetLocalizedString("OutlookEntegrationService.RecipientEmailRequired"),
+                    _localizationService.GetLocalizedString("OutlookEntegrationService.NoRecipientEmailFound"),
                     StatusCodes.Status400BadRequest);
             }
 
@@ -160,20 +149,16 @@ namespace crm_api.Services
             if (oauthSettings == null || !oauthSettings.IsEnabled)
             {
                 await WriteGoogleOperationalLogAsync(userId, tenantId, dto.CustomerId, false, "Warning", "google.gmail.send", "Google OAuth is not configured or disabled.", "oauth_disabled", cancellationToken).ConfigureAwait(false);
-                return ApiResponse<GoogleCustomerMailSendResultDto>.ErrorResult(
-                    "Google OAuth ayarları yapılandırılmamış.",
-                    "Google OAuth settings are missing or disabled.",
-                    StatusCodes.Status400BadRequest);
+                var oauthMsg = _localizationService.GetLocalizedString("GoogleGmailApiService.OAuthNotConfigured");
+                return ApiResponse<GoogleCustomerMailSendResultDto>.ErrorResult(oauthMsg, oauthMsg, StatusCodes.Status400BadRequest);
             }
 
             var account = await _googleTokenService.GetAccountAsync(userId, cancellationToken).ConfigureAwait(false);
             if (account == null || !account.IsConnected)
             {
                 await WriteGoogleOperationalLogAsync(userId, tenantId, dto.CustomerId, false, "Warning", "google.gmail.send", "Google account is not connected.", "account_not_connected", cancellationToken).ConfigureAwait(false);
-                return ApiResponse<GoogleCustomerMailSendResultDto>.ErrorResult(
-                    "Google hesabınız bağlı değil.",
-                    "Google account is not connected.",
-                    StatusCodes.Status400BadRequest);
+                var acctMsg = _localizationService.GetLocalizedString("GoogleGmailApiService.AccountNotConnected");
+                return ApiResponse<GoogleCustomerMailSendResultDto>.ErrorResult(acctMsg, acctMsg, StatusCodes.Status400BadRequest);
             }
 
             var scopes = string.Join(' ', new[] { account.Scopes, oauthSettings.Scopes }
@@ -182,20 +167,16 @@ namespace crm_api.Services
             if (!ScopeContains(scopes, GmailSendScope))
             {
                 await WriteGoogleOperationalLogAsync(userId, tenantId, dto.CustomerId, false, "Warning", "google.gmail.send", "Google account does not have gmail.send scope.", "insufficient_scope", cancellationToken).ConfigureAwait(false);
-                return ApiResponse<GoogleCustomerMailSendResultDto>.ErrorResult(
-                    "Google hesabınızda mail gönderme yetkisi yok. Lütfen yeniden bağlanın.",
-                    "Google scope does not contain gmail.send.",
-                    StatusCodes.Status400BadRequest);
+                var scopeMsg = _localizationService.GetLocalizedString("GoogleGmailApiService.MailSendScopeMissing");
+                return ApiResponse<GoogleCustomerMailSendResultDto>.ErrorResult(scopeMsg, scopeMsg, StatusCodes.Status400BadRequest);
             }
 
             var accessToken = await _googleTokenService.GetValidAccessTokenAsync(userId, cancellationToken: cancellationToken).ConfigureAwait(false);
             if (string.IsNullOrWhiteSpace(accessToken))
             {
                 await WriteGoogleOperationalLogAsync(userId, tenantId, dto.CustomerId, false, "Warning", "google.gmail.send", "Google token is invalid or expired.", "token_invalid", cancellationToken).ConfigureAwait(false);
-                return ApiResponse<GoogleCustomerMailSendResultDto>.ErrorResult(
-                    "Google token geçersiz veya süresi dolmuş. Lütfen tekrar bağlanın.",
-                    "Google token invalid or expired.",
-                    StatusCodes.Status400BadRequest);
+                var tokenMsg = _localizationService.GetLocalizedString("GoogleGmailApiService.TokenInvalidOrExpired");
+                return ApiResponse<GoogleCustomerMailSendResultDto>.ErrorResult(tokenMsg, tokenMsg, StatusCodes.Status400BadRequest);
             }
 
             var senderEmail = string.IsNullOrWhiteSpace(account.GoogleEmail) ? null : account.GoogleEmail!.Trim();
@@ -265,15 +246,16 @@ namespace crm_api.Services
 
                 if (IsInsufficientScopeError(gmailResponse))
                 {
+                    var insufMsg = _localizationService.GetLocalizedString("GoogleGmailApiService.InsufficientMailScope");
                     return ApiResponse<GoogleCustomerMailSendResultDto>.ErrorResult(
-                        "Google Mail yetkisi yetersiz. Lütfen Google bağlantısını kaldırıp tekrar bağlayın.",
-                        gmailResponse.ErrorMessage ?? "ACCESS_TOKEN_SCOPE_INSUFFICIENT",
+                        insufMsg,
+                        gmailResponse.ErrorMessage ?? insufMsg,
                         StatusCodes.Status400BadRequest);
                 }
 
                 if (IsServiceDisabledError(gmailResponse, out var activationUrl))
                 {
-                    var message = "Gmail API bu Google projesinde aktif değil. Lütfen Google Cloud Console üzerinden Gmail API'yi etkinleştirip birkaç dakika sonra tekrar deneyin.";
+                    var message = _localizationService.GetLocalizedString("GoogleGmailApiService.GmailApiNotEnabled");
                     var detail = string.IsNullOrWhiteSpace(activationUrl)
                         ? (gmailResponse.ErrorMessage ?? "SERVICE_DISABLED")
                         : $"SERVICE_DISABLED. ActivationUrl: {activationUrl}";
@@ -284,9 +266,10 @@ namespace crm_api.Services
                         StatusCodes.Status400BadRequest);
                 }
 
+                var sendFailMsg = _localizationService.GetLocalizedString("GoogleGmailApiService.MailSendFailed");
                 return ApiResponse<GoogleCustomerMailSendResultDto>.ErrorResult(
-                    "Mail gönderilemedi.",
-                    gmailResponse.ErrorMessage ?? "Google Gmail API send failed.",
+                    sendFailMsg,
+                    gmailResponse.ErrorMessage ?? sendFailMsg,
                     StatusCodes.Status400BadRequest);
             }
 
@@ -315,16 +298,18 @@ namespace crm_api.Services
             catch (DbUpdateException dbEx)
             {
                 _logger.LogError(dbEx, "Google mail sent but log save failed. CustomerId={CustomerId}, UserId={UserId}", dto.CustomerId, userId);
+                var logFailMsg = _localizationService.GetLocalizedString("GoogleGmailApiService.MailSentButLogFailed");
                 return ApiResponse<GoogleCustomerMailSendResultDto>.ErrorResult(
-                    "Mail gönderildi ancak kayıt oluşturulamadı.",
+                    logFailMsg,
                     dbEx.InnerException?.Message ?? dbEx.Message,
                     StatusCodes.Status500InternalServerError);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Google mail sent but unexpected log save error occurred. CustomerId={CustomerId}, UserId={UserId}", dto.CustomerId, userId);
+                var logFailMsg = _localizationService.GetLocalizedString("GoogleGmailApiService.MailSentButLogFailed");
                 return ApiResponse<GoogleCustomerMailSendResultDto>.ErrorResult(
-                    "Mail gönderildi ancak kayıt oluşturulamadı.",
+                    logFailMsg,
                     ex.Message,
                     StatusCodes.Status500InternalServerError);
             }
@@ -355,7 +340,7 @@ namespace crm_api.Services
                     GoogleThreadId = gmailResponse.ThreadId,
                     SentAt = sentAt
                 },
-                "Mail başarıyla gönderildi.");
+                _localizationService.GetLocalizedString("GoogleGmailApiService.MailSentSuccessfully"));
         }
 
         public async Task<ApiResponse<PagedResponse<GoogleCustomerMailLogDto>>> GetCustomerMailLogsAsync(
@@ -366,10 +351,8 @@ namespace crm_api.Services
             var tenantId = _userContextService.GetCurrentTenantId() ?? Guid.Empty;
             if (tenantId == Guid.Empty)
             {
-                return ApiResponse<PagedResponse<GoogleCustomerMailLogDto>>.ErrorResult(
-                    "Tenant context is missing.",
-                    "Tenant context is missing.",
-                    StatusCodes.Status400BadRequest);
+                var tenantMsg = _localizationService.GetLocalizedString("OutlookEntegrationService.TenantContextMissing");
+                return ApiResponse<PagedResponse<GoogleCustomerMailLogDto>>.ErrorResult(tenantMsg, tenantMsg, StatusCodes.Status400BadRequest);
             }
 
             var pageNumber = query.PageNumber < 1 ? 1 : query.PageNumber;
