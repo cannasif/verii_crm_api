@@ -34,6 +34,20 @@ using crm_api.Infrastructure.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var configuredCorsOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>()
+    ?.Where(origin => !string.IsNullOrWhiteSpace(origin))
+    .Select(origin => origin.Trim().TrimEnd('/'))
+    .Distinct(StringComparer.OrdinalIgnoreCase)
+    .ToArray()
+    ?? Array.Empty<string>();
+
+if (configuredCorsOrigins.Length == 0)
+{
+    throw new InvalidOperationException("Cors:AllowedOrigins ayari bos birakilamaz.");
+}
+
 builder.Services.Configure<Microsoft.AspNetCore.Mvc.ApiBehaviorOptions>(options =>
 {
     options.SuppressModelStateInvalidFilter = true;
@@ -321,15 +335,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("DevCors", policy =>
     {
-        policy.WithOrigins(
-                "http://localhost:5173",
-                "https://crm.v3rii.com",
-                "http://crm.v3rii.com",
-                "http://192.168.10.52",
-                "http://192.168.10.52:5173",
-                "http://cloud.windoform.com",
-                "https://cloud.windoform.com"
-            )
+        policy.WithOrigins(configuredCorsOrigins)
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials();
@@ -534,12 +540,7 @@ GlobalJobFilters.Filters.Add(
 // Handles preflight (OPTIONS) requests *before* any other middleware can
 // short-circuit. For non-preflight requests it adds the CORS headers so
 // that even 500 / exception-handler responses carry them.
-var allowedCorsOrigins = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-{
-    "http://localhost:5173",
-    "https://crm.v3rii.com",
-    "http://crm.v3rii.com"
-};
+var allowedCorsOrigins = new HashSet<string>(configuredCorsOrigins, StringComparer.OrdinalIgnoreCase);
 
 app.Use(async (ctx, next) =>
 {
