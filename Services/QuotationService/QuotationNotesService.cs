@@ -165,7 +165,7 @@ namespace crm_api.Services
                 }
 
                 var entity = _mapper.Map<QuotationNotes>(createQuotationNotesDto);
-                entity.CreatedDate = DateTime.UtcNow;
+                entity.CreatedDate = DateTimeProvider.Now;
 
                 await _unitOfWork.QuotationNotes.AddAsync(entity).ConfigureAwait(false);
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
@@ -198,7 +198,7 @@ namespace crm_api.Services
                 }
 
                 _mapper.Map(updateQuotationNotesDto, existing);
-                existing.UpdatedDate = DateTime.UtcNow;
+                existing.UpdatedDate = DateTimeProvider.Now;
 
                 await _unitOfWork.QuotationNotes.UpdateAsync(existing).ConfigureAwait(false);
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
@@ -255,7 +255,7 @@ namespace crm_api.Services
                     entity = new QuotationNotes
                     {
                         QuotationId = quotationId,
-                        CreatedDate = DateTime.UtcNow
+                        CreatedDate = DateTimeProvider.Now
                     };
 
                     ApplyNotesToEntity(entity, normalizedNotes);
@@ -264,7 +264,7 @@ namespace crm_api.Services
                 else
                 {
                     ApplyNotesToEntity(entity, normalizedNotes);
-                    entity.UpdatedDate = DateTime.UtcNow;
+                    entity.UpdatedDate = DateTimeProvider.Now;
                     await _unitOfWork.QuotationNotes.UpdateAsync(entity).ConfigureAwait(false);
                 }
 

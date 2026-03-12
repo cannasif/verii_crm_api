@@ -144,7 +144,7 @@ namespace crm_api.Services
                     _loc.GetLocalizedString("UserSessionService.UserSessionNotFound"),
                     _loc.GetLocalizedString("UserSessionService.UserSessionNotFound"),
                     StatusCodes.Status404NotFound);
-                entity.RevokedAt = DateTime.UtcNow;
+                entity.RevokedAt = DateTimeProvider.Now;
                 await _uow.UserSessions.UpdateAsync(entity).ConfigureAwait(false);
                 await _uow.SaveChangesAsync().ConfigureAwait(false);
                 _userSessionCacheService.RemoveSession(entity.SessionId);
@@ -192,7 +192,7 @@ namespace crm_api.Services
                 {
                     foreach (var session in sessionsList)
                     {
-                        session.RevokedAt = DateTime.UtcNow;
+                        session.RevokedAt = DateTimeProvider.Now;
                         await _uow.UserSessions.UpdateAsync(session).ConfigureAwait(false);
                         _userSessionCacheService.RemoveSession(session.SessionId);
                     }

@@ -57,7 +57,7 @@ namespace crm_api.Services
                 foreach (var dto in request)
                 {
                     var entity = _mapper.Map<ActivityImage>(dto);
-                    entity.CreatedDate = DateTime.UtcNow;
+                    entity.CreatedDate = DateTimeProvider.Now;
                     await _unitOfWork.ActivityImages.AddAsync(entity).ConfigureAwait(false);
                     entities.Add(entity);
                 }
@@ -127,7 +127,7 @@ namespace crm_api.Services
                         ActivityId = activityId,
                         ResimAciklama = aciklama,
                         ResimUrl = uploadResult.Data,
-                        CreatedDate = DateTime.UtcNow
+                        CreatedDate = DateTimeProvider.Now
                     };
 
                     await _unitOfWork.ActivityImages.AddAsync(entity).ConfigureAwait(false);
@@ -214,7 +214,7 @@ namespace crm_api.Services
                 }
 
                 _mapper.Map(request, entity);
-                entity.UpdatedDate = DateTime.UtcNow;
+                entity.UpdatedDate = DateTimeProvider.Now;
 
                 await _unitOfWork.ActivityImages.UpdateAsync(entity).ConfigureAwait(false);
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);

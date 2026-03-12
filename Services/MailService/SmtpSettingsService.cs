@@ -101,7 +101,7 @@ namespace crm_api.Services
                     {
                         Id = 1,
                         IsDeleted = false,
-                        CreatedDate = DateTime.UtcNow,
+                        CreatedDate = DateTimeProvider.Now,
                         CreatedBy = userId
                     };
 
@@ -112,7 +112,7 @@ namespace crm_api.Services
                     if (!string.IsNullOrWhiteSpace(dto.Password))
                         entity.PasswordEncrypted = _protector.Protect(dto.Password);
 
-                    entity.UpdatedDate = DateTime.UtcNow;
+                    entity.UpdatedDate = DateTimeProvider.Now;
                     entity.UpdatedBy = userId;
 
                     await _unitOfWork.SmtpSettings.AddAsync(entity).ConfigureAwait(false);
@@ -135,7 +135,7 @@ namespace crm_api.Services
                 if (!string.IsNullOrWhiteSpace(dto.Password))
                     entity.PasswordEncrypted = _protector.Protect(dto.Password);
 
-                entity.UpdatedDate = DateTime.UtcNow;
+                entity.UpdatedDate = DateTimeProvider.Now;
                 entity.UpdatedBy = userId;
 
                 await _unitOfWork.SmtpSettings.UpdateAsync(entity).ConfigureAwait(false);

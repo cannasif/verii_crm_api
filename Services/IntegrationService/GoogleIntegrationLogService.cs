@@ -75,7 +75,7 @@ namespace crm_api.Services
                     ActivityId = dto.ActivityId,
                     GoogleCalendarEventId = TrimToNull(dto.GoogleCalendarEventId, 512),
                     MetadataJson = TrimToNull(metadataJson, 4000),
-                    CreatedDate = DateTime.UtcNow,
+                    CreatedDate = DateTimeProvider.Now,
                     IsDeleted = false,
                 };
 

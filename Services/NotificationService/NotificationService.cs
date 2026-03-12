@@ -181,7 +181,7 @@ namespace crm_api.Services
                 }
 
                 notification.IsRead = true;
-                notification.UpdatedDate = DateTime.UtcNow;
+                notification.UpdatedDate = DateTimeProvider.Now;
                 notification.UpdatedBy = userId;
 
                 await _unitOfWork.Notifications.UpdateAsync(notification).ConfigureAwait(false);
@@ -209,7 +209,7 @@ namespace crm_api.Services
                     foreach (var notification in notifications)
                     {
                         notification.IsRead = true;
-                        notification.UpdatedDate = DateTime.UtcNow;
+                        notification.UpdatedDate = DateTimeProvider.Now;
                         notification.UpdatedBy = userId;
                         await _unitOfWork.Notifications.UpdateAsync(notification).ConfigureAwait(false);
                     }
@@ -320,7 +320,7 @@ namespace crm_api.Services
                 }
 
                 notification.IsDeleted = true;
-                notification.DeletedDate = DateTime.UtcNow;
+                notification.DeletedDate = DateTimeProvider.Now;
                 notification.DeletedBy = userId;
 
                 await _unitOfWork.Notifications.UpdateAsync(notification).ConfigureAwait(false);

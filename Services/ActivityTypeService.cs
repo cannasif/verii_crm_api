@@ -116,7 +116,7 @@ namespace crm_api.Services
             try
             {
                 var activityType = _mapper.Map<ActivityType>(createActivityTypeDto);
-                activityType.CreatedDate = DateTime.UtcNow;
+                activityType.CreatedDate = DateTimeProvider.Now;
 
                 await _unitOfWork.ActivityTypes.AddAsync(activityType).ConfigureAwait(false);
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
@@ -156,7 +156,7 @@ namespace crm_api.Services
                 }
 
                 _mapper.Map(updateActivityTypeDto, existingActivityType);
-                existingActivityType.UpdatedDate = DateTime.UtcNow;
+                existingActivityType.UpdatedDate = DateTimeProvider.Now;
 
                 await _unitOfWork.ActivityTypes.UpdateAsync(existingActivityType).ConfigureAwait(false);
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);

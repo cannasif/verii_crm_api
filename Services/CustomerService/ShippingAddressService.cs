@@ -207,7 +207,7 @@ namespace crm_api.Services
 
                 var addressBefore = (existingShippingAddress.Address, existingShippingAddress.CountryId, existingShippingAddress.CityId, existingShippingAddress.DistrictId);
                 _mapper.Map(updateShippingAddressDto, existingShippingAddress);
-                existingShippingAddress.UpdatedDate = DateTime.UtcNow;
+                existingShippingAddress.UpdatedDate = DateTimeProvider.Now;
                 var addressAfter = (existingShippingAddress.Address, existingShippingAddress.CountryId, existingShippingAddress.CityId, existingShippingAddress.DistrictId);
                 var addressChanged = addressBefore != addressAfter;
 

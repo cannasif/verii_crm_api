@@ -69,7 +69,7 @@ namespace crm_api.Helpers
                                 : failedState.Exception?.StackTrace,
                             Queue = queue,
                             RetryCount = retryCount,
-                            CreatedDate = DateTime.UtcNow,
+                            CreatedDate = DateTimeProvider.Now,
                             IsDeleted = false
                         };
                         db.JobFailureLogs.Add(log);

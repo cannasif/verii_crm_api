@@ -119,7 +119,7 @@ namespace crm_api.Services
                 var entity = _mapper.Map<SalesTypeDefinition>(createSalesTypeDto);
                 entity.SalesType = normalizedSalesType;
                 entity.Name = normalizedName;
-                entity.CreatedDate = DateTime.UtcNow;
+                entity.CreatedDate = DateTimeProvider.Now;
 
                 await _unitOfWork.SalesTypeDefinitions.AddAsync(entity).ConfigureAwait(false);
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
@@ -187,7 +187,7 @@ namespace crm_api.Services
 
                 entity.SalesType = normalizedSalesType;
                 entity.Name = normalizedName;
-                entity.UpdatedDate = DateTime.UtcNow;
+                entity.UpdatedDate = DateTimeProvider.Now;
 
                 await _unitOfWork.SalesTypeDefinitions.UpdateAsync(entity).ConfigureAwait(false);
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);

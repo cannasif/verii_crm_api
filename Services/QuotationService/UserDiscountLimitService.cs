@@ -182,7 +182,7 @@ namespace crm_api.Services
             try
             {
                 var userDiscountLimit = _mapper.Map<UserDiscountLimit>(createDto);
-                userDiscountLimit.CreatedDate = DateTime.UtcNow;
+                userDiscountLimit.CreatedDate = DateTimeProvider.Now;
                 
                 await _unitOfWork.UserDiscountLimits.AddAsync(userDiscountLimit).ConfigureAwait(false);
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
@@ -221,7 +221,7 @@ namespace crm_api.Services
                 }
 
                 _mapper.Map(updateDto, existingUserDiscountLimit);
-                existingUserDiscountLimit.UpdatedDate = DateTime.UtcNow;
+                existingUserDiscountLimit.UpdatedDate = DateTimeProvider.Now;
                 
                 await _unitOfWork.UserDiscountLimits.UpdateAsync(existingUserDiscountLimit).ConfigureAwait(false);
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
@@ -260,7 +260,7 @@ namespace crm_api.Services
                 }
 
                 userDiscountLimit.IsDeleted = true;
-                userDiscountLimit.DeletedDate = DateTime.UtcNow;
+                userDiscountLimit.DeletedDate = DateTimeProvider.Now;
                 
                 await _unitOfWork.UserDiscountLimits.UpdateAsync(userDiscountLimit).ConfigureAwait(false);
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);

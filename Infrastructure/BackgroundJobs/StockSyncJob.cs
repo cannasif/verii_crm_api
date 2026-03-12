@@ -150,7 +150,7 @@ namespace Infrastructure.BackgroundJobs
                         continue;
                     }
 
-                    stock.UpdatedDate = DateTime.UtcNow;
+                    stock.UpdatedDate = DateTimeProvider.Now;
                     stock.UpdatedBy = null;
                     await _unitOfWork.SaveChangesAsync();
                     updatedCount++;
@@ -190,7 +190,7 @@ namespace Infrastructure.BackgroundJobs
                     StackTrace = ex.StackTrace?.Length > 8000 ? ex.StackTrace[..8000] : ex.StackTrace,
                     Queue = "default",
                     RetryCount = 0,
-                    CreatedDate = DateTime.UtcNow,
+                    CreatedDate = DateTimeProvider.Now,
                     IsDeleted = false
                 });
                 await _db.SaveChangesAsync();

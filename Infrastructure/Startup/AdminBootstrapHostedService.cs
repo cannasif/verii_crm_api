@@ -65,7 +65,7 @@ namespace crm_api.Infrastructure.Startup
                 IsEmailConfirmed = true,
                 IsActive = true,
                 IsDeleted = false,
-                CreatedDate = DateTime.UtcNow
+                CreatedDate = DateTimeProvider.Now
             };
 
             db.Set<User>().Add(user);

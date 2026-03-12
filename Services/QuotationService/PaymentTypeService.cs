@@ -116,7 +116,7 @@ namespace crm_api.Services
             try
             {
                 var paymentType = _mapper.Map<PaymentType>(createPaymentTypeDto);
-                paymentType.CreatedDate = DateTime.UtcNow;
+                paymentType.CreatedDate = DateTimeProvider.Now;
 
                 await _unitOfWork.PaymentTypes.AddAsync(paymentType).ConfigureAwait(false);
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
@@ -156,7 +156,7 @@ namespace crm_api.Services
                 }
 
                 _mapper.Map(updatePaymentTypeDto, existingPaymentType);
-                existingPaymentType.UpdatedDate = DateTime.UtcNow;
+                existingPaymentType.UpdatedDate = DateTimeProvider.Now;
 
                 await _unitOfWork.PaymentTypes.UpdateAsync(existingPaymentType).ConfigureAwait(false);
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);

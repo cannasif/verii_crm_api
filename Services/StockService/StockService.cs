@@ -450,7 +450,7 @@ namespace crm_api.Services
                     stock.Kod5 = kod5;
                     stock.Kod5Adi = kod5Adi;
                     stock.BranchCode = branchCode;
-                    stock.UpdatedDate = DateTime.UtcNow;
+                    stock.UpdatedDate = DateTimeProvider.Now;
                     stock.UpdatedBy = null; // ERP sync: background job
 
                     hasAnyChange = true;

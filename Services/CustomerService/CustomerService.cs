@@ -999,7 +999,7 @@ namespace crm_api.Services
 
                 if (updated)
                 {
-                    customer.UpdatedDate = DateTime.UtcNow;
+                    customer.UpdatedDate = DateTimeProvider.Now;
                     customer.UpdatedBy = null; // ERP sync: background job, kullanıcı yok
                     customer.LastSyncDate = DateTime.UtcNow;
                     hasAnyChange = true;

@@ -134,7 +134,7 @@ namespace crm_api.Services
                 }
 
                 var entity = _mapper.Map<TempQuotattion>(dto);
-                entity.CreatedDate = DateTime.UtcNow;
+                entity.CreatedDate = DateTimeProvider.Now;
                 entity.OfferDate = DateTime.UtcNow;
 
                 await _unitOfWork.TempQuotattions.AddAsync(entity).ConfigureAwait(false);
@@ -185,7 +185,7 @@ namespace crm_api.Services
                 }
 
                 _mapper.Map(dto, entity);
-                entity.UpdatedDate = DateTime.UtcNow;
+                entity.UpdatedDate = DateTimeProvider.Now;
 
                 await _unitOfWork.TempQuotattions.UpdateAsync(entity).ConfigureAwait(false);
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
@@ -256,7 +256,7 @@ namespace crm_api.Services
                     ApprovedDate = null,
                     QuotationId = null,
                     QuotationNo = null,
-                    CreatedDate = DateTime.UtcNow
+                    CreatedDate = DateTimeProvider.Now
                 };
 
                 await _unitOfWork.TempQuotattions.AddAsync(revision).ConfigureAwait(false);
@@ -282,7 +282,7 @@ namespace crm_api.Services
                         LineTotal = line.LineTotal,
                         LineGrandTotal = line.LineGrandTotal,
                         Description = line.Description,
-                        CreatedDate = DateTime.UtcNow
+                        CreatedDate = DateTimeProvider.Now
                     }).ToList();
 
                     await _unitOfWork.TempQuotattionLines.AddAllAsync(revisionLines).ConfigureAwait(false);
@@ -297,7 +297,7 @@ namespace crm_api.Services
                         ExchangeRate = line.ExchangeRate,
                         ExchangeRateDate = line.ExchangeRateDate,
                         IsManual = line.IsManual,
-                        CreatedDate = DateTime.UtcNow
+                        CreatedDate = DateTimeProvider.Now
                     }).ToList();
 
                     await _unitOfWork.TempQuotattionExchangeLines.AddAllAsync(revisionExchangeLines).ConfigureAwait(false);
@@ -482,7 +482,7 @@ namespace crm_api.Services
                     SalesTypeDefinitionId = salesTypeDefinition.Id,
                     Status = ApprovalStatus.HavenotStarted,
                     CreatedBy = userId,
-                    CreatedDate = DateTime.UtcNow
+                    CreatedDate = DateTimeProvider.Now
                 };
 
                 await _unitOfWork.Quotations.AddAsync(quotation).ConfigureAwait(false);
@@ -527,7 +527,7 @@ namespace crm_api.Services
                 entity.ApprovedDate = DateTime.UtcNow;
                 entity.QuotationId = quotation.Id;
                 entity.QuotationNo = quotation.OfferNo;
-                entity.UpdatedDate = DateTime.UtcNow;
+                entity.UpdatedDate = DateTimeProvider.Now;
                 entity.UpdatedBy = userId;
 
                 await _unitOfWork.TempQuotattions.UpdateAsync(entity).ConfigureAwait(false);
@@ -663,7 +663,7 @@ namespace crm_api.Services
                 }
 
                 var entity = _mapper.Map<TempQuotattionLine>(dto);
-                entity.CreatedDate = DateTime.UtcNow;
+                entity.CreatedDate = DateTimeProvider.Now;
 
                 await _unitOfWork.TempQuotattionLines.AddAsync(entity).ConfigureAwait(false);
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
@@ -709,7 +709,7 @@ namespace crm_api.Services
                 var entities = _mapper.Map<List<TempQuotattionLine>>(dtos);
                 foreach (var entity in entities)
                 {
-                    entity.CreatedDate = DateTime.UtcNow;
+                    entity.CreatedDate = DateTimeProvider.Now;
                 }
 
                 await _unitOfWork.TempQuotattionLines.AddAllAsync(entities).ConfigureAwait(false);
@@ -741,7 +741,7 @@ namespace crm_api.Services
                 }
 
                 _mapper.Map(dto, entity);
-                entity.UpdatedDate = DateTime.UtcNow;
+                entity.UpdatedDate = DateTimeProvider.Now;
 
                 await _unitOfWork.TempQuotattionLines.UpdateAsync(entity).ConfigureAwait(false);
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
@@ -878,7 +878,7 @@ namespace crm_api.Services
                     existingLine.ExchangeRate = dto.ExchangeRate;
                     existingLine.ExchangeRateDate = dto.ExchangeRateDate;
                     existingLine.IsManual = dto.IsManual;
-                    existingLine.UpdatedDate = DateTime.UtcNow;
+                    existingLine.UpdatedDate = DateTimeProvider.Now;
 
                     await _unitOfWork.TempQuotattionExchangeLines.UpdateAsync(existingLine).ConfigureAwait(false);
                     await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
@@ -889,7 +889,7 @@ namespace crm_api.Services
                 }
 
                 var entity = _mapper.Map<TempQuotattionExchangeLine>(dto);
-                entity.CreatedDate = DateTime.UtcNow;
+                entity.CreatedDate = DateTimeProvider.Now;
 
                 await _unitOfWork.TempQuotattionExchangeLines.AddAsync(entity).ConfigureAwait(false);
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
@@ -934,7 +934,7 @@ namespace crm_api.Services
                 }
 
                 _mapper.Map(dto, entity);
-                entity.UpdatedDate = DateTime.UtcNow;
+                entity.UpdatedDate = DateTimeProvider.Now;
 
                 await _unitOfWork.TempQuotattionExchangeLines.UpdateAsync(entity).ConfigureAwait(false);
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);

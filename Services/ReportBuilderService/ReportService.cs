@@ -96,7 +96,7 @@ namespace crm_api.Services.ReportBuilderService
             {
                 var entity = _mapper.Map<ReportDefinition>(dto);
                 entity.CreatedBy = userId;
-                entity.CreatedDate = DateTime.UtcNow;
+                entity.CreatedDate = DateTimeProvider.Now;
                 entity.IsDeleted = false;
                 var repo = _unitOfWork.Repository<ReportDefinition>();
                 await repo.AddAsync(entity).ConfigureAwait(false);
@@ -132,7 +132,7 @@ namespace crm_api.Services.ReportBuilderService
                 entity.DataSourceName = dto.DataSourceName;
                 entity.ConfigJson = dto.ConfigJson;
                 entity.UpdatedBy = userId;
-                entity.UpdatedDate = DateTime.UtcNow;
+                entity.UpdatedDate = DateTimeProvider.Now;
                 await repo.UpdateAsync(entity).ConfigureAwait(false);
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
                 var updated = await _unitOfWork.ReportDefinitions.Query().AsNoTracking().FirstOrDefaultAsync(r => r.Id == id).ConfigureAwait(false);

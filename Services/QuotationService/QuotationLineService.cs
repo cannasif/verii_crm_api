@@ -93,7 +93,7 @@ namespace crm_api.Services
             try
             {
                 var entity = _mapper.Map<QuotationLine>(createQuotationLineDto);
-                entity.CreatedDate = DateTime.UtcNow;
+                entity.CreatedDate = DateTimeProvider.Now;
 
                 await _unitOfWork.QuotationLines.AddAsync(entity).ConfigureAwait(false);
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
@@ -159,7 +159,7 @@ namespace crm_api.Services
                 }
 
                 _mapper.Map(updateQuotationLineDto, existing);
-                existing.UpdatedDate = DateTime.UtcNow;
+                existing.UpdatedDate = DateTimeProvider.Now;
 
                 await _unitOfWork.QuotationLines.UpdateAsync(existing).ConfigureAwait(false);
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);

@@ -149,7 +149,7 @@ namespace Infrastructure.BackgroundJobs
                         continue;
                     }
 
-                    customer.UpdatedDate = DateTime.UtcNow;
+                    customer.UpdatedDate = DateTimeProvider.Now;
                     customer.UpdatedBy = null;
                     customer.LastSyncDate = DateTime.UtcNow;
 
@@ -200,7 +200,7 @@ namespace Infrastructure.BackgroundJobs
                     StackTrace = ex.StackTrace?.Length > 8000 ? ex.StackTrace[..8000] : ex.StackTrace,
                     Queue = "default",
                     RetryCount = 0,
-                    CreatedDate = DateTime.UtcNow,
+                    CreatedDate = DateTimeProvider.Now,
                     IsDeleted = false
                 });
                 await _db.SaveChangesAsync();

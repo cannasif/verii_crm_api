@@ -18,7 +18,7 @@ namespace crm_api.Data.Configurations
             // Base properties configuration
             builder.Property(e => e.CreatedDate)
                 .IsRequired()
-                .HasDefaultValueSql("GETUTCDATE()");
+                .HasDefaultValueSql("GETDATE()");
 
             builder.Property(e => e.UpdatedDate)
                 .IsRequired(false);

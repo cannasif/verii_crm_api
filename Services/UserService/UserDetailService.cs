@@ -222,7 +222,7 @@ namespace crm_api.Services
                 }
 
                 _mapper.Map(dto, entity);
-                entity.UpdatedDate = DateTime.UtcNow;
+                entity.UpdatedDate = DateTimeProvider.Now;
                 
                 await _unitOfWork.UserDetails.UpdateAsync(entity).ConfigureAwait(false);
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
@@ -267,7 +267,7 @@ namespace crm_api.Services
                 }
 
                 entity.IsDeleted = true;
-                entity.DeletedDate = DateTime.UtcNow;
+                entity.DeletedDate = DateTimeProvider.Now;
                 await _unitOfWork.UserDetails.UpdateAsync(entity).ConfigureAwait(false);
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
@@ -319,7 +319,7 @@ namespace crm_api.Services
                     {
                         UserId = userId,
                         ProfilePictureUrl = uploadResult.Data,
-                        CreatedDate = DateTime.UtcNow,
+                        CreatedDate = DateTimeProvider.Now,
                         IsDeleted = false
                     };
                     await _unitOfWork.UserDetails.AddAsync(userDetail).ConfigureAwait(false);
@@ -334,7 +334,7 @@ namespace crm_api.Services
 
                     // Update existing user detail
                     userDetail.ProfilePictureUrl = uploadResult.Data;
-                    userDetail.UpdatedDate = DateTime.UtcNow;
+                    userDetail.UpdatedDate = DateTimeProvider.Now;
                     await _unitOfWork.UserDetails.UpdateAsync(userDetail).ConfigureAwait(false);
                 }
 

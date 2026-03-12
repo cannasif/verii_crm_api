@@ -156,7 +156,7 @@ namespace crm_api.Services
                 var order = _mapper.Map<Order>(createOrderDto);
                 order.GeneralDiscountRate = createOrderDto.GeneralDiscountRate;
                 order.GeneralDiscountAmount = createOrderDto.GeneralDiscountAmount;
-                order.CreatedDate = DateTime.UtcNow;
+                order.CreatedDate = DateTimeProvider.Now;
 
                 await _unitOfWork.Orders.AddAsync(order).ConfigureAwait(false);
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
@@ -205,7 +205,7 @@ namespace crm_api.Services
                 _mapper.Map(updateOrderDto, order);
                 order.GeneralDiscountRate = updateOrderDto.GeneralDiscountRate;
                 order.GeneralDiscountAmount = updateOrderDto.GeneralDiscountAmount;
-                order.UpdatedDate = DateTime.UtcNow;
+                order.UpdatedDate = DateTimeProvider.Now;
                 order.UpdatedBy = userId;
 
                 // 4. Toplamları yeniden hesapla
@@ -528,7 +528,7 @@ namespace crm_api.Services
                 newOrder.Total = order.Total;
                 newOrder.GrandTotal = order.GrandTotal;
                 newOrder.CreatedBy = userId;
-                newOrder.CreatedDate = DateTime.UtcNow;
+                newOrder.CreatedDate = DateTimeProvider.Now;
                 newOrder.PotentialCustomerId = order.PotentialCustomerId;
                 newOrder.ErpCustomerCode = order.ErpCustomerCode;
                 newOrder.ContactId = order.ContactId;
@@ -590,7 +590,7 @@ namespace crm_api.Services
                     newExchangeRate.ExchangeRate = exchangeRate.ExchangeRate;
                     newExchangeRate.ExchangeRateDate = exchangeRate.ExchangeRateDate;
                     newExchangeRate.IsOfficial = exchangeRate.IsOfficial;
-                    newExchangeRate.CreatedDate = DateTime.UtcNow;
+                    newExchangeRate.CreatedDate = DateTimeProvider.Now;
                     newExchangeRate.CreatedBy = userId;
                     newOrderExchangeRates.Add(newExchangeRate);
                 }
@@ -951,7 +951,7 @@ namespace crm_api.Services
                     ApprovalFlowId = flow.Id,
                     CurrentStep = selectedStep.StepOrder,
                     Status = ApprovalStatus.Waiting,
-                    CreatedDate = DateTime.UtcNow,
+                    CreatedDate = DateTimeProvider.Now,
                     CreatedBy = startedByUserId,
                     IsDeleted = false
                 };
@@ -1003,8 +1003,8 @@ namespace crm_api.Services
                         StepOrder = selectedStep.StepOrder,
                         ApprovedByUserId = userId,
                         Status = ApprovalStatus.Waiting,
-                        ActionDate = DateTime.UtcNow,
-                        CreatedDate = DateTime.UtcNow,
+                        ActionDate = DateTimeProvider.Now,
+                        CreatedDate = DateTimeProvider.Now,
                         CreatedBy = startedByUserId,
                         IsDeleted = false
                     };
@@ -1158,8 +1158,8 @@ namespace crm_api.Services
 
                 // Onay işlemini gerçekleştir
                 action.Status = ApprovalStatus.Approved;
-                action.ActionDate = DateTime.UtcNow;
-                action.UpdatedDate = DateTime.UtcNow;
+                action.ActionDate = DateTimeProvider.Now;
+                action.UpdatedDate = DateTimeProvider.Now;
                 action.UpdatedBy = userId;
 
                 await _unitOfWork.ApprovalActions.UpdateAsync(action).ConfigureAwait(false);
@@ -1334,7 +1334,7 @@ namespace crm_api.Services
 
                 // Yeni step için onaycıları oluştur
                 approvalRequest.CurrentStep = nextStep.StepOrder;
-                approvalRequest.UpdatedDate = DateTime.UtcNow;
+                approvalRequest.UpdatedDate = DateTimeProvider.Now;
                 approvalRequest.UpdatedBy = userId;
                 await _unitOfWork.ApprovalRequests.UpdateAsync(approvalRequest).ConfigureAwait(false);
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
@@ -1385,8 +1385,8 @@ namespace crm_api.Services
                         StepOrder = nextStep.StepOrder,
                         ApprovedByUserId = newUserId,
                         Status = ApprovalStatus.Waiting,
-                        ActionDate = DateTime.UtcNow,
-                        CreatedDate = DateTime.UtcNow,
+                        ActionDate = DateTimeProvider.Now,
+                        CreatedDate = DateTimeProvider.Now,
                         CreatedBy = userId,
                         IsDeleted = false
                     };
@@ -1516,8 +1516,8 @@ namespace crm_api.Services
 
                 // Red işlemini gerçekleştir
                 action.Status = ApprovalStatus.Rejected;
-                action.ActionDate = DateTime.UtcNow;
-                action.UpdatedDate = DateTime.UtcNow;
+                action.ActionDate = DateTimeProvider.Now;
+                action.UpdatedDate = DateTimeProvider.Now;
                 action.UpdatedBy = userId;
 
                 await _unitOfWork.ApprovalActions.UpdateAsync(action).ConfigureAwait(false);
@@ -1537,7 +1537,7 @@ namespace crm_api.Services
                 }
 
                 approvalRequest.Status = ApprovalStatus.Rejected;
-                approvalRequest.UpdatedDate = DateTime.UtcNow;
+                approvalRequest.UpdatedDate = DateTimeProvider.Now;
                 approvalRequest.UpdatedBy = userId;
 
                 await _unitOfWork.ApprovalRequests.UpdateAsync(approvalRequest).ConfigureAwait(false);
@@ -1549,7 +1549,7 @@ namespace crm_api.Services
                 {
                     orderForReject.Status = ApprovalStatus.Rejected;
                     orderForReject.RejectedReason = request.RejectReason;
-                    orderForReject.UpdatedDate = DateTime.UtcNow;
+                    orderForReject.UpdatedDate = DateTimeProvider.Now;
                     orderForReject.UpdatedBy = userId;
                     await _unitOfWork.Orders.UpdateAsync(orderForReject).ConfigureAwait(false);
                 }
@@ -1572,7 +1572,7 @@ namespace crm_api.Services
                         foreach (var line in orderLines)
                         {
                             line.ApprovalStatus = ApprovalStatus.Rejected;
-                            line.UpdatedDate = DateTime.UtcNow;
+                            line.UpdatedDate = DateTimeProvider.Now;
                             line.UpdatedBy = userId;
                             await _unitOfWork.OrderLines.UpdateAsync(line).ConfigureAwait(false);
                         }

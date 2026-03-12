@@ -167,7 +167,7 @@ namespace crm_api.Services
                     IsActive = dto.IsActive,
                     Default = setAsDefault,
                     CreatedByUserId = userId,
-                    CreatedDate = DateTime.UtcNow
+                    CreatedDate = DateTimeProvider.Now
                 };
 
                 await _unitOfWork.Repository<ReportTemplate>().AddAsync(template).ConfigureAwait(false);
@@ -260,7 +260,7 @@ namespace crm_api.Services
                 template.IsActive = dto.IsActive;
                 template.Default = dto.Default;
                 template.UpdatedByUserId = userId;
-                template.UpdatedDate = DateTime.UtcNow;
+                template.UpdatedDate = DateTimeProvider.Now;
 
                 await _unitOfWork.Repository<ReportTemplate>().UpdateAsync(template).ConfigureAwait(false);
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
@@ -325,7 +325,7 @@ namespace crm_api.Services
                 }
 
                 template.IsDeleted = true;
-                template.DeletedDate = DateTime.UtcNow;
+                template.DeletedDate = DateTimeProvider.Now;
                 await _unitOfWork.Repository<ReportTemplate>().UpdateAsync(template).ConfigureAwait(false);
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 

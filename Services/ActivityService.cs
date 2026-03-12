@@ -259,12 +259,12 @@ namespace crm_api.Services
                 }
 
                 _mapper.Map(updateActivityDto, activity);
-                activity.UpdatedDate = DateTime.UtcNow;
+                activity.UpdatedDate = DateTimeProvider.Now;
 
                 foreach (var existingReminder in activity.Reminders.Where(r => !r.IsDeleted))
                 {
                     existingReminder.IsDeleted = true;
-                    existingReminder.DeletedDate = DateTime.UtcNow;
+                    existingReminder.DeletedDate = DateTimeProvider.Now;
                 }
 
                 foreach (var reminderDto in updateActivityDto.Reminders)
@@ -364,7 +364,7 @@ namespace crm_api.Services
                 foreach (var reminder in activity.Reminders.Where(r => !r.IsDeleted))
                 {
                     reminder.IsDeleted = true;
-                    reminder.DeletedDate = DateTime.UtcNow;
+                    reminder.DeletedDate = DateTimeProvider.Now;
                 }
 
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);

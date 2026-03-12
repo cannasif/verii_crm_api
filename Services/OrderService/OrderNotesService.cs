@@ -149,7 +149,7 @@ namespace crm_api.Services
                 }
 
                 var entity = _mapper.Map<OrderNotes>(createOrderNotesDto);
-                entity.CreatedDate = DateTime.UtcNow;
+                entity.CreatedDate = DateTimeProvider.Now;
                 await _unitOfWork.OrderNotes.AddAsync(entity).ConfigureAwait(false);
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
@@ -180,7 +180,7 @@ namespace crm_api.Services
                 }
 
                 _mapper.Map(updateOrderNotesDto, existing);
-                existing.UpdatedDate = DateTime.UtcNow;
+                existing.UpdatedDate = DateTimeProvider.Now;
                 await _unitOfWork.OrderNotes.UpdateAsync(existing).ConfigureAwait(false);
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
@@ -231,12 +231,12 @@ namespace crm_api.Services
                 var entity = await _unitOfWork.OrderNotes.Query().FirstOrDefaultAsync(x => x.OrderId == orderId && !x.IsDeleted).ConfigureAwait(false);
                 if (entity == null)
                 {
-                    entity = new OrderNotes { OrderId = orderId, CreatedDate = DateTime.UtcNow };
+                    entity = new OrderNotes { OrderId = orderId, CreatedDate = DateTimeProvider.Now };
                     await _unitOfWork.OrderNotes.AddAsync(entity).ConfigureAwait(false);
                 }
                 else
                 {
-                    entity.UpdatedDate = DateTime.UtcNow;
+                    entity.UpdatedDate = DateTimeProvider.Now;
                     await _unitOfWork.OrderNotes.UpdateAsync(entity).ConfigureAwait(false);
                 }
 

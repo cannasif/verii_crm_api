@@ -156,7 +156,7 @@ namespace crm_api.Services
                 var demand = _mapper.Map<Demand>(createDemandDto);
                 demand.GeneralDiscountRate = createDemandDto.GeneralDiscountRate;
                 demand.GeneralDiscountAmount = createDemandDto.GeneralDiscountAmount;
-                demand.CreatedDate = DateTime.UtcNow;
+                demand.CreatedDate = DateTimeProvider.Now;
 
                 await _unitOfWork.Demands.AddAsync(demand).ConfigureAwait(false);
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
@@ -204,7 +204,7 @@ namespace crm_api.Services
                 _mapper.Map(updateDemandDto, demand);
                 demand.GeneralDiscountRate = updateDemandDto.GeneralDiscountRate;
                 demand.GeneralDiscountAmount = updateDemandDto.GeneralDiscountAmount;
-                demand.UpdatedDate = DateTime.UtcNow;
+                demand.UpdatedDate = DateTimeProvider.Now;
                 demand.UpdatedBy = userId;
 
                 // 4. Toplamları yeniden hesapla
@@ -567,7 +567,7 @@ namespace crm_api.Services
                 newDemand.Total = demand.Total;
                 newDemand.GrandTotal = demand.GrandTotal;
                 newDemand.CreatedBy = userId;
-                newDemand.CreatedDate = DateTime.UtcNow;
+                newDemand.CreatedDate = DateTimeProvider.Now;
                 newDemand.PotentialCustomerId = demand.PotentialCustomerId;
                 newDemand.ErpCustomerCode = demand.ErpCustomerCode;
                 newDemand.ContactId = demand.ContactId;
@@ -628,7 +628,7 @@ namespace crm_api.Services
                     newExchangeRate.ExchangeRate = exchangeRate.ExchangeRate;
                     newExchangeRate.ExchangeRateDate = exchangeRate.ExchangeRateDate;
                     newExchangeRate.IsOfficial = exchangeRate.IsOfficial;
-                    newExchangeRate.CreatedDate = DateTime.UtcNow;
+                    newExchangeRate.CreatedDate = DateTimeProvider.Now;
                     newExchangeRate.CreatedBy = userId;
                     newDemandExchangeRates.Add(newExchangeRate);
                 }
@@ -957,7 +957,7 @@ namespace crm_api.Services
                     ApprovalFlowId = flow.Id,
                     CurrentStep = selectedStep.StepOrder,
                     Status = ApprovalStatus.Waiting,
-                    CreatedDate = DateTime.UtcNow,
+                    CreatedDate = DateTimeProvider.Now,
                     CreatedBy = startedByUserId,
                     IsDeleted = false
                 };
@@ -1009,8 +1009,8 @@ namespace crm_api.Services
                         StepOrder = selectedStep.StepOrder,
                         ApprovedByUserId = userId,
                         Status = ApprovalStatus.Waiting,
-                        ActionDate = DateTime.UtcNow,
-                        CreatedDate = DateTime.UtcNow,
+                        ActionDate = DateTimeProvider.Now,
+                        CreatedDate = DateTimeProvider.Now,
                         CreatedBy = startedByUserId,
                         IsDeleted = false
                     };
@@ -1163,8 +1163,8 @@ namespace crm_api.Services
 
                 // Onay işlemini gerçekleştir
                 action.Status = ApprovalStatus.Approved;
-                action.ActionDate = DateTime.UtcNow;
-                action.UpdatedDate = DateTime.UtcNow;
+                action.ActionDate = DateTimeProvider.Now;
+                action.UpdatedDate = DateTimeProvider.Now;
                 action.UpdatedBy = userId;
 
                 await _unitOfWork.ApprovalActions.UpdateAsync(action).ConfigureAwait(false);
@@ -1348,7 +1348,7 @@ namespace crm_api.Services
 
                 // Yeni step için onaycıları oluştur
                 approvalRequest.CurrentStep = nextStep.StepOrder;
-                approvalRequest.UpdatedDate = DateTime.UtcNow;
+                approvalRequest.UpdatedDate = DateTimeProvider.Now;
                 approvalRequest.UpdatedBy = userId;
                 await _unitOfWork.ApprovalRequests.UpdateAsync(approvalRequest).ConfigureAwait(false);
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
@@ -1399,8 +1399,8 @@ namespace crm_api.Services
                         StepOrder = nextStep.StepOrder,
                         ApprovedByUserId = newUserId,
                         Status = ApprovalStatus.Waiting,
-                        ActionDate = DateTime.UtcNow,
-                        CreatedDate = DateTime.UtcNow,
+                        ActionDate = DateTimeProvider.Now,
+                        CreatedDate = DateTimeProvider.Now,
                         CreatedBy = userId,
                         IsDeleted = false
                     };
@@ -1530,8 +1530,8 @@ namespace crm_api.Services
 
                 // Red işlemini gerçekleştir
                 action.Status = ApprovalStatus.Rejected;
-                action.ActionDate = DateTime.UtcNow;
-                action.UpdatedDate = DateTime.UtcNow;
+                action.ActionDate = DateTimeProvider.Now;
+                action.UpdatedDate = DateTimeProvider.Now;
                 action.UpdatedBy = userId;
 
                 await _unitOfWork.ApprovalActions.UpdateAsync(action).ConfigureAwait(false);
@@ -1551,7 +1551,7 @@ namespace crm_api.Services
                 }
 
                 approvalRequest.Status = ApprovalStatus.Rejected;
-                approvalRequest.UpdatedDate = DateTime.UtcNow;
+                approvalRequest.UpdatedDate = DateTimeProvider.Now;
                 approvalRequest.UpdatedBy = userId;
 
                 await _unitOfWork.ApprovalRequests.UpdateAsync(approvalRequest).ConfigureAwait(false);
@@ -1563,7 +1563,7 @@ namespace crm_api.Services
                 {
                     demandForReject.Status = ApprovalStatus.Rejected;
                     demandForReject.RejectedReason = request.RejectReason;
-                    demandForReject.UpdatedDate = DateTime.UtcNow;
+                    demandForReject.UpdatedDate = DateTimeProvider.Now;
                     demandForReject.UpdatedBy = userId;
                     await _unitOfWork.Demands.UpdateAsync(demandForReject).ConfigureAwait(false);
                 }
@@ -1586,7 +1586,7 @@ namespace crm_api.Services
                         foreach (var line in demandLines)
                         {
                             line.ApprovalStatus = ApprovalStatus.Rejected;
-                            line.UpdatedDate = DateTime.UtcNow;
+                            line.UpdatedDate = DateTimeProvider.Now;
                             line.UpdatedBy = userId;
                             await _unitOfWork.DemandLines.UpdateAsync(line).ConfigureAwait(false);
                         }
@@ -1911,7 +1911,7 @@ namespace crm_api.Services
                         StatusCodes.Status404NotFound);
                 }
                 demand.Status = ApprovalStatus.Approved;
-                demand.UpdatedDate = DateTime.UtcNow;
+                demand.UpdatedDate = DateTimeProvider.Now;
                 demand.UpdatedBy = userId;
 
                 var demandsForReject = await _unitOfWork.Demands.Query(tracking: true)
@@ -1922,7 +1922,7 @@ namespace crm_api.Services
                     foreach (var demandForReject in demandsForReject)
                     {
                         demandForReject.Status = ApprovalStatus.Rejected;
-                        demandForReject.UpdatedDate = DateTime.UtcNow;
+                        demandForReject.UpdatedDate = DateTimeProvider.Now;
                         demandForReject.UpdatedBy = userId;
                     }
                 }
@@ -1986,7 +1986,7 @@ namespace crm_api.Services
                     DemandId = demand.Id,
                     Status = ApprovalStatus.HavenotStarted,
                     CreatedBy = userId,
-                    CreatedDate = DateTime.UtcNow
+                    CreatedDate = DateTimeProvider.Now
                 };
 
                 await _unitOfWork.Quotations.AddAsync(quotation).ConfigureAwait(false);
@@ -2020,7 +2020,7 @@ namespace crm_api.Services
                         RelatedProductKey = line.RelatedProductKey,
                         IsMainRelatedProduct = line.IsMainRelatedProduct,
                         ApprovalStatus = ApprovalStatus.HavenotStarted,
-                        CreatedDate = DateTime.UtcNow,
+                        CreatedDate = DateTimeProvider.Now,
                         CreatedBy = userId
                     });
                 }
@@ -2035,7 +2035,7 @@ namespace crm_api.Services
                         ExchangeRate = rate.ExchangeRate,
                         ExchangeRateDate = rate.ExchangeRateDate,
                         IsOfficial = rate.IsOfficial,
-                        CreatedDate = DateTime.UtcNow,
+                        CreatedDate = DateTimeProvider.Now,
                         CreatedBy = userId
                     }).ToList();
                     await _unitOfWork.QuotationExchangeRates.AddAllAsync(quotationExchangeRates).ConfigureAwait(false);

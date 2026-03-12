@@ -184,8 +184,8 @@ namespace crm_api.Services
                             _localizationService.GetLocalizedString("Success.User.LoginSuccessful"));
                     }
 
-                    activeSession.RevokedAt = DateTime.UtcNow;
-                    activeSession.UpdatedDate = DateTime.UtcNow;
+                    activeSession.RevokedAt = DateTimeProvider.Now;
+                    activeSession.UpdatedDate = DateTimeProvider.Now;
                     await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
                     _userSessionCacheService.RemoveSession(activeSession.SessionId);
                 }
@@ -438,7 +438,7 @@ namespace crm_api.Services
                         UserId = user.Id,
                         TokenHash = tokenHash,
                         ExpiresAt = expiresAt,
-                        CreatedDate = DateTime.UtcNow,
+                        CreatedDate = DateTimeProvider.Now,
                         IsDeleted = false
                     };
                     await _unitOfWork.Repository<PasswordResetRequest>().AddAsync(reset).ConfigureAwait(false);
@@ -542,7 +542,7 @@ namespace crm_api.Services
                 }
 
                 user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
-                user.UpdatedDate = DateTime.UtcNow;
+                user.UpdatedDate = DateTimeProvider.Now;
                 var affectedRows = await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
                 if (affectedRows == 0 || !BCrypt.Net.BCrypt.Verify(request.NewPassword, user.PasswordHash))
                 {
@@ -626,7 +626,7 @@ namespace crm_api.Services
 
             user.RefreshToken = GenerateRefreshToken();
             user.RefreshTokenExpiryTime = DateTime.UtcNow.Add(RefreshTokenLifetime);
-            user.UpdatedDate = DateTime.UtcNow;
+            user.UpdatedDate = DateTimeProvider.Now;
         }
 
         private static string GenerateRefreshToken()

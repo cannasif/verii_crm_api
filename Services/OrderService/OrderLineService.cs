@@ -103,7 +103,7 @@ namespace crm_api.Services
             try
             {
                 var entity = _mapper.Map<OrderLine>(createOrderLineDto);
-                entity.CreatedDate = DateTime.UtcNow;
+                entity.CreatedDate = DateTimeProvider.Now;
 
                 await _unitOfWork.OrderLines.AddAsync(entity).ConfigureAwait(false);
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
@@ -170,7 +170,7 @@ namespace crm_api.Services
                 }
 
                 _mapper.Map(updateOrderLineDto, existing);
-                existing.UpdatedDate = DateTime.UtcNow;
+                existing.UpdatedDate = DateTimeProvider.Now;
 
                 await _unitOfWork.OrderLines.UpdateAsync(existing).ConfigureAwait(false);
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);

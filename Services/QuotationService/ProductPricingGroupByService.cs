@@ -136,7 +136,7 @@ namespace crm_api.Services
                 {
                     // Yeni kayıt oluştur
                     productPricingGroupBy = _mapper.Map<ProductPricingGroupBy>(createDto);
-                    productPricingGroupBy.CreatedDate = DateTime.UtcNow;
+                    productPricingGroupBy.CreatedDate = DateTimeProvider.Now;
                     productPricingGroupBy.IsDeleted = false;
 
                     await _unitOfWork.ProductPricingGroupBys.AddAsync(productPricingGroupBy).ConfigureAwait(false);
@@ -179,7 +179,7 @@ namespace crm_api.Services
                 }
 
                 _mapper.Map(updateDto, existingProductPricingGroupBy);
-                existingProductPricingGroupBy.UpdatedDate = DateTime.UtcNow;
+                existingProductPricingGroupBy.UpdatedDate = DateTimeProvider.Now;
 
                 await _unitOfWork.ProductPricingGroupBys.UpdateAsync(existingProductPricingGroupBy).ConfigureAwait(false);
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
@@ -218,7 +218,7 @@ namespace crm_api.Services
                 }
 
                 productPricingGroupBy.IsDeleted = true;
-                productPricingGroupBy.UpdatedDate = DateTime.UtcNow;
+                productPricingGroupBy.UpdatedDate = DateTimeProvider.Now;
 
                 await _unitOfWork.ProductPricingGroupBys.UpdateAsync(productPricingGroupBy).ConfigureAwait(false);
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
