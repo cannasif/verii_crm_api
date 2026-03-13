@@ -27,6 +27,23 @@ namespace crm_api.Mappings
                 .ForMember(dest => dest.VergiDairesi, opt => opt.MapFrom(src => src.VERGI_DAIRESI))
                 .ForMember(dest => dest.TcknNumber, opt => opt.MapFrom(src => src.TCKIMLIKNO));
 
+            CreateMap<RII_FN_CAHAR, ErpCariMovementDto>()
+                .ForMember(dest => dest.CariKod, opt => opt.MapFrom(src => src.CARI_KOD))
+                .ForMember(dest => dest.Tarih, opt => opt.MapFrom(src => src.TARIH))
+                .ForMember(dest => dest.VadeTarihi, opt => opt.MapFrom(src => src.VADE_TARIHI))
+                .ForMember(dest => dest.BelgeNo, opt => opt.MapFrom(src => src.BELGE_NO))
+                .ForMember(dest => dest.Aciklama, opt => opt.MapFrom(src => src.ACIKLAMA))
+                .ForMember(dest => dest.DovizTuru, opt => opt.MapFrom(src => src.DOVIZ_TURU))
+                .ForMember(dest => dest.ParaBirimi, opt => opt.MapFrom(src => src.PARA_BIRIMI))
+                .ForMember(dest => dest.Borc, opt => opt.MapFrom(src => src.BORC ?? 0m))
+                .ForMember(dest => dest.Alacak, opt => opt.MapFrom(src => src.ALACAK ?? 0m))
+                .ForMember(dest => dest.TarihSiraliTlBakiye, opt => opt.MapFrom(src => src.TARIH_SIRALI_TL_BAKIYE ?? 0m))
+                .ForMember(dest => dest.VadeSiraliTlBakiye, opt => opt.MapFrom(src => src.VADE_SIRALI_TL_BAKIYE ?? 0m))
+                .ForMember(dest => dest.DovizBorc, opt => opt.MapFrom(src => src.DOVIZ_BORC ?? 0m))
+                .ForMember(dest => dest.DovizAlacak, opt => opt.MapFrom(src => src.DOVIZ_ALACAK ?? 0m))
+                .ForMember(dest => dest.TarihSiraliDovizBakiye, opt => opt.MapFrom(src => src.TARIH_SIRALI_DOVIZ_BAKIYE ?? 0m))
+                .ForMember(dest => dest.VadeSiraliDovizBakiye, opt => opt.MapFrom(src => src.VADE_SIRALI_DOVIZ_BAKIYE ?? 0m));
+
             // Stok mappings
             CreateMap<RII_VW_STOK, StokDto>()
                 .ForMember(dest => dest.StokKodu, opt => opt.MapFrom(src => src.STOK_KODU))

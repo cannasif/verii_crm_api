@@ -530,6 +530,123 @@ namespace crm_api.Services
             }
         }
 
+        public async Task<ApiResponse<List<Customer360ErpMovementDto>>> GetErpMovementsAsync(long customerId)
+        {
+            try
+            {
+                var customer = await _unitOfWork.Customers.Query(tracking: false)
+                    .Where(c => c.Id == customerId && !c.IsDeleted)
+                    .Select(c => new { c.CustomerCode })
+                    .FirstOrDefaultAsync()
+                    .ConfigureAwait(false);
+
+                if (customer == null)
+                {
+                    return ApiResponse<List<Customer360ErpMovementDto>>.ErrorResult(
+                        _localizationService.GetLocalizedString("Customer360Service.CustomerNotFound"),
+                        _localizationService.GetLocalizedString("Customer360Service.CustomerNotFound"),
+                        StatusCodes.Status404NotFound);
+                }
+
+                if (string.IsNullOrWhiteSpace(customer.CustomerCode))
+                {
+                    return ApiResponse<List<Customer360ErpMovementDto>>.SuccessResult(
+                        new List<Customer360ErpMovementDto>(),
+                        _localizationService.GetLocalizedString("Customer360Service.OverviewRetrieved"));
+                }
+
+                var erpResult = await _erpService.GetCariMovementsAsync(customer.CustomerCode).ConfigureAwait(false);
+                if (!erpResult.Success || erpResult.Data == null)
+                {
+                    return ApiResponse<List<Customer360ErpMovementDto>>.ErrorResult(
+                        erpResult.Message ?? _localizationService.GetLocalizedString("Customer360Service.InternalServerError"),
+                        erpResult.ExceptionMessage ?? erpResult.Message ?? _localizationService.GetLocalizedString("Customer360Service.InternalServerError"),
+                        erpResult.StatusCode);
+                }
+
+                var rows = erpResult.Data
+                    .OrderByDescending(x => x.Tarih ?? DateTime.MinValue)
+                    .ThenByDescending(x => x.VadeTarihi ?? DateTime.MinValue)
+                    .Select(x => new Customer360ErpMovementDto
+                    {
+                        CariKod = x.CariKod,
+                        Tarih = x.Tarih,
+                        VadeTarihi = x.VadeTarihi,
+                        BelgeNo = x.BelgeNo,
+                        Aciklama = x.Aciklama,
+                        DovizTuru = x.DovizTuru,
+                        ParaBirimi = x.ParaBirimi,
+                        Borc = x.Borc,
+                        Alacak = x.Alacak,
+                        TarihSiraliTlBakiye = x.TarihSiraliTlBakiye,
+                        VadeSiraliTlBakiye = x.VadeSiraliTlBakiye,
+                        DovizBorc = x.DovizBorc,
+                        DovizAlacak = x.DovizAlacak,
+                        TarihSiraliDovizBakiye = x.TarihSiraliDovizBakiye,
+                        VadeSiraliDovizBakiye = x.VadeSiraliDovizBakiye
+                    })
+                    .ToList();
+
+                return ApiResponse<List<Customer360ErpMovementDto>>.SuccessResult(
+                    rows,
+                    _localizationService.GetLocalizedString("Customer360Service.OverviewRetrieved"));
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<List<Customer360ErpMovementDto>>.ErrorResult(
+                    _localizationService.GetLocalizedString("Customer360Service.InternalServerError"),
+                    _localizationService.GetLocalizedString("Customer360Service.ExceptionMessage", ex.Message),
+                    StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        public async Task<ApiResponse<Customer360ErpBalanceDto>> GetErpBalanceAsync(long customerId)
+        {
+            try
+            {
+                var movementsResult = await GetErpMovementsAsync(customerId).ConfigureAwait(false);
+                if (!movementsResult.Success || movementsResult.Data == null)
+                {
+                    return ApiResponse<Customer360ErpBalanceDto>.ErrorResult(
+                        movementsResult.Message ?? _localizationService.GetLocalizedString("Customer360Service.InternalServerError"),
+                        movementsResult.ExceptionMessage ?? movementsResult.Message ?? _localizationService.GetLocalizedString("Customer360Service.InternalServerError"),
+                        movementsResult.StatusCode);
+                }
+
+                var movements = movementsResult.Data;
+                var totalBorc = movements.Sum(x => x.Borc);
+                var totalAlacak = movements.Sum(x => x.Alacak);
+                var lastBalance = movements
+                    .OrderByDescending(x => x.Tarih ?? DateTime.MinValue)
+                    .ThenByDescending(x => x.VadeTarihi ?? DateTime.MinValue)
+                    .Select(x => x.TarihSiraliTlBakiye)
+                    .FirstOrDefault();
+                var netBakiye = movements.Count > 0 ? lastBalance : totalBorc - totalAlacak;
+                var bakiyeDurumu = netBakiye > 0 ? "Borç" : netBakiye < 0 ? "Alacak" : "Kapalı";
+
+                var summary = new Customer360ErpBalanceDto
+                {
+                    CariKod = movements.FirstOrDefault()?.CariKod ?? string.Empty,
+                    NetBakiye = netBakiye,
+                    BakiyeDurumu = bakiyeDurumu,
+                    BakiyeTutari = Math.Abs(netBakiye),
+                    ToplamBorc = totalBorc,
+                    ToplamAlacak = totalAlacak
+                };
+
+                return ApiResponse<Customer360ErpBalanceDto>.SuccessResult(
+                    summary,
+                    _localizationService.GetLocalizedString("Customer360Service.OverviewRetrieved"));
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<Customer360ErpBalanceDto>.ErrorResult(
+                    _localizationService.GetLocalizedString("Customer360Service.InternalServerError"),
+                    _localizationService.GetLocalizedString("Customer360Service.ExceptionMessage", ex.Message),
+                    StatusCodes.Status500InternalServerError);
+            }
+        }
+
         public async Task<ApiResponse<ActivityDto>> ExecuteRecommendedActionAsync(long customerId, ExecuteRecommendedActionDto request)
         {
             try

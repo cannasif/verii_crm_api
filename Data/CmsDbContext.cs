@@ -73,6 +73,7 @@ namespace crm_api.Data
         public DbSet<ReportTemplate> ReportTemplates { get; set; }
         public DbSet<ReportDefinition> ReportDefinitions { get; set; }
         public DbSet<SmtpSetting> SmtpSettings { get; set; }
+        public DbSet<RII_FN_CAHAR> RII_FN_CAHAR { get; set; }
 
         //Power BI DbSet'leri
         public DbSet<PowerBIReportDefinition> PowerBIReportDefinitions { get; set; }
@@ -144,6 +145,17 @@ namespace crm_api.Data
                 entity.ToTable("__EFMigrationsHistory_FN_STOK", t => t.ExcludeFromMigrations());
                 entity.ToFunction("RII_FN_STOK");
 
+            });
+
+            modelBuilder.Entity<RII_FN_CAHAR>(entity =>
+            {
+                entity.HasNoKey();
+                entity.ToTable("__EFMigrationsHistory_FN_CAHAR", t => t.ExcludeFromMigrations());
+                entity.ToFunction("RII_FN_CAHAR");
+                entity.Property(e => e.CARI_KOD).HasMaxLength(15);
+                entity.Property(e => e.BELGE_NO).HasMaxLength(15);
+                entity.Property(e => e.ACIKLAMA).HasMaxLength(50);
+                entity.Property(e => e.PARA_BIRIMI).HasMaxLength(30);
             });
 
             // Apply all configurations from the Configurations folder

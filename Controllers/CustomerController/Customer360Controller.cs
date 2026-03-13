@@ -55,6 +55,20 @@ namespace crm_api.Controllers
             return StatusCode(result.StatusCode, result);
         }
 
+        [HttpGet("{id}/erp-movements")]
+        public async Task<IActionResult> GetErpMovements(long id)
+        {
+            var result = await _customer360Service.GetErpMovementsAsync(id);
+            return StatusCode(result.StatusCode, result);
+        }
+
+        [HttpGet("{id}/erp-balance")]
+        public async Task<IActionResult> GetErpBalance(long id)
+        {
+            var result = await _customer360Service.GetErpBalanceAsync(id);
+            return StatusCode(result.StatusCode, result);
+        }
+
         [HttpPost("{id}/recommended-actions/execute")]
         public async Task<IActionResult> ExecuteRecommendedAction(long id, [FromBody] ExecuteRecommendedActionDto request)
         {

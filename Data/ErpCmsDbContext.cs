@@ -34,8 +34,6 @@ namespace crm_api.Data
                 entity.Property(e => e.CARI_ADRES).HasMaxLength(500);
             });
 
-
-
             // Stok view yapılandırması - Key yok
             modelBuilder.Entity<RII_VW_STOK>(entity =>
             {
