@@ -196,39 +196,12 @@ namespace crm_api.Services
         {
             try
             {
+                string resultDate = tarih.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
                 var result = await _cmsContext.Set<RII_FN_KUR>()
-                    .FromSqlRaw("SELECT * FROM dbo.RII_FN_KUR({0}, {1})", tarih.Date, fiyatTipi)
-                    .AsNoTracking()
-                    .ToListAsync().ConfigureAwait(false);
-
-                _logger.LogInformation(
-                    "ERP exchange rates retrieved from function. Date: {Date}, PriceType: {PriceType}, Count: {Count}, Rates: {@Rates}",
-                    tarih.Date,
-                    fiyatTipi,
-                    result.Count,
-                    result.Select(x => new { x.DOVIZ_TIPI, x.DOVIZ_ISMI, x.KUR_DEGERI }).ToList());
-
+                .FromSqlRaw("SELECT * FROM dbo.RII_FN_KUR({0}, {1})", resultDate, fiyatTipi)
+                .AsNoTracking()
+                .ToListAsync().ConfigureAwait(false);
                 var mappedResult = _mapper.Map<List<KurDto>>(result);
-
-                if (!mappedResult.Any(x => x.DovizTipi == 0))
-                {
-                    _logger.LogWarning(
-                        "TL exchange rate row was missing from ERP function result. Injecting fallback TL row. Date: {Date}, PriceType: {PriceType}",
-                        tarih.Date,
-                        fiyatTipi);
-
-                    mappedResult.Insert(0, new KurDto
-                    {
-                        DovizTipi = 0,
-                        DovizIsmi = "TL",
-                        KurDegeri = 1
-                    });
-                }
-
-                mappedResult = mappedResult
-                    .OrderBy(x => x.DovizTipi)
-                    .ToList();
-
                 return ApiResponse<List<KurDto>>.SuccessResult(mappedResult, _localizationService.GetLocalizedString("ErpService.ExchangeRateRecordsRetrieved"));
             }
             catch (Exception ex)
