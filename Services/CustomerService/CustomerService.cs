@@ -399,6 +399,18 @@ namespace crm_api.Services
                         .ToUpperInvariant();
                 }
 
+                string normalizeCompanyKey(string? value)
+                {
+                    var normalized = normalizeNullable(value);
+                    if (string.IsNullOrWhiteSpace(normalized))
+                        return string.Empty;
+
+                    return new string(normalized
+                        .ToUpperInvariant()
+                        .Where(char.IsLetterOrDigit)
+                        .ToArray());
+                }
+
                 bool isMobile(string? value)
                 {
                     var digits = NormalizeDigits(value);
@@ -477,6 +489,7 @@ namespace crm_api.Services
                 var requestEmail = request.Email;
                 var requestPhone = request.Phone;
                 var requestPhone2 = request.Phone2;
+                var normalizedRequestCompanyKey = normalizeCompanyKey(request.Name);
 
                 var customerQuery = _unitOfWork.Customers
                     .Query(tracking: false, ignoreQueryFilters: true);
@@ -514,13 +527,28 @@ namespace crm_api.Services
                 if (emailMatchedIds.Count > 0) foreach (var id in emailMatchedIds) matchedIds.Add(id);
                 if (phoneMatchedIds.Count > 0) foreach (var id in phoneMatchedIds) matchedIds.Add(id);
 
-                if (matchedIds.Count > 1)
+                var matchedCustomers = matchedIds.Count == 0
+                    ? new List<Customer>()
+                    : await customerQuery
+                        .Where(c => matchedIds.Contains(c.Id))
+                        .ToListAsync().ConfigureAwait(false);
+
+                var companyMatchedCustomers = string.IsNullOrWhiteSpace(normalizedRequestCompanyKey)
+                    ? matchedCustomers
+                    : matchedCustomers
+                        .Where(c => string.Equals(normalizeCompanyKey(c.CustomerName), normalizedRequestCompanyKey, StringComparison.Ordinal))
+                        .ToList();
+
+                if (matchedCustomers.Count > 1 && companyMatchedCustomers.Count != 1)
                 {
                     var matchedDetails = new List<string>();
                     if (emailMatchedIds.Count > 0)
                         matchedDetails.Add($"email=>[{string.Join(", ", emailMatchedIds.OrderBy(x => x))}]");
                     if (phoneMatchedIds.Count > 0)
                         matchedDetails.Add($"telefon=>[{string.Join(", ", phoneMatchedIds.OrderBy(x => x))}]");
+                    matchedDetails.Add(companyMatchedCustomers.Count == 0
+                        ? "sirket-adi=>eslesme-yok"
+                        : $"sirket-adi=>[{string.Join(", ", companyMatchedCustomers.Select(x => x.Id).OrderBy(x => x))}]");
 
                     return ApiResponse<CustomerCreateFromMobileResultDto>.ErrorResult(
                         _localizationService.GetLocalizedString("CustomerService.ConflictingCustomerMatches"),
@@ -528,7 +556,20 @@ namespace crm_api.Services
                         StatusCodes.Status409Conflict);
                 }
 
-                var existingCustomerId = matchedIds.FirstOrDefault();
+                if (matchedCustomers.Count == 1 && companyMatchedCustomers.Count == 0 && !string.IsNullOrWhiteSpace(normalizedRequestCompanyKey))
+                {
+                    var matchedCustomer = matchedCustomers[0];
+                    return ApiResponse<CustomerCreateFromMobileResultDto>.ErrorResult(
+                        _localizationService.GetLocalizedString("CustomerService.ConflictingCustomerMatches"),
+                        _localizationService.GetLocalizedString(
+                            "CustomerService.ConflictingCustomerMatchesDetail",
+                            $"musteriId=>[{matchedCustomer.Id}] | sirket-adi=>[{matchedCustomer.CustomerName}] | beklenen=>[{request.Name}]"),
+                        StatusCodes.Status409Conflict);
+                }
+
+                var existingCustomerId = companyMatchedCustomers.Count == 1
+                    ? companyMatchedCustomers[0].Id
+                    : matchedCustomers.FirstOrDefault()?.Id ?? 0;
 
                 await _unitOfWork.BeginTransactionAsync().ConfigureAwait(false);
 
@@ -556,9 +597,27 @@ namespace crm_api.Services
                             existingCustomer.IsDeleted = false;
                             existingCustomer.DeletedDate = null;
                             existingCustomer.DeletedBy = null;
-                            await _unitOfWork.Customers.UpdateAsync(existingCustomer).ConfigureAwait(false);
-                            await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
                         }
+
+                        existingCustomer.CustomerName = request.Name.Trim();
+                        existingCustomer.Email = normalizeNullable(request.Email);
+                        existingCustomer.Phone1 = normalizeNullable(request.Phone);
+                        existingCustomer.Phone2 = normalizeNullable(request.Phone2);
+                        existingCustomer.Address = normalizeNullable(request.Address);
+                        existingCustomer.Website = normalizeNullable(request.Website);
+                        existingCustomer.Notes = normalizeNullable(request.Notes);
+                        existingCustomer.CountryId = request.CountryId;
+                        existingCustomer.CityId = request.CityId;
+                        existingCustomer.DistrictId = request.DistrictId;
+                        existingCustomer.CustomerTypeId = request.CustomerTypeId;
+                        existingCustomer.SalesRepCode = normalizeNullable(request.SalesRepCode);
+                        existingCustomer.GroupCode = normalizeNullable(request.GroupCode);
+                        existingCustomer.CreditLimit = request.CreditLimit;
+                        existingCustomer.BranchCode = request.BranchCode ?? existingCustomer.BranchCode;
+                        existingCustomer.BusinessUnitCode = request.BusinessUnitCode ?? existingCustomer.BusinessUnitCode;
+
+                        await _unitOfWork.Customers.UpdateAsync(existingCustomer).ConfigureAwait(false);
+                        await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
 
                         customer = existingCustomer;
                     }
@@ -691,8 +750,12 @@ namespace crm_api.Services
                             !string.IsNullOrWhiteSpace(normalizedContactEmail) ||
                             normalizedContactNumbers.Count > 0;
 
-                        var sameContacts = await _unitOfWork.Contacts
+                        var candidateContacts = await _unitOfWork.Contacts
                             .Query(tracking: true, ignoreQueryFilters: true)
+                            .Where(c =>
+                                (!string.IsNullOrWhiteSpace(normalizedContactFullName) && !string.IsNullOrWhiteSpace(c.FullName)) ||
+                                (!string.IsNullOrWhiteSpace(normalizedContactEmail) && !string.IsNullOrWhiteSpace(c.Email)) ||
+                                normalizedContactNumbers.Count > 0)
                             .ToListAsync().ConfigureAwait(false);
 
                         bool isSameContact(Contact c)
@@ -723,61 +786,85 @@ namespace crm_api.Services
                             return fullNameMatched || emailMatched || phoneMatched;
                         }
 
-                        var matchedExistingActiveContact = sameContacts.FirstOrDefault(c => !c.IsDeleted && isSameContact(c));
-                        if (matchedExistingActiveContact != null)
+                        var matchedExistingSameCustomerContact = candidateContacts.FirstOrDefault(c => c.CustomerId == customer.Id && !c.IsDeleted && isSameContact(c));
+                        if (matchedExistingSameCustomerContact != null)
                         {
-                            await _unitOfWork.RollbackTransactionAsync().ConfigureAwait(false);
-                            var duplicateContactMessage = _localizationService.GetLocalizedString("CustomerService.MobileOcrDuplicateContact");
-                            return ApiResponse<CustomerCreateFromMobileResultDto>.ErrorResult(
-                                duplicateContactMessage,
-                                duplicateContactMessage,
-                                StatusCodes.Status409Conflict);
-                        }
+                            matchedExistingSameCustomerContact.Salutation = SalutationType.None;
+                            matchedExistingSameCustomerContact.FirstName = contactFirstName!;
+                            matchedExistingSameCustomerContact.MiddleName = contactMiddleName;
+                            matchedExistingSameCustomerContact.LastName = contactLastName!;
+                            matchedExistingSameCustomerContact.FullName = fullName;
+                            matchedExistingSameCustomerContact.Email = normalizeNullable(request.Email);
+                            matchedExistingSameCustomerContact.Phone = normalizeNullable(contactPhone);
+                            matchedExistingSameCustomerContact.Mobile = normalizeNullable(contactMobile);
+                            matchedExistingSameCustomerContact.Notes = normalizeNullable(request.Notes);
+                            matchedExistingSameCustomerContact.TitleId = titleId;
 
-                        var matchedDeletedContact = sameContacts.FirstOrDefault(c => c.IsDeleted && isSameContact(c));
-                        if (matchedDeletedContact != null)
-                        {
-                            matchedDeletedContact.IsDeleted = false;
-                            matchedDeletedContact.DeletedDate = null;
-                            matchedDeletedContact.DeletedBy = null;
-                            matchedDeletedContact.Salutation = SalutationType.None;
-                            matchedDeletedContact.FirstName = contactFirstName!;
-                            matchedDeletedContact.MiddleName = contactMiddleName;
-                            matchedDeletedContact.LastName = contactLastName!;
-                            matchedDeletedContact.FullName = fullName;
-                            matchedDeletedContact.Email = normalizeNullable(request.Email);
-                            matchedDeletedContact.Phone = normalizeNullable(contactPhone);
-                            matchedDeletedContact.Mobile = normalizeNullable(contactMobile);
-                            matchedDeletedContact.Notes = normalizeNullable(request.Notes);
-                            matchedDeletedContact.CustomerId = customer.Id;
-                            matchedDeletedContact.TitleId = titleId;
-
-                            await _unitOfWork.Contacts.UpdateAsync(matchedDeletedContact).ConfigureAwait(false);
+                            await _unitOfWork.Contacts.UpdateAsync(matchedExistingSameCustomerContact).ConfigureAwait(false);
                             await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
-                            contactId = matchedDeletedContact.Id;
+                            contactId = matchedExistingSameCustomerContact.Id;
                         }
                         else
                         {
-                            var contact = new Contact
+                            var matchedExistingOtherCustomerContact = candidateContacts.FirstOrDefault(c => c.CustomerId != customer.Id && !c.IsDeleted && isSameContact(c));
+                            if (matchedExistingOtherCustomerContact != null)
                             {
-                                Salutation = SalutationType.None,
-                                FirstName = contactFirstName!,
-                                MiddleName = contactMiddleName,
-                                LastName = contactLastName!,
-                                FullName = fullName,
-                                Email = normalizeNullable(request.Email),
-                                Phone = normalizeNullable(contactPhone),
-                                Mobile = normalizeNullable(contactMobile),
-                                Notes = normalizeNullable(request.Notes),
-                                CustomerId = customer.Id,
-                                TitleId = titleId
-                            };
+                                await _unitOfWork.RollbackTransactionAsync().ConfigureAwait(false);
+                                var duplicateContactMessage = _localizationService.GetLocalizedString("CustomerService.MobileOcrDuplicateContact");
+                                return ApiResponse<CustomerCreateFromMobileResultDto>.ErrorResult(
+                                    duplicateContactMessage,
+                                    duplicateContactMessage,
+                                    StatusCodes.Status409Conflict);
+                            }
 
-                            await _unitOfWork.Contacts.AddAsync(contact).ConfigureAwait(false);
-                            contactCreated = true;
+                            var matchedDeletedSameCustomerContact = candidateContacts.FirstOrDefault(c => c.CustomerId == customer.Id && c.IsDeleted && isSameContact(c));
+                            var matchedDeletedOtherCustomerContact = candidateContacts.FirstOrDefault(c => c.CustomerId != customer.Id && c.IsDeleted && isSameContact(c));
+                            var matchedDeletedContact = matchedDeletedSameCustomerContact ?? matchedDeletedOtherCustomerContact;
 
-                            await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
-                            contactId = contact.Id;
+                            if (matchedDeletedContact != null)
+                            {
+                                matchedDeletedContact.IsDeleted = false;
+                                matchedDeletedContact.DeletedDate = null;
+                                matchedDeletedContact.DeletedBy = null;
+                                matchedDeletedContact.Salutation = SalutationType.None;
+                                matchedDeletedContact.FirstName = contactFirstName!;
+                                matchedDeletedContact.MiddleName = contactMiddleName;
+                                matchedDeletedContact.LastName = contactLastName!;
+                                matchedDeletedContact.FullName = fullName;
+                                matchedDeletedContact.Email = normalizeNullable(request.Email);
+                                matchedDeletedContact.Phone = normalizeNullable(contactPhone);
+                                matchedDeletedContact.Mobile = normalizeNullable(contactMobile);
+                                matchedDeletedContact.Notes = normalizeNullable(request.Notes);
+                                matchedDeletedContact.CustomerId = customer.Id;
+                                matchedDeletedContact.TitleId = titleId;
+
+                                await _unitOfWork.Contacts.UpdateAsync(matchedDeletedContact).ConfigureAwait(false);
+                                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
+                                contactId = matchedDeletedContact.Id;
+                            }
+                            else
+                            {
+                                var contact = new Contact
+                                {
+                                    Salutation = SalutationType.None,
+                                    FirstName = contactFirstName!,
+                                    MiddleName = contactMiddleName,
+                                    LastName = contactLastName!,
+                                    FullName = fullName,
+                                    Email = normalizeNullable(request.Email),
+                                    Phone = normalizeNullable(contactPhone),
+                                    Mobile = normalizeNullable(contactMobile),
+                                    Notes = normalizeNullable(request.Notes),
+                                    CustomerId = customer.Id,
+                                    TitleId = titleId
+                                };
+
+                                await _unitOfWork.Contacts.AddAsync(contact).ConfigureAwait(false);
+                                contactCreated = true;
+
+                                await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
+                                contactId = contact.Id;
+                            }
                         }
                     }
 

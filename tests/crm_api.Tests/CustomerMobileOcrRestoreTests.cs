@@ -212,11 +212,19 @@ public class CustomerMobileOcrRestoreTests
     [Fact]
     public async Task CreateFromMobile_ShouldReturnConflict_WhenMatchingActiveContactExists()
     {
-        var activeCustomer = new Customer
+        var matchedCustomer = new Customer
         {
             CustomerName = "Musteri",
             Email = "dup.customer@example.com",
             Phone1 = "5551000404",
+            IsDeleted = false
+        };
+
+        var otherCustomer = new Customer
+        {
+            CustomerName = "Baska Musteri",
+            Email = "other.customer@example.com",
+            Phone1 = "5551000499",
             IsDeleted = false
         };
 
@@ -227,17 +235,89 @@ public class CustomerMobileOcrRestoreTests
             FullName = "Ali Veli",
             Email = "dup.customer@example.com",
             Mobile = "5551000404",
-            CustomerId = 1,
             IsDeleted = false
         };
 
         var (service, _) = await BuildServiceAsync(db =>
         {
-            db.Customers.Add(activeCustomer);
+            db.Customers.Add(matchedCustomer);
+            db.Customers.Add(otherCustomer);
+            db.SaveChanges();
+            activeContact.CustomerId = otherCustomer.Id;
             db.Contacts.Add(activeContact);
         });
 
         var request = BuildRequest("Musteri", "dup.customer@example.com", "5551000404", "Ali Veli");
+
+        var result = await service.CreateCustomerFromMobileAsync(request);
+
+        Assert.False(result.Success);
+        Assert.Equal(StatusCodes.Status409Conflict, result.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateFromMobile_ShouldReuseActiveContact_WhenItAlreadyBelongsToMatchedCustomer()
+    {
+        var activeCustomer = new Customer
+        {
+            CustomerName = "Musteri",
+            Email = "same.customer@example.com",
+            Phone1 = "5551000505",
+            IsDeleted = false
+        };
+
+        var activeContact = new Contact
+        {
+            FirstName = "Ali",
+            LastName = "Veli",
+            FullName = "Ali Veli",
+            Email = "same.customer@example.com",
+            Mobile = "5551000505",
+            CustomerId = activeCustomer.Id,
+            IsDeleted = false
+        };
+
+        var (service, context) = await BuildServiceAsync(db =>
+        {
+            db.Customers.Add(activeCustomer);
+            db.SaveChanges();
+            activeContact.CustomerId = activeCustomer.Id;
+            db.Contacts.Add(activeContact);
+        });
+
+        var request = BuildRequest("Musteri", "same.customer@example.com", "5551000505", "Ali Veli");
+
+        var result = await service.CreateCustomerFromMobileAsync(request);
+
+        Assert.True(result.Success);
+        Assert.NotNull(result.Data);
+        Assert.Equal(activeCustomer.Id, result.Data!.CustomerId);
+        Assert.Equal(activeContact.Id, result.Data.ContactId);
+        Assert.False(result.Data.CustomerCreated);
+        Assert.False(result.Data.ContactCreated);
+
+        var existingContact = await context.Contacts.FirstAsync(x => x.Id == activeContact.Id);
+        Assert.Equal(activeCustomer.Id, existingContact.CustomerId);
+        Assert.False(existingContact.IsDeleted);
+    }
+
+    [Fact]
+    public async Task CreateFromMobile_ShouldReturnConflict_WhenCustomerContactMatchBelongsToDifferentCompany()
+    {
+        var otherCustomer = new Customer
+        {
+            CustomerName = "Baska Sirket",
+            Email = "shared.customer@example.com",
+            Phone1 = "5551000606",
+            IsDeleted = false
+        };
+
+        var (service, _) = await BuildServiceAsync(db =>
+        {
+            db.Customers.Add(otherCustomer);
+        });
+
+        var request = BuildRequest("Dogru Sirket", "shared.customer@example.com", "5551000606", "Ali Veli");
 
         var result = await service.CreateCustomerFromMobileAsync(request);
 
