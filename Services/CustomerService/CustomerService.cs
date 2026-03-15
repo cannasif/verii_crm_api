@@ -436,7 +436,7 @@ namespace crm_api.Services
 
                     return ApiResponse<CustomerCreateFromMobileResultDto>.SuccessResult(
                         response,
-                        _localizationService.GetLocalizedString("CustomerService.CustomerCreated"));
+                        BuildBusinessCardOcrSuccessMessage(processingState));
                 }
                 catch (BusinessCardOcrConflictException ex)
                 {
@@ -1574,6 +1574,44 @@ namespace crm_api.Services
             contact.Mobile = BusinessCardOcrNormalizer.NormalizeNullable(mobile);
             contact.Notes = BusinessCardOcrNormalizer.NormalizeNullable(request.Notes);
             contact.TitleId = titleId;
+        }
+
+        private string BuildBusinessCardOcrSuccessMessage(BusinessCardOcrProcessingState processingState)
+        {
+            var customerAction = processingState.CustomerAction;
+            var contactAction = processingState.ContactAction;
+
+            if (string.Equals(customerAction, BusinessCardOcrActions.Created, StringComparison.Ordinal) &&
+                string.Equals(contactAction, BusinessCardOcrActions.Created, StringComparison.Ordinal))
+            {
+                return GetLocalizedBusinessCardMessage(
+                    BusinessCardOcrMessageKeys.CustomerAndContactCreated,
+                    "Müşteri ve kişi başarıyla oluşturuldu.");
+            }
+
+            if (string.Equals(customerAction, BusinessCardOcrActions.Reactivated, StringComparison.Ordinal))
+            {
+                return GetLocalizedBusinessCardMessage(
+                    BusinessCardOcrMessageKeys.CustomerReactivatedAndContactResolved,
+                    "Müşteri yeniden aktifleştirildi ve kişi bilgileri işlendi.");
+            }
+
+            if (string.Equals(contactAction, BusinessCardOcrActions.Created, StringComparison.Ordinal))
+            {
+                return GetLocalizedBusinessCardMessage(
+                    BusinessCardOcrMessageKeys.ContactCreatedForExistingCustomer,
+                    "Mevcut müşteriye yeni kişi eklendi.");
+            }
+
+            return GetLocalizedBusinessCardMessage(
+                BusinessCardOcrMessageKeys.ExistingCustomerAndContactReused,
+                "Müşteri ve kişi zaten sistemde mevcut; mevcut kayıtlar kullanıldı.");
+        }
+
+        private string GetLocalizedBusinessCardMessage(string key, string fallback)
+        {
+            var localized = _localizationService.GetLocalizedString(key);
+            return string.Equals(localized, key, StringComparison.Ordinal) ? fallback : localized;
         }
 
         private static string NormalizeText(string? value)

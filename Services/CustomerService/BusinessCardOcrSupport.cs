@@ -16,6 +16,14 @@ internal static class BusinessCardOcrActions
     public const string Reactivated = "Reactivated";
 }
 
+internal static class BusinessCardOcrMessageKeys
+{
+    public const string CustomerAndContactCreated = "CustomerService.MobileOcrCustomerAndContactCreated";
+    public const string ContactCreatedForExistingCustomer = "CustomerService.MobileOcrContactCreatedForExistingCustomer";
+    public const string ExistingCustomerAndContactReused = "CustomerService.MobileOcrExistingCustomerAndContactReused";
+    public const string CustomerReactivatedAndContactResolved = "CustomerService.MobileOcrCustomerReactivatedAndContactResolved";
+}
+
 internal sealed class BusinessCardOcrProcessingState
 {
     public long CustomerId { get; set; }
