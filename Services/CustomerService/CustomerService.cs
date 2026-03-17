@@ -18,6 +18,27 @@ namespace crm_api.Services
 {
     public class CustomerService : ICustomerService
     {
+        private static readonly string[] SearchableColumns =
+        {
+            nameof(Customer.CustomerCode),
+            nameof(Customer.CustomerName),
+            nameof(Customer.TaxOffice),
+            nameof(Customer.TaxNumber),
+            nameof(Customer.TcknNumber),
+            nameof(Customer.SalesRepCode),
+            nameof(Customer.GroupCode),
+            nameof(Customer.Notes),
+            nameof(Customer.Email),
+            nameof(Customer.Website),
+            nameof(Customer.Phone1),
+            nameof(Customer.Phone2),
+            nameof(Customer.Address),
+            "Country.Name",
+            "City.Name",
+            "District.Name",
+            "CustomerType.Name"
+        };
+
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly ILocalizationService _localizationService;
@@ -82,6 +103,7 @@ namespace crm_api.Services
                     .Include(c => c.CreatedByUser)
                     .Include(c => c.UpdatedByUser)
                     .Include(c => c.DeletedByUser))
+                    .ApplySearch(request.Search, SearchableColumns)
                     .ApplyFilters(request.Filters, request.FilterLogic, columnMapping);
 
                 var sortBy = request.SortBy ?? nameof(Customer.Id);
