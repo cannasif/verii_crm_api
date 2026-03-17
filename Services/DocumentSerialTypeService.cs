@@ -10,6 +10,14 @@ namespace crm_api.Services
 {
     public class DocumentSerialTypeService : IDocumentSerialTypeService
     {
+        private static readonly string[] SearchableColumns =
+        [
+            nameof(DocumentSerialType.SerialPrefix),
+            "CustomerType.Name",
+            "SalesRep.FirstName",
+            "SalesRep.LastName"
+        ];
+
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly ILocalizationService _localizationService;
@@ -43,6 +51,7 @@ namespace crm_api.Services
                     .Include(d => d.CreatedByUser)
                     .Include(d => d.UpdatedByUser)
                     .Include(d => d.DeletedByUser)
+                    .ApplySearch(request.Search, SearchableColumns)
                     .ApplyFilters(request.Filters, request.FilterLogic);
 
                 var sortBy = request.SortBy ?? nameof(DocumentSerialType.Id);
