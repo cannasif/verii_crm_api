@@ -11,6 +11,26 @@ namespace crm_api.Services
 {
     public class StockService : IStockService
     {
+        private static readonly string[] SearchableColumns =
+        [
+            nameof(Stock.ErpStockCode),
+            nameof(Stock.StockName),
+            nameof(Stock.Unit),
+            nameof(Stock.UreticiKodu),
+            nameof(Stock.GrupKodu),
+            nameof(Stock.GrupAdi),
+            nameof(Stock.Kod1),
+            nameof(Stock.Kod1Adi),
+            nameof(Stock.Kod2),
+            nameof(Stock.Kod2Adi),
+            nameof(Stock.Kod3),
+            nameof(Stock.Kod3Adi),
+            nameof(Stock.Kod4),
+            nameof(Stock.Kod4Adi),
+            nameof(Stock.Kod5),
+            nameof(Stock.Kod5Adi)
+        ];
+
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly ILocalizationService _localizationService;
@@ -48,6 +68,7 @@ namespace crm_api.Services
                     .Include(s => s.CreatedByUser)
                     .Include(s => s.UpdatedByUser)
                     .Include(s => s.DeletedByUser)
+                    .ApplySearch(request.Search, SearchableColumns)
                     .ApplyFilters(request.Filters, request.FilterLogic);
 
                 var sortBy = request.SortBy ?? nameof(Stock.Id);
@@ -107,6 +128,7 @@ namespace crm_api.Services
                     .Include(s => s.CreatedByUser)
                     .Include(s => s.UpdatedByUser)
                     .Include(s => s.DeletedByUser)
+                    .ApplySearch(request.Search, SearchableColumns)
                     .ApplyFilters(request.Filters, request.FilterLogic);
 
                 var sortBy = request.SortBy ?? nameof(Stock.Id);
