@@ -3027,7 +3027,7 @@
     <value>Invalid ConfigJson format.</value>
   </data>
   <data name="ReportService.ReportConfigInvalidChartType" xml:space="preserve">
-    <value>chartType must be one of: table, bar, line, pie.</value>
+    <value>chartType must be one of: table, bar, stackedBar, line, pie, donut, kpi, or matrix.</value>
   </data>
   <data name="ReportService.ReportConfigValueRequired" xml:space="preserve">
     <value>At least one value field is required.</value>

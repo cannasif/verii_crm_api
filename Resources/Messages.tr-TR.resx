@@ -3108,7 +3108,7 @@
     <value>Geçersiz ConfigJson formatı.</value>
   </data>
   <data name="ReportService.ReportConfigInvalidChartType" xml:space="preserve">
-    <value>chartType değeri table, bar, line veya pie olmalıdır.</value>
+    <value>chartType değeri table, bar, stackedBar, line, pie, donut, kpi veya matrix olmalıdır.</value>
   </data>
   <data name="ReportService.ReportConfigValueRequired" xml:space="preserve">
     <value>En az bir değer alanı zorunludur.</value>
@@ -3132,7 +3132,7 @@
     <value>Geçersiz ConfigJson.</value>
   </data>
   <data name="ReportPreviewService.ChartRequiresAxisLegendAndValue" xml:space="preserve">
-    <value>Grafik için axis veya legend ve en az bir value gerekir.</value>
+    <value>Grafik için eksen veya lejant ve en az bir değer alanı gerekir.</value>
   </data>
   <data name="ReportPreviewService.PreviewOk" xml:space="preserve">
     <value>Önizleme başarılı.</value>

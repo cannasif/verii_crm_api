@@ -21,6 +21,9 @@ namespace crm_api.DTOs.ReportBuilderDto
 
         [JsonPropertyName("filters")]
         public List<FilterRule> Filters { get; set; } = new();
+
+        [JsonPropertyName("calculatedFields")]
+        public List<CalculatedFieldConfig> CalculatedFields { get; set; } = new();
     }
 
     public class AxisConfig
@@ -78,5 +81,23 @@ namespace crm_api.DTOs.ReportBuilderDto
 
         [JsonPropertyName("to")]
         public object? To { get; set; }
+    }
+
+    public class CalculatedFieldConfig
+    {
+        [JsonPropertyName("name")]
+        public string Name { get; set; } = string.Empty;
+
+        [JsonPropertyName("label")]
+        public string? Label { get; set; }
+
+        [JsonPropertyName("leftField")]
+        public string LeftField { get; set; } = string.Empty;
+
+        [JsonPropertyName("rightField")]
+        public string RightField { get; set; } = string.Empty;
+
+        [JsonPropertyName("operation")]
+        public string Operation { get; set; } = "add";
     }
 }

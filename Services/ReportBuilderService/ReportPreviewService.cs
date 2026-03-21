@@ -25,6 +25,8 @@ namespace crm_api.Services.ReportBuilderService
         private static readonly Regex IdentifierRegex = new(@"^[a-zA-Z_][a-zA-Z0-9_]*$", RegexOptions.Compiled);
         private static readonly HashSet<string> FilterOps = new(StringComparer.OrdinalIgnoreCase)
             { "eq", "ne", "gt", "gte", "lt", "lte", "contains", "startswith", "endswith", "in", "between" };
+        private static readonly HashSet<string> CalculatedFieldOps = new(StringComparer.OrdinalIgnoreCase)
+            { "add", "subtract", "multiply", "divide" };
 
         public ReportPreviewService(
             IReportingConnectionService connectionService,
@@ -73,11 +75,12 @@ namespace crm_api.Services.ReportBuilderService
                 : $"[{Escape(schemaName)}].[{Escape(objectName)}]";
 
             var chartType = (config.ChartType ?? "table").Trim().ToLowerInvariant();
-            if (chartType != "table" && chartType != "bar" && chartType != "line" && chartType != "pie")
+            if (chartType != "table" && chartType != "bar" && chartType != "stackedbar" && chartType != "line" && chartType != "pie" && chartType != "donut" && chartType != "kpi" && chartType != "matrix")
                 chartType = "table";
 
             string selectClause;
             string? groupByClause = null;
+            var calculatedFieldMap = BuildCalculatedFieldMap(config, schemaDict);
 
             if (chartType == "table")
             {
@@ -87,13 +90,41 @@ namespace crm_api.Services.ReportBuilderService
                 if (config.Values != null)
                     foreach (var v in config.Values.Where(v => !string.IsNullOrWhiteSpace(v.Field) && schemaDict.ContainsKey(v.Field!.Trim())))
                         cols.Add($"[{Escape(v.Field!.Trim())}]");
+                if (config.Values != null)
+                    foreach (var v in config.Values.Where(v => !string.IsNullOrWhiteSpace(v.Field) && calculatedFieldMap.ContainsKey(v.Field!.Trim()) && !cols.Any(c => c.Contains($"[{Escape(v.Field!.Trim())}]"))))
+                        cols.Add($"{calculatedFieldMap[v.Field!.Trim()]} AS [{Escape(v.Field.Trim())}]");
                 if (config.Legend != null && !string.IsNullOrWhiteSpace(config.Legend.Field) && schemaDict.ContainsKey(config.Legend.Field.Trim()))
                     cols.Add($"[{Escape(config.Legend.Field!.Trim())}]");
                 if (cols.Count == 0 && config.Values != null && config.Values.Count > 0)
                     foreach (var v in config.Values.Take(1))
                         if (schemaDict.ContainsKey(v.Field!.Trim()))
                             cols.Add($"[{Escape(v.Field.Trim())}]");
+                        else if (calculatedFieldMap.ContainsKey(v.Field!.Trim()))
+                            cols.Add($"{calculatedFieldMap[v.Field!.Trim()]} AS [{Escape(v.Field.Trim())}]");
                 selectClause = cols.Count > 0 ? string.Join(", ", cols) : "*";
+            }
+            else if (chartType == "kpi")
+            {
+                var selectCols = new List<string>();
+                if (config.Values != null)
+                    foreach (var v in config.Values.Where(v => !string.IsNullOrWhiteSpace(v.Field) && schemaDict.ContainsKey(v.Field!.Trim())))
+                    {
+                        var agg = (v.Aggregation ?? "sum").Trim().ToLowerInvariant();
+                        if (agg == "none") agg = "sum";
+                        selectCols.Add($"{AggSql(agg)}([{Escape(v.Field!.Trim())}]) AS [{Escape(v.Field.Trim())}]");
+                    }
+                if (config.Values != null)
+                    foreach (var v in config.Values.Where(v => !string.IsNullOrWhiteSpace(v.Field) && calculatedFieldMap.ContainsKey(v.Field!.Trim())))
+                    {
+                        var agg = (v.Aggregation ?? "sum").Trim().ToLowerInvariant();
+                        if (agg == "none") agg = "sum";
+                        selectCols.Add($"{AggSql(agg)}({calculatedFieldMap[v.Field!.Trim()]}) AS [{Escape(v.Field.Trim())}]");
+                    }
+
+                if (selectCols.Count == 0)
+                    return ApiResponse<PreviewResponseDto>.ErrorResult(_localizationService.GetLocalizedString("ReportPreviewService.ChartRequiresAxisLegendAndValue"), null, 400);
+
+                selectClause = string.Join(", ", selectCols);
             }
             else
             {
@@ -115,6 +146,13 @@ namespace crm_api.Services.ReportBuilderService
                         var agg = (v.Aggregation ?? "sum").Trim().ToLowerInvariant();
                         if (agg == "none") agg = "sum";
                         selectCols.Add($"{AggSql(agg)}([{Escape(v.Field!.Trim())}]) AS [{Escape(v.Field.Trim())}]");
+                    }
+                if (config.Values != null)
+                    foreach (var v in config.Values.Where(v => !string.IsNullOrWhiteSpace(v.Field) && calculatedFieldMap.ContainsKey(v.Field!.Trim())))
+                    {
+                        var agg = (v.Aggregation ?? "sum").Trim().ToLowerInvariant();
+                        if (agg == "none") agg = "sum";
+                        selectCols.Add($"{AggSql(agg)}({calculatedFieldMap[v.Field!.Trim()]}) AS [{Escape(v.Field.Trim())}]");
                     }
                 if (selectCols.Count == 0)
                     return ApiResponse<PreviewResponseDto>.ErrorResult(_localizationService.GetLocalizedString("ReportPreviewService.ChartRequiresAxisLegendAndValue"), null, 400);
@@ -179,7 +217,9 @@ namespace crm_api.Services.ReportBuilderService
                 else if (config.Axis != null && !string.IsNullOrWhiteSpace(config.Axis.Field) && schemaDict.ContainsKey(config.Axis.Field.Trim()))
                     orderClause = $" ORDER BY [{Escape(config.Axis.Field!.Trim())}] {dir}";
             }
-            if (string.IsNullOrEmpty(orderClause))
+            if (chartType == "kpi")
+                orderClause = string.Empty;
+            else if (string.IsNullOrEmpty(orderClause))
                 orderClause = " ORDER BY (SELECT NULL)";
 
             var sql = $"SELECT TOP({MaxRows}) {selectClause} FROM {fromClause}{whereClause}{groupByClause}{orderClause}";
@@ -253,9 +293,47 @@ namespace crm_api.Services.ReportBuilderService
                     allFields.Add(f.Field!.Trim());
             if (config.Sorting?.ValueField != null) allFields.Add(config.Sorting.ValueField.Trim());
             foreach (var f in allFields)
-                if (!schemaDict.ContainsKey(f))
+                if (!schemaDict.ContainsKey(f) && !(config.CalculatedFields?.Any(c => string.Equals(c.Name?.Trim(), f, StringComparison.OrdinalIgnoreCase)) ?? false))
                     return _localizationService.GetLocalizedString("ReportPreviewService.FieldNotInSchema", f);
+
+            if (config.CalculatedFields != null)
+            {
+                foreach (var field in config.CalculatedFields)
+                {
+                    if (string.IsNullOrWhiteSpace(field.Name) || string.IsNullOrWhiteSpace(field.LeftField) || string.IsNullOrWhiteSpace(field.RightField))
+                        return "Calculated field definition is incomplete.";
+                    if (!CalculatedFieldOps.Contains(field.Operation ?? ""))
+                        return "Calculated field operation is invalid.";
+                    if (!schemaDict.ContainsKey(field.LeftField.Trim()) || !schemaDict.ContainsKey(field.RightField.Trim()))
+                        return "Calculated field references a field outside schema.";
+                }
+            }
             return null;
+        }
+
+        private static Dictionary<string, string> BuildCalculatedFieldMap(ReportConfig config, Dictionary<string, FieldSchemaDto> schemaDict)
+        {
+            var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var field in config.CalculatedFields ?? new List<CalculatedFieldConfig>())
+            {
+                if (string.IsNullOrWhiteSpace(field.Name) || string.IsNullOrWhiteSpace(field.LeftField) || string.IsNullOrWhiteSpace(field.RightField))
+                    continue;
+                if (!schemaDict.ContainsKey(field.LeftField.Trim()) || !schemaDict.ContainsKey(field.RightField.Trim()))
+                    continue;
+
+                var left = $"TRY_CONVERT(decimal(18,4), [{Escape(field.LeftField.Trim())}])";
+                var right = $"TRY_CONVERT(decimal(18,4), [{Escape(field.RightField.Trim())}])";
+                var expr = (field.Operation ?? "add").Trim().ToLowerInvariant() switch
+                {
+                    "subtract" => $"({left} - {right})",
+                    "multiply" => $"({left} * {right})",
+                    "divide" => $"({left} / NULLIF({right}, 0))",
+                    _ => $"({left} + {right})",
+                };
+                map[field.Name.Trim()] = expr;
+            }
+
+            return map;
         }
 
         private static string AggSql(string agg)

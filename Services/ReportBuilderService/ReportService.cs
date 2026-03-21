@@ -185,7 +185,17 @@ namespace crm_api.Services.ReportBuilderService
             return ApiResponse<object>.SuccessResult(null!, _localizationService.GetLocalizedString("ReportService.ReportRetrieved"));
         }
 
-        private static readonly HashSet<string> ChartTypes = new(StringComparer.OrdinalIgnoreCase) { "table", "bar", "line", "pie" };
+        private static readonly HashSet<string> ChartTypes = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "table",
+            "bar",
+            "stackedbar",
+            "line",
+            "pie",
+            "donut",
+            "kpi",
+            "matrix"
+        };
         private static readonly HashSet<string> Aggregations = new(StringComparer.OrdinalIgnoreCase) { "none", "sum", "count", "avg", "min", "max" };
 
         private string? ValidateReportConfig(ReportConfig config)

@@ -58,6 +58,14 @@ namespace crm_api.Controllers
             return Ok(response);
         }
 
+        // GET /api/reportbuilder/datasources?connectionKey=...&type=view&search=...
+        [HttpGet("datasources")]
+        public async Task<IActionResult> ListDataSources([FromQuery] string connectionKey, [FromQuery] string type, [FromQuery] string? search = null)
+        {
+            var result = await _catalogService.ListDataSourcesAsync(connectionKey, type, search);
+            return StatusCode(result.StatusCode, result);
+        }
+
         // POST /api/reportbuilder   (Create)
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] ReportCreateDto dto)
