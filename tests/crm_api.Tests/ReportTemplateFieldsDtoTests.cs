@@ -1,4 +1,5 @@
 using crm_api.DTOs;
+using System.Linq;
 using Xunit;
 
 namespace crm_api.Tests;
@@ -72,5 +73,27 @@ public class ReportTemplateFieldsDtoTests
     {
         var fields = OrderFields.GetFields();
         Assert.Contains(fields.LineFields, x => x.Path == expectedPath);
+    }
+
+    [Theory]
+    [InlineData("OfferNo")]
+    [InlineData("QuotationNo")]
+    [InlineData("Currency")]
+    [InlineData("Total")]
+    [InlineData("GrandTotal")]
+    [InlineData("Lines.ImagePath")]
+    [InlineData("Lines.ProductCode")]
+    [InlineData("Lines.ProductName")]
+    [InlineData("Lines.LineGrandTotal")]
+    [InlineData("ExchangeRates.Currency")]
+    [InlineData("ExchangeRates.IsManual")]
+    public void FastQuotationFields_ShouldContain_ExpectedFields(string expectedPath)
+    {
+        var fields = FastQuotationFields.GetFields();
+        var allPaths = fields.HeaderFields.Select(x => x.Path)
+            .Concat(fields.LineFields.Select(x => x.Path))
+            .Concat(fields.ExchangeRateFields.Select(x => x.Path));
+
+        Assert.Contains(expectedPath, allPaths);
     }
 }
