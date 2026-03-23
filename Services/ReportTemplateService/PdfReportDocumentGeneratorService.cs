@@ -34,17 +34,20 @@ namespace crm_api.Services
         private readonly ILogger<PdfReportDocumentGeneratorService> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly PdfBuilderOptions _options;
+        private readonly IErpService? _erpService;
 
         public PdfReportDocumentGeneratorService(
             IUnitOfWork unitOfWork,
             ILogger<PdfReportDocumentGeneratorService> logger,
             IHttpClientFactory httpClientFactory,
-            IOptions<PdfBuilderOptions> options)
+            IOptions<PdfBuilderOptions> options,
+            IErpService? erpService = null)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _httpClientFactory = httpClientFactory;
             _options = options?.Value ?? new PdfBuilderOptions();
+            _erpService = erpService;
             QuestPDF.Settings.License = LicenseType.Community;
         }
 
@@ -1536,6 +1539,175 @@ namespace crm_api.Services
             return string.IsNullOrWhiteSpace(currencyCode) ? formatted : $"{formatted} {currencyCode}";
         }
 
+        private async Task<object?> FetchFastQuotationEntityDataAsync(long entityId)
+        {
+            var data = await (from tq in _unitOfWork.TempQuotattions.Query(false, false)
+                              where tq.Id == entityId && !tq.IsDeleted
+                              select new
+                              {
+                                  tq.Id,
+                                  OfferNo = !string.IsNullOrWhiteSpace(tq.QuotationNo) ? tq.QuotationNo : ("HT-" + tq.Id),
+                                  tq.QuotationNo,
+                                  tq.OfferDate,
+                                  OfferType = "FastQuotation",
+                                  tq.RevisionId,
+                                  RevisionNo = tq.RevisionId.HasValue ? ("REV-" + tq.RevisionId.Value) : "",
+                                  CustomerName = tq.Customer != null ? tq.Customer.CustomerName : "",
+                                  PotentialCustomerName = tq.Customer != null ? tq.Customer.CustomerName : "",
+                                  ErpCustomerCode = "",
+                                  DeliveryDate = (DateTime?)null,
+                                  ShippingAddressText =
+                                      tq.Customer != null
+                                          ? (tq.Customer.DefaultShippingAddress != null
+                                              ? (tq.Customer.DefaultShippingAddress.Address ?? "")
+                                              : (tq.Customer.Address ?? ""))
+                                          : "",
+                                  RepresentativeName = "",
+                                  tq.Description,
+                                  PaymentTypeName = "",
+                                  DocumentSerialTypeName = "",
+                                  CurrencyCode = tq.CurrencyCode,
+                                  tq.ExchangeRate,
+                                  tq.DiscountRate1,
+                                  tq.DiscountRate2,
+                                  tq.DiscountRate3,
+                                  GeneralDiscountAmount = (from tl in _unitOfWork.TempQuotattionLines.Query(false, false)
+                                                           where tl.TempQuotattionId == tq.Id && !tl.IsDeleted
+                                                           select (decimal?)(tl.DiscountAmount1 + tl.DiscountAmount2 + tl.DiscountAmount3))
+                                                          .Sum() ?? 0m,
+                                  Total = (from tl in _unitOfWork.TempQuotattionLines.Query(false, false)
+                                           where tl.TempQuotattionId == tq.Id && !tl.IsDeleted
+                                           select (decimal?)tl.LineTotal)
+                                          .Sum() ?? 0m,
+                                  GrandTotal = (from tl in _unitOfWork.TempQuotattionLines.Query(false, false)
+                                                where tl.TempQuotattionId == tq.Id && !tl.IsDeleted
+                                                select (decimal?)tl.LineGrandTotal)
+                                               .Sum() ?? 0m,
+                                  tq.IsApproved,
+                                  tq.ApprovedDate,
+                                  tq.CreatedBy,
+                                  tq.UpdatedBy,
+                                  ExchangeRates = (from er in _unitOfWork.TempQuotattionExchangeLines.Query(false, false)
+                                                   where er.TempQuotattionId == tq.Id && !er.IsDeleted
+                                                   select new
+                                                   {
+                                                       er.Currency,
+                                                       er.ExchangeRate,
+                                                       er.ExchangeRateDate,
+                                                       er.IsManual
+                                                   }).ToList(),
+                                  Lines = (from tl in _unitOfWork.TempQuotattionLines.Query(false, false)
+                                           where tl.TempQuotattionId == tq.Id && !tl.IsDeleted
+                                           select new
+                                           {
+                                               ImagePath = tl.ImagePath,
+                                               tl.ProductCode,
+                                               tl.ProductName,
+                                               GroupCode = "",
+                                               StockCode = tl.ProductCode,
+                                               StockUnit = "",
+                                               StockManufacturerCode = "",
+                                               StockGroupName = "",
+                                               StockCode1 = "",
+                                               StockCode1Name = "",
+                                               StockCode2 = "",
+                                               StockCode2Name = "",
+                                               StockCode3 = "",
+                                               StockCode3Name = "",
+                                               StockCode4 = "",
+                                               StockCode4Name = "",
+                                               StockCode5 = "",
+                                               StockCode5Name = "",
+                                               tl.Quantity,
+                                               tl.UnitPrice,
+                                               tl.DiscountRate1,
+                                               tl.DiscountAmount1,
+                                               tl.DiscountRate2,
+                                               tl.DiscountAmount2,
+                                               tl.DiscountRate3,
+                                               tl.DiscountAmount3,
+                                               tl.VatRate,
+                                               tl.VatAmount,
+                                               tl.LineTotal,
+                                               tl.LineGrandTotal,
+                                               tl.Description,
+                                               HtmlDescription = "",
+                                               DefaultImagePath = ""
+                                           }).ToList()
+                              }).FirstOrDefaultAsync().ConfigureAwait(false);
+
+            if (data == null)
+                return null;
+
+            var currencyName = await ResolveErpCurrencyNameAsync(data.CurrencyCode).ConfigureAwait(false);
+
+            return new
+            {
+                data.Id,
+                data.OfferNo,
+                data.QuotationNo,
+                data.OfferDate,
+                data.OfferType,
+                data.RevisionId,
+                data.RevisionNo,
+                data.CustomerName,
+                data.PotentialCustomerName,
+                data.ErpCustomerCode,
+                data.DeliveryDate,
+                data.ShippingAddressText,
+                data.RepresentativeName,
+                data.Description,
+                data.PaymentTypeName,
+                data.DocumentSerialTypeName,
+                Currency = currencyName,
+                data.ExchangeRate,
+                data.DiscountRate1,
+                data.DiscountRate2,
+                data.DiscountRate3,
+                data.GeneralDiscountAmount,
+                data.Total,
+                data.GrandTotal,
+                data.IsApproved,
+                data.ApprovedDate,
+                data.CreatedBy,
+                data.UpdatedBy,
+                data.ExchangeRates,
+                data.Lines
+            };
+        }
+
+        private async Task<string> ResolveErpCurrencyNameAsync(string? value)
+        {
+            var normalized = string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim().ToUpperInvariant();
+            if (string.IsNullOrWhiteSpace(normalized))
+                return string.Empty;
+
+            if (_erpService == null)
+                return normalized;
+
+            try
+            {
+                var rates = await _erpService.GetExchangeRateAsync(DateTime.Now, 1).ConfigureAwait(false);
+                if (!rates.Success || rates.Data == null)
+                    return normalized;
+
+                foreach (var item in rates.Data)
+                {
+                    if (string.Equals(item.DovizTipi.ToString(), normalized, StringComparison.OrdinalIgnoreCase)
+                        && !string.IsNullOrWhiteSpace(item.DovizIsmi))
+                    {
+                        return item.DovizIsmi.Trim().ToUpperInvariant();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to resolve ERP currency name for fast quotation currency code {CurrencyCode}", normalized);
+            }
+
+            return normalized;
+        }
+
         private static object? ResolvePropertyPathStatic(object obj, string path)
         {
             if (obj == null || string.IsNullOrWhiteSpace(path))
@@ -2223,95 +2395,7 @@ namespace crm_api.Services
                                 }).ToList()
                     }).FirstOrDefaultAsync().ConfigureAwait(false),
 
-                DocumentRuleType.FastQuotation => await (from tq in _unitOfWork.TempQuotattions.Query(false, false)
-                    where tq.Id == entityId && !tq.IsDeleted
-                    select new
-                    {
-                        tq.Id,
-                        OfferNo = !string.IsNullOrWhiteSpace(tq.QuotationNo) ? tq.QuotationNo : ("HT-" + tq.Id),
-                        tq.QuotationNo,
-                        tq.OfferDate,
-                        OfferType = "FastQuotation",
-                        tq.RevisionId,
-                        RevisionNo = tq.RevisionId.HasValue ? ("REV-" + tq.RevisionId.Value) : "",
-                        CustomerName = tq.Customer != null ? tq.Customer.CustomerName : "",
-                        PotentialCustomerName = tq.Customer != null ? tq.Customer.CustomerName : "",
-                        ErpCustomerCode = "",
-                        DeliveryDate = (DateTime?)null,
-                        ShippingAddressText = "",
-                        RepresentativeName = "",
-                        tq.Description,
-                        PaymentTypeName = "",
-                        DocumentSerialTypeName = "",
-                        Currency = tq.CurrencyCode,
-                        tq.ExchangeRate,
-                        tq.DiscountRate1,
-                        tq.DiscountRate2,
-                        tq.DiscountRate3,
-                        GeneralDiscountAmount = (from tl in _unitOfWork.TempQuotattionLines.Query(false, false)
-                                                 where tl.TempQuotattionId == tq.Id && !tl.IsDeleted
-                                                 select (decimal?)(tl.DiscountAmount1 + tl.DiscountAmount2 + tl.DiscountAmount3))
-                                                .Sum() ?? 0m,
-                        Total = (from tl in _unitOfWork.TempQuotattionLines.Query(false, false)
-                                 where tl.TempQuotattionId == tq.Id && !tl.IsDeleted
-                                 select (decimal?)tl.LineTotal)
-                                .Sum() ?? 0m,
-                        GrandTotal = (from tl in _unitOfWork.TempQuotattionLines.Query(false, false)
-                                      where tl.TempQuotattionId == tq.Id && !tl.IsDeleted
-                                      select (decimal?)tl.LineGrandTotal)
-                                     .Sum() ?? 0m,
-                        tq.IsApproved,
-                        tq.ApprovedDate,
-                        tq.CreatedBy,
-                        tq.UpdatedBy,
-                        ExchangeRates = (from er in _unitOfWork.TempQuotattionExchangeLines.Query(false, false)
-                                         where er.TempQuotattionId == tq.Id && !er.IsDeleted
-                                         select new
-                                         {
-                                             er.Currency,
-                                             er.ExchangeRate,
-                                             er.ExchangeRateDate,
-                                             er.IsManual
-                                         }).ToList(),
-                        Lines = (from tl in _unitOfWork.TempQuotattionLines.Query(false, false)
-                                 where tl.TempQuotattionId == tq.Id && !tl.IsDeleted
-                                 select new
-                                 {
-                                     ImagePath = tl.ImagePath,
-                                     tl.ProductCode,
-                                     tl.ProductName,
-                                     GroupCode = "",
-                                     StockCode = tl.ProductCode,
-                                     StockUnit = "",
-                                     StockManufacturerCode = "",
-                                     StockGroupName = "",
-                                     StockCode1 = "",
-                                     StockCode1Name = "",
-                                     StockCode2 = "",
-                                     StockCode2Name = "",
-                                     StockCode3 = "",
-                                     StockCode3Name = "",
-                                     StockCode4 = "",
-                                     StockCode4Name = "",
-                                     StockCode5 = "",
-                                     StockCode5Name = "",
-                                     tl.Quantity,
-                                     tl.UnitPrice,
-                                     tl.DiscountRate1,
-                                     tl.DiscountAmount1,
-                                     tl.DiscountRate2,
-                                     tl.DiscountAmount2,
-                                     tl.DiscountRate3,
-                                     tl.DiscountAmount3,
-                                     tl.VatRate,
-                                     tl.VatAmount,
-                                     tl.LineTotal,
-                                     tl.LineGrandTotal,
-                                     tl.Description,
-                                     HtmlDescription = "",
-                                     DefaultImagePath = ""
-                                 }).ToList()
-                    }).FirstOrDefaultAsync().ConfigureAwait(false),
+                DocumentRuleType.FastQuotation => await FetchFastQuotationEntityDataAsync(entityId).ConfigureAwait(false),
 
                 DocumentRuleType.Order => await (from o in _unitOfWork.Orders.Query(false, false)
                     where o.Id == entityId && !o.IsDeleted

@@ -368,6 +368,7 @@ namespace crm_api.DTOs
                     new FieldDefinition { Label = "Revizyon No", Path = "RevisionNo", DataType = "string", ExampleValue = "REV-3" },
                     new FieldDefinition { Label = "Müşteri Adı", Path = "CustomerName", DataType = "string", ExampleValue = "ABC Şirketi" },
                     new FieldDefinition { Label = "Potansiyel Müşteri Adı", Path = "PotentialCustomerName", DataType = "string", ExampleValue = "ABC Şirketi" },
+                    new FieldDefinition { Label = "Müşteri Adresi", Path = "ShippingAddressText", DataType = "string", ExampleValue = "Kazım Karabekir Mah. 8501 Sok. No:7 Buca / İzmir" },
                     new FieldDefinition { Label = "Para Birimi", Path = "Currency", DataType = "string", ExampleValue = "TRY" },
                     new FieldDefinition { Label = "Kur", Path = "ExchangeRate", DataType = "number", ExampleValue = "1.00" },
                     new FieldDefinition { Label = "İndirim Oranı 1 (%)", Path = "DiscountRate1", DataType = "number", ExampleValue = "5" },
