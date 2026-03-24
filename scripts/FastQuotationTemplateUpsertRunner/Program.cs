@@ -12,6 +12,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using depoWebAPI.Models;
+using crm_api.DTOs.ErpDto;
 
 namespace FastQuotationTemplateUpsertRunner;
 
@@ -68,7 +70,8 @@ public static class Program
             Options.Create(new PdfBuilderOptions
             {
                 LocalImageBasePath = apiRoot,
-            }));
+            }),
+            new FakeErpService());
 
         var bytes = await generator.GeneratePdfAsync(DocumentRuleType.FastQuotation, fastQuotation.Id, templateData).ConfigureAwait(false);
         Directory.CreateDirectory(Path.GetDirectoryName(outputPdf)!);
@@ -181,10 +184,31 @@ public static class Program
             table.TableOptions.RepeatHeader = true;
         }
 
+        foreach (var element in templateData.Elements)
+        {
+            if (string.Equals(element.Id, "offer-delivery-label", StringComparison.OrdinalIgnoreCase))
+            {
+                element.Text = "Para Birimi:";
+            }
+
+            if (string.Equals(element.Id, "offer-delivery", StringComparison.OrdinalIgnoreCase))
+            {
+                element.Path = "Currency";
+            }
+
+            if (string.Equals(element.Id, "customer-rep", StringComparison.OrdinalIgnoreCase))
+            {
+                element.Path = "ShippingAddressText";
+                element.Height = 6.35m;
+            }
+        }
+
         foreach (var template in db.ReportTemplates.Where(x => !x.IsDeleted && x.RuleType == DocumentRuleType.FastQuotation))
         {
-            template.Default = template.Id == targetTemplate.Id;
+            template.Default = false;
         }
+
+        await db.SaveChangesAsync().ConfigureAwait(false);
 
         targetTemplate.Title = TargetTemplateTitle;
         targetTemplate.TemplateJson = JsonSerializer.Serialize(templateData);
@@ -250,7 +274,7 @@ public static class Program
             CustomerId = customer.Id,
             QuotationNo = $"HT-V5-{DateTime.UtcNow:yyyyMMddHHmmss}",
             OfferDate = DateTime.UtcNow,
-            CurrencyCode = "TRY",
+            CurrencyCode = "3",
             ExchangeRate = 1m,
             Description = "V5 brochure + line image proof",
             IsApproved = false,
@@ -312,5 +336,31 @@ public static class Program
     {
         public string GetLocalizedString(string key) => key;
         public string GetLocalizedString(string key, params object[] arguments) => string.Format(key, arguments);
+    }
+
+    private sealed class FakeErpService : IErpService
+    {
+        public Task<ApiResponse<short>> GetBranchCodeFromContext() => throw new NotSupportedException();
+        public Task<ApiResponse<List<CariDto>>> GetCarisAsync(string? cariKodu) => throw new NotSupportedException();
+        public Task<ApiResponse<List<CariDto>>> GetCarisByCodesAsync(IEnumerable<string> cariKodlari) => throw new NotSupportedException();
+        public Task<ApiResponse<List<StokFunctionDto>>> GetStoksAsync(string? stokKodu) => throw new NotSupportedException();
+        public Task<ApiResponse<List<BranchDto>>> GetBranchesAsync(int? branchNo = null) => throw new NotSupportedException();
+        public Task<ApiResponse<List<ErpCariMovementDto>>> GetCariMovementsAsync(string customerCode) => throw new NotSupportedException();
+        public Task<ApiResponse<List<ErpCariBalanceDto>>> GetCariBalancesAsync(string customerCode) => throw new NotSupportedException();
+        public Task<ApiResponse<List<ErpShippingAddressDto>>> GetErpShippingAddressAsync(string customerCode) => throw new NotSupportedException();
+        public Task<ApiResponse<List<StokGroupDto>>> GetStokGroupAsync(string? grupKodu) => throw new NotSupportedException();
+        public Task<ApiResponse<List<ProjeDto>>> GetProjectCodesAsync() => throw new NotSupportedException();
+        public Task<ApiResponse<object>> HealthCheckAsync() => throw new NotSupportedException();
+
+        public Task<ApiResponse<List<KurDto>>> GetExchangeRateAsync(DateTime tarih, int fiyatTipi)
+        {
+            return Task.FromResult(ApiResponse<List<KurDto>>.SuccessResult(new List<KurDto>
+            {
+                new() { DovizTipi = 1, DovizIsmi = "TL", KurDegeri = 1 },
+                new() { DovizTipi = 2, DovizIsmi = "USD", KurDegeri = 36.1 },
+                new() { DovizTipi = 3, DovizIsmi = "EURO", KurDegeri = 39.2 },
+                new() { DovizTipi = 4, DovizIsmi = "GBP", KurDegeri = 45.7 },
+            }, "ok"));
+        }
     }
 }
