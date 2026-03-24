@@ -334,11 +334,15 @@ namespace crm_api.Services.ReportBuilderService
                 {
                     var binding = config.DatasetParameters?.FirstOrDefault(item => string.Equals(item.Name?.Trim(), parameterDef.Name, StringComparison.OrdinalIgnoreCase));
                     if (binding == null)
+                    {
+                        if (parameterDef.IsNullable)
+                            continue;
                         return $"Datasource parameter '{parameterDef.Name}' is required.";
+                    }
                     var source = (binding.Source ?? string.Empty).Trim().ToLowerInvariant();
                     if (source is not ("literal" or "currentuserid" or "currentuseremail" or "today" or "now"))
                         return $"Datasource parameter '{parameterDef.Name}' has an invalid source.";
-                    if (source == "literal" && string.IsNullOrWhiteSpace(binding.Value))
+                    if (source == "literal" && string.IsNullOrWhiteSpace(binding.Value) && !parameterDef.IsNullable)
                         return $"Datasource parameter '{parameterDef.Name}' requires a value.";
                 }
             }

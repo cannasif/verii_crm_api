@@ -195,8 +195,8 @@ namespace crm_api.Services.ReportBuilderService
                 await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
                 var updated = await _unitOfWork.ReportDefinitions.Query().AsNoTracking().FirstOrDefaultAsync(r => r.Id == id).ConfigureAwait(false);
                 var detail = _mapper.Map<ReportDetailDto>(updated!);
-                detail.CanManage = true;
-                detail.AccessLevel = "owner";
+                detail.CanManage = access.CanManage;
+                detail.AccessLevel = access.AccessLevel;
                 detail.AssignedUserIds = await GetAssignedUserIdsAsync(entity.Id).ConfigureAwait(false);
                 return ApiResponse<ReportDetailDto>.SuccessResult(detail, _localizationService.GetLocalizedString("ReportService.ReportUpdated"));
             }
@@ -375,8 +375,8 @@ namespace crm_api.Services.ReportBuilderService
         {
             public static ReportAccessDecision None { get; } = new(false, false, "none");
             public static ReportAccessDecision Owner { get; } = new(true, true, "owner");
-            public static ReportAccessDecision Shared { get; } = new(true, false, "shared");
-            public static ReportAccessDecision Organization { get; } = new(true, false, "organization");
+            public static ReportAccessDecision Shared { get; } = new(true, true, "shared");
+            public static ReportAccessDecision Organization { get; } = new(true, true, "organization");
         }
 
         private async Task<ApiResponse<object>> ValidateForSaveAsync(string connectionKey, string dataSourceType, string dataSourceName, string configJson)
@@ -439,11 +439,15 @@ namespace crm_api.Services.ReportBuilderService
             {
                 var binding = config.DatasetParameters?.FirstOrDefault(item => string.Equals(item.Name?.Trim(), parameterDef.Name, StringComparison.OrdinalIgnoreCase));
                 if (binding == null)
+                {
+                    if (parameterDef.IsNullable)
+                        continue;
                     return $"Datasource parameter '{parameterDef.Name}' is required.";
+                }
                 var source = (binding.Source ?? string.Empty).Trim().ToLowerInvariant();
                 if (source is not ("literal" or "currentuserid" or "currentuseremail" or "today" or "now"))
                     return $"Datasource parameter '{parameterDef.Name}' has an invalid source.";
-                if (source == "literal" && string.IsNullOrWhiteSpace(binding.Value))
+                if (source == "literal" && string.IsNullOrWhiteSpace(binding.Value) && !parameterDef.IsNullable)
                     return $"Datasource parameter '{parameterDef.Name}' requires a value.";
             }
             return null;
