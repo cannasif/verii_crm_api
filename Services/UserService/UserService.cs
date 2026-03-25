@@ -107,8 +107,24 @@ namespace crm_api.Services
                 query = query.ApplyFilters(remainingFilters, request.FilterLogic, columnMapping);
 
                 var sortBy = request.SortBy ?? nameof(User.Id);
+                var isDescending = !string.IsNullOrWhiteSpace(request.SortDirection)
+                    && (request.SortDirection.Equals("desc", StringComparison.OrdinalIgnoreCase)
+                        || request.SortDirection.Equals("descending", StringComparison.OrdinalIgnoreCase));
 
-                query = query.ApplySorting(sortBy, request.SortDirection, columnMapping);
+                if (string.Equals(sortBy, "fullName", StringComparison.OrdinalIgnoreCase))
+                {
+                    query = isDescending
+                        ? query
+                            .OrderByDescending(u => (u.FirstName ?? string.Empty) + " " + (u.LastName ?? string.Empty))
+                            .ThenByDescending(u => u.Username)
+                        : query
+                            .OrderBy(u => (u.FirstName ?? string.Empty) + " " + (u.LastName ?? string.Empty))
+                            .ThenBy(u => u.Username);
+                }
+                else
+                {
+                    query = query.ApplySorting(sortBy, request.SortDirection, columnMapping);
+                }
 
                 var totalCount = await query.CountAsync().ConfigureAwait(false);
 
