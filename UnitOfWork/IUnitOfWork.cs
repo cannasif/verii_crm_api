@@ -26,6 +26,9 @@ namespace crm_api.UnitOfWork
         IGenericRepository<Activity> Activities { get; }
         IGenericRepository<ActivityImage> ActivityImages { get; }
         IGenericRepository<ActivityType> ActivityTypes { get; }
+        IGenericRepository<ActivityMeetingType> ActivityMeetingTypes { get; }
+        IGenericRepository<ActivityTopicPurpose> ActivityTopicPurposes { get; }
+        IGenericRepository<ActivityShipping> ActivityShippings { get; }
         IGenericRepository<ProductPricing> ProductPricings { get; }
         IGenericRepository<ProductPricingGroupBy> ProductPricingGroupBys { get; }
         IGenericRepository<UserDiscountLimit> UserDiscountLimits { get; }

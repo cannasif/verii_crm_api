@@ -11,6 +11,18 @@ namespace crm_api.Models
         public long ActivityTypeId { get; set; }
         public ActivityType ActivityType { get; set; } = null!;
 
+        public long? PaymentTypeId { get; set; }
+        public PaymentType? PaymentType { get; set; }
+
+        public long? ActivityMeetingTypeId { get; set; }
+        public ActivityMeetingType? ActivityMeetingType { get; set; }
+
+        public long? ActivityTopicPurposeId { get; set; }
+        public ActivityTopicPurpose? ActivityTopicPurpose { get; set; }
+
+        public long? ActivityShippingId { get; set; }
+        public ActivityShipping? ActivityShipping { get; set; }
+
         public DateTime StartDateTime { get; set; }
         public DateTime? EndDateTime { get; set; }
         public bool IsAllDay { get; set; } = false;

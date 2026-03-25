@@ -62,6 +62,14 @@ namespace crm_api.DTOs
         public long ActivityTypeId { get; set; }
         public string? ActivityTypeName { get; set; }
         public ActivityTypeGetDto ActivityType { get; set; } = null!;
+        public long? PaymentTypeId { get; set; }
+        public string? PaymentTypeName { get; set; }
+        public long? ActivityMeetingTypeId { get; set; }
+        public string? ActivityMeetingTypeName { get; set; }
+        public long? ActivityTopicPurposeId { get; set; }
+        public string? ActivityTopicPurposeName { get; set; }
+        public long? ActivityShippingId { get; set; }
+        public string? ActivityShippingName { get; set; }
         public DateTime StartDateTime { get; set; }
         public DateTime? EndDateTime { get; set; }
         public bool IsAllDay { get; set; }
@@ -87,13 +95,18 @@ namespace crm_api.DTOs
         [MaxLength(100)]
         public string Subject { get; set; } = string.Empty;
 
-        [MaxLength(500)]
+        [MaxLength(2000)]
         public string? Description { get; set; }
 
         [Required]
         public long ActivityTypeId { get; set; }
         [MaxLength(100)]
         public string? ActivityTypeName { get; set; }
+
+        public long? PaymentTypeId { get; set; }
+        public long? ActivityMeetingTypeId { get; set; }
+        public long? ActivityTopicPurposeId { get; set; }
+        public long? ActivityShippingId { get; set; }
 
         [Required]
         public DateTime StartDateTime { get; set; }
@@ -129,13 +142,18 @@ namespace crm_api.DTOs
         [MaxLength(100)]
         public string Subject { get; set; } = string.Empty;
 
-        [MaxLength(500)]
+        [MaxLength(2000)]
         public string? Description { get; set; }
 
         [Required]
         public long ActivityTypeId { get; set; }
         [MaxLength(100)]
         public string? ActivityTypeName { get; set; }
+
+        public long? PaymentTypeId { get; set; }
+        public long? ActivityMeetingTypeId { get; set; }
+        public long? ActivityTopicPurposeId { get; set; }
+        public long? ActivityShippingId { get; set; }
 
         [Required]
         public DateTime StartDateTime { get; set; }

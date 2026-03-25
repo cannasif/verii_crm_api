@@ -29,6 +29,9 @@ namespace crm_api.Data
         public DbSet<ActivityReminder> ActivityReminders { get; set; }
         public DbSet<ActivityImage> ActivityImages { get; set; }
         public DbSet<ActivityType> ActivityTypes { get; set; }
+        public DbSet<ActivityMeetingType> ActivityMeetingTypes { get; set; }
+        public DbSet<ActivityTopicPurpose> ActivityTopicPurposes { get; set; }
+        public DbSet<ActivityShipping> ActivityShippings { get; set; }
         public DbSet<ProductPricing> ProductPricings { get; set; }
         public DbSet<ProductPricingGroupBy> ProductPricingGroupBys { get; set; }
         public DbSet<UserDiscountLimit> UserDiscountLimits { get; set; }

@@ -37,6 +37,9 @@ namespace crm_api.UnitOfWork
         private IGenericRepository<Activity>? _activities;
         private IGenericRepository<ActivityImage>? _activityImages;
         private IGenericRepository<ActivityType>? _activityTypes;
+        private IGenericRepository<ActivityMeetingType>? _activityMeetingTypes;
+        private IGenericRepository<ActivityTopicPurpose>? _activityTopicPurposes;
+        private IGenericRepository<ActivityShipping>? _activityShippings;
         private IGenericRepository<PaymentType>? _paymentTypes;
         private IGenericRepository<SalesTypeDefinition>? _salesTypeDefinitions;
         private IGenericRepository<ProductPricing>? _productPricings;
@@ -114,6 +117,9 @@ namespace crm_api.UnitOfWork
         public IGenericRepository<Activity> Activities{get{_activities ??= new GenericRepository<Activity>(_context, _httpContextAccessor);return _activities;}}
         public IGenericRepository<ActivityImage> ActivityImages{get{_activityImages ??= new GenericRepository<ActivityImage>(_context, _httpContextAccessor);return _activityImages;}}
         public IGenericRepository<ActivityType> ActivityTypes{get{_activityTypes ??= new GenericRepository<ActivityType>(_context, _httpContextAccessor);return _activityTypes;}}
+        public IGenericRepository<ActivityMeetingType> ActivityMeetingTypes{get{_activityMeetingTypes ??= new GenericRepository<ActivityMeetingType>(_context, _httpContextAccessor);return _activityMeetingTypes;}}
+        public IGenericRepository<ActivityTopicPurpose> ActivityTopicPurposes{get{_activityTopicPurposes ??= new GenericRepository<ActivityTopicPurpose>(_context, _httpContextAccessor);return _activityTopicPurposes;}}
+        public IGenericRepository<ActivityShipping> ActivityShippings{get{_activityShippings ??= new GenericRepository<ActivityShipping>(_context, _httpContextAccessor);return _activityShippings;}}
         public IGenericRepository<PaymentType> PaymentTypes{get{_paymentTypes ??= new GenericRepository<PaymentType>(_context, _httpContextAccessor);return _paymentTypes;}}
         public IGenericRepository<SalesTypeDefinition> SalesTypeDefinitions{get{_salesTypeDefinitions ??= new GenericRepository<SalesTypeDefinition>(_context, _httpContextAccessor);return _salesTypeDefinitions;}}
 

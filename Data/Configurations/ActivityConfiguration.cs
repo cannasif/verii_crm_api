@@ -15,7 +15,7 @@ namespace crm_api.Data.Configurations
                 .IsRequired();
 
             builder.Property(e => e.Description)
-                .HasMaxLength(1000)
+                .HasMaxLength(2000)
                 .IsRequired(false);
 
             builder.Property(e => e.ActivityTypeId)
@@ -24,6 +24,26 @@ namespace crm_api.Data.Configurations
             builder.HasOne(e => e.ActivityType)
                 .WithMany(at => at.Activities)
                 .HasForeignKey(e => e.ActivityTypeId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.HasOne(e => e.PaymentType)
+                .WithMany()
+                .HasForeignKey(e => e.PaymentTypeId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.HasOne(e => e.ActivityMeetingType)
+                .WithMany()
+                .HasForeignKey(e => e.ActivityMeetingTypeId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.HasOne(e => e.ActivityTopicPurpose)
+                .WithMany()
+                .HasForeignKey(e => e.ActivityTopicPurposeId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.HasOne(e => e.ActivityShipping)
+                .WithMany()
+                .HasForeignKey(e => e.ActivityShippingId)
                 .OnDelete(DeleteBehavior.NoAction);
 
             builder.Property(e => e.ErpCustomerCode)
@@ -79,6 +99,18 @@ namespace crm_api.Data.Configurations
 
             builder.HasIndex(e => e.ActivityTypeId)
                 .HasDatabaseName("IX_Activity_ActivityTypeId");
+
+            builder.HasIndex(e => e.PaymentTypeId)
+                .HasDatabaseName("IX_Activity_PaymentTypeId");
+
+            builder.HasIndex(e => e.ActivityMeetingTypeId)
+                .HasDatabaseName("IX_Activity_ActivityMeetingTypeId");
+
+            builder.HasIndex(e => e.ActivityTopicPurposeId)
+                .HasDatabaseName("IX_Activity_ActivityTopicPurposeId");
+
+            builder.HasIndex(e => e.ActivityShippingId)
+                .HasDatabaseName("IX_Activity_ActivityShippingId");
 
             builder.HasIndex(e => e.Status)
                 .HasDatabaseName("IX_Activity_Status");
