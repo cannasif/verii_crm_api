@@ -61,6 +61,10 @@ namespace crm_api.Services
                     .AsNoTracking()
                     .Where(a => !a.IsDeleted)
                     .Include(a => a.ActivityType)
+                    .Include(a => a.PaymentType)
+                    .Include(a => a.ActivityMeetingType)
+                    .Include(a => a.ActivityTopicPurpose)
+                    .Include(a => a.ActivityShipping)
                     .Include(a => a.PotentialCustomer)
                     .Include(a => a.Contact)
                     .Include(a => a.AssignedUser)
@@ -110,6 +114,10 @@ namespace crm_api.Services
                 var activity = await _unitOfWork.Activities.Query()
                     .AsNoTracking()
                     .Include(a => a.ActivityType)
+                    .Include(a => a.PaymentType)
+                    .Include(a => a.ActivityMeetingType)
+                    .Include(a => a.ActivityTopicPurpose)
+                    .Include(a => a.ActivityShipping)
                     .Include(a => a.PotentialCustomer)
                     .Include(a => a.Contact)
                     .Include(a => a.AssignedUser)
@@ -161,7 +169,11 @@ namespace crm_api.Services
                     createActivityDto.ActivityTypeId,
                     createActivityDto.AssignedUserId,
                     createActivityDto.ContactId,
-                    createActivityDto.PotentialCustomerId).ConfigureAwait(false);
+                    createActivityDto.PotentialCustomerId,
+                    createActivityDto.PaymentTypeId,
+                    createActivityDto.ActivityMeetingTypeId,
+                    createActivityDto.ActivityTopicPurposeId,
+                    createActivityDto.ActivityShippingId).ConfigureAwait(false);
                 if (validationError != null)
                 {
                     await _unitOfWork.RollbackTransactionAsync().ConfigureAwait(false);
@@ -260,7 +272,11 @@ namespace crm_api.Services
                     updateActivityDto.ActivityTypeId,
                     updateActivityDto.AssignedUserId,
                     updateActivityDto.ContactId,
-                    updateActivityDto.PotentialCustomerId).ConfigureAwait(false);
+                    updateActivityDto.PotentialCustomerId,
+                    updateActivityDto.PaymentTypeId,
+                    updateActivityDto.ActivityMeetingTypeId,
+                    updateActivityDto.ActivityTopicPurposeId,
+                    updateActivityDto.ActivityShippingId).ConfigureAwait(false);
                 if (validationError != null)
                 {
                     await _unitOfWork.RollbackTransactionAsync().ConfigureAwait(false);
@@ -420,6 +436,10 @@ namespace crm_api.Services
 
             return await query
                 .Include(a => a.ActivityType)
+                .Include(a => a.PaymentType)
+                .Include(a => a.ActivityMeetingType)
+                .Include(a => a.ActivityTopicPurpose)
+                .Include(a => a.ActivityShipping)
                 .Include(a => a.PotentialCustomer)
                 .Include(a => a.Contact)
                 .Include(a => a.AssignedUser)
@@ -435,7 +455,11 @@ namespace crm_api.Services
             long activityTypeId,
             long assignedUserId,
             long? contactId,
-            long? potentialCustomerId)
+            long? potentialCustomerId,
+            long? paymentTypeId,
+            long? activityMeetingTypeId,
+            long? activityTopicPurposeId,
+            long? activityShippingId)
         {
             var activityTypeExists = await _unitOfWork.ActivityTypes.Query(tracking: false)
                 .AnyAsync(x => x.Id == activityTypeId && !x.IsDeleted).ConfigureAwait(false);
@@ -479,6 +503,58 @@ namespace crm_api.Services
                     return ApiResponse<ActivityDto>.ErrorResult(
                         _localizationService.GetLocalizedString("General.ValidationError"),
                         _localizationService.GetLocalizedString("ActivityService.CustomerNotFound"),
+                        StatusCodes.Status400BadRequest);
+                }
+            }
+
+            if (paymentTypeId.HasValue)
+            {
+                var paymentTypeExists = await _unitOfWork.PaymentTypes.Query(tracking: false)
+                    .AnyAsync(x => x.Id == paymentTypeId.Value && !x.IsDeleted).ConfigureAwait(false);
+                if (!paymentTypeExists)
+                {
+                    return ApiResponse<ActivityDto>.ErrorResult(
+                        _localizationService.GetLocalizedString("General.ValidationError"),
+                        "Payment type not found",
+                        StatusCodes.Status400BadRequest);
+                }
+            }
+
+            if (activityMeetingTypeId.HasValue)
+            {
+                var meetingTypeExists = await _unitOfWork.ActivityMeetingTypes.Query(tracking: false)
+                    .AnyAsync(x => x.Id == activityMeetingTypeId.Value && !x.IsDeleted).ConfigureAwait(false);
+                if (!meetingTypeExists)
+                {
+                    return ApiResponse<ActivityDto>.ErrorResult(
+                        _localizationService.GetLocalizedString("General.ValidationError"),
+                        "Activity meeting type not found",
+                        StatusCodes.Status400BadRequest);
+                }
+            }
+
+            if (activityTopicPurposeId.HasValue)
+            {
+                var topicPurposeExists = await _unitOfWork.ActivityTopicPurposes.Query(tracking: false)
+                    .AnyAsync(x => x.Id == activityTopicPurposeId.Value && !x.IsDeleted).ConfigureAwait(false);
+                if (!topicPurposeExists)
+                {
+                    return ApiResponse<ActivityDto>.ErrorResult(
+                        _localizationService.GetLocalizedString("General.ValidationError"),
+                        "Activity topic purpose not found",
+                        StatusCodes.Status400BadRequest);
+                }
+            }
+
+            if (activityShippingId.HasValue)
+            {
+                var shippingExists = await _unitOfWork.ActivityShippings.Query(tracking: false)
+                    .AnyAsync(x => x.Id == activityShippingId.Value && !x.IsDeleted).ConfigureAwait(false);
+                if (!shippingExists)
+                {
+                    return ApiResponse<ActivityDto>.ErrorResult(
+                        _localizationService.GetLocalizedString("General.ValidationError"),
+                        "Activity shipping not found",
                         StatusCodes.Status400BadRequest);
                 }
             }

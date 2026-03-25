@@ -214,6 +214,9 @@ builder.Services.AddScoped<IUserDetailService, UserDetailService>();
 builder.Services.AddScoped<IActivityService, ActivityService>();
 builder.Services.AddScoped<IActivityImageService, ActivityImageService>();
 builder.Services.AddScoped<IActivityTypeService, ActivityTypeService>();
+builder.Services.AddScoped<IActivityMeetingTypeService, ActivityMeetingTypeService>();
+builder.Services.AddScoped<IActivityTopicPurposeService, ActivityTopicPurposeService>();
+builder.Services.AddScoped<IActivityShippingService, ActivityShippingService>();
 
 // Register Payment Services
 builder.Services.AddScoped<IPaymentTypeService, PaymentTypeService>();
