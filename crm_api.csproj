@@ -7,24 +7,28 @@
     <Compile Remove="scripts/FastQuotationTemplateUpsertRunner/**" />
     <Compile Remove="scripts/FastQuotationImageProofRunner/**" />
     <Compile Remove="scripts/ApplyReportSqlRunner/**" />
+    <Compile Remove="scripts/ActivityTemplateProofRunner/**" />
     <Content Remove="tests/**" />
     <Content Remove="scripts/PdfRegressionSampleRunner/**" />
     <Content Remove="scripts/VisualBrochureRunner/**" />
     <Content Remove="scripts/FastQuotationTemplateUpsertRunner/**" />
     <Content Remove="scripts/FastQuotationImageProofRunner/**" />
     <Content Remove="scripts/ApplyReportSqlRunner/**" />
+    <Content Remove="scripts/ActivityTemplateProofRunner/**" />
     <EmbeddedResource Remove="tests/**" />
     <EmbeddedResource Remove="scripts/PdfRegressionSampleRunner/**" />
     <EmbeddedResource Remove="scripts/VisualBrochureRunner/**" />
     <EmbeddedResource Remove="scripts/FastQuotationTemplateUpsertRunner/**" />
     <EmbeddedResource Remove="scripts/FastQuotationImageProofRunner/**" />
     <EmbeddedResource Remove="scripts/ApplyReportSqlRunner/**" />
+    <EmbeddedResource Remove="scripts/ActivityTemplateProofRunner/**" />
     <None Remove="tests/**" />
     <None Remove="scripts/PdfRegressionSampleRunner/**" />
     <None Remove="scripts/VisualBrochureRunner/**" />
     <None Remove="scripts/FastQuotationTemplateUpsertRunner/**" />
     <None Remove="scripts/FastQuotationImageProofRunner/**" />
     <None Remove="scripts/ApplyReportSqlRunner/**" />
+    <None Remove="scripts/ActivityTemplateProofRunner/**" />
   </ItemGroup>
 
   <PropertyGroup>
