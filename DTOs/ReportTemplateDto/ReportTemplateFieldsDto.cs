@@ -410,4 +410,53 @@ namespace crm_api.DTOs
             };
         }
     }
+
+    /// <summary>
+    /// Activity / aktivite için field'lar
+    /// </summary>
+    public static class ActivityFields
+    {
+        public static ReportTemplateFieldsDto GetFields()
+        {
+            return new ReportTemplateFieldsDto
+            {
+                HeaderFields = new List<FieldDefinition>
+                {
+                    new FieldDefinition { Label = "Aktivite Konusu", Path = "Subject", DataType = "string", ExampleValue = "Kazakistan fuar görüşmesi" },
+                    new FieldDefinition { Label = "Açıklama", Path = "Description", DataType = "string", ExampleValue = "Müşteri ile fuar alanında görüşüldü." },
+                    new FieldDefinition { Label = "Aktivite Tipi", Path = "ActivityTypeName", DataType = "string", ExampleValue = "Fuar Görüşmesi" },
+                    new FieldDefinition { Label = "Ödeme", Path = "PaymentTypeName", DataType = "string", ExampleValue = "Vadeli" },
+                    new FieldDefinition { Label = "Görüşme", Path = "ActivityMeetingTypeName", DataType = "string", ExampleValue = "Yüz yüze" },
+                    new FieldDefinition { Label = "İlgilenilen Konular", Path = "ActivityTopicPurposeName", DataType = "string", ExampleValue = "PVC pencere sistemleri" },
+                    new FieldDefinition { Label = "Teslimat", Path = "ActivityShippingName", DataType = "string", ExampleValue = "Depodan teslim" },
+                    new FieldDefinition { Label = "Başlangıç Tarihi", Path = "StartDateTime", DataType = "date", ExampleValue = "2026-03-25 10:30" },
+                    new FieldDefinition { Label = "Bitiş Tarihi", Path = "EndDateTime", DataType = "date", ExampleValue = "2026-03-25 11:30" },
+                    new FieldDefinition { Label = "Tüm Gün", Path = "IsAllDay", DataType = "boolean", ExampleValue = "false" },
+                    new FieldDefinition { Label = "Durum", Path = "Status", DataType = "string", ExampleValue = "Completed" },
+                    new FieldDefinition { Label = "Öncelik", Path = "Priority", DataType = "string", ExampleValue = "High" },
+                    new FieldDefinition { Label = "Atanan Kullanıcı", Path = "AssignedUserName", DataType = "string", ExampleValue = "Can Nasif" },
+                    new FieldDefinition { Label = "Atanan Kullanıcı E-Posta", Path = "AssignedUserEmail", DataType = "string", ExampleValue = "can.nasif@v3rii.com" },
+                    new FieldDefinition { Label = "İletişim Kişisi", Path = "ContactName", DataType = "string", ExampleValue = "Aidar Bekov" },
+                    new FieldDefinition { Label = "İletişim E-Posta", Path = "ContactEmail", DataType = "string", ExampleValue = "aidar@example.com" },
+                    new FieldDefinition { Label = "İletişim Telefon", Path = "ContactPhone", DataType = "string", ExampleValue = "+7 700 000 00 00" },
+                    new FieldDefinition { Label = "Firma Adı", Path = "CustomerName", DataType = "string", ExampleValue = "BEM Kazakhstan" },
+                    new FieldDefinition { Label = "Firma Adresi", Path = "CustomerAddress", DataType = "string", ExampleValue = "Almaty / Kazakhstan" },
+                    new FieldDefinition { Label = "Müşteri Kodu", Path = "ErpCustomerCode", DataType = "string", ExampleValue = "CR-001" },
+                    new FieldDefinition { Label = "Kartvizit Görseli", Path = "PrimaryImageUrl", DataType = "string", ExampleValue = "/uploads/activity/cardsample.jpg" },
+                    new FieldDefinition { Label = "Oluşturulma Tarihi", Path = "CreatedDate", DataType = "date", ExampleValue = "2026-03-25 10:00" },
+                    new FieldDefinition { Label = "Güncellenme Tarihi", Path = "UpdatedDate", DataType = "date", ExampleValue = "2026-03-25 12:15" },
+                },
+                LineFields = new List<FieldDefinition>
+                {
+                    new FieldDefinition { Label = "Görsel Açıklaması", Path = "Images.ResimAciklama", DataType = "string", ExampleValue = "Kartvizit ön yüz" },
+                    new FieldDefinition { Label = "Görsel URL", Path = "Images.ResimUrl", DataType = "string", ExampleValue = "/uploads/activity/cardsample.jpg" },
+                    new FieldDefinition { Label = "Hatırlatma Dakika", Path = "Reminders.OffsetMinutes", DataType = "number", ExampleValue = "30" },
+                    new FieldDefinition { Label = "Hatırlatma Kanalı", Path = "Reminders.Channel", DataType = "string", ExampleValue = "Email" },
+                    new FieldDefinition { Label = "Hatırlatma Durumu", Path = "Reminders.Status", DataType = "string", ExampleValue = "Pending" },
+                    new FieldDefinition { Label = "Hatırlatma Gönderim Zamanı", Path = "Reminders.SentAt", DataType = "date", ExampleValue = "2026-03-25 09:30" },
+                },
+                ExchangeRateFields = new List<FieldDefinition>()
+            };
+        }
+    }
 }

@@ -1708,6 +1708,142 @@ namespace crm_api.Services
             return normalized;
         }
 
+        private async Task<object?> FetchActivityEntityDataAsync(long entityId)
+        {
+            return await (from a in _unitOfWork.Activities.Query(false, false)
+                          where a.Id == entityId && !a.IsDeleted
+                          select new
+                          {
+                              a.Id,
+                              a.Subject,
+                              a.Description,
+                              ActivityTypeName = _unitOfWork.ActivityTypes.Query(false, false)
+                                  .Where(x => x.Id == a.ActivityTypeId && !x.IsDeleted)
+                                  .Select(x => x.Name)
+                                  .FirstOrDefault() ?? "",
+                              PaymentTypeName = a.PaymentTypeId.HasValue
+                                  ? (_unitOfWork.Repository<PaymentType>().Query(false, false)
+                                      .Where(x => x.Id == a.PaymentTypeId.Value && !x.IsDeleted)
+                                      .Select(x => x.Name)
+                                      .FirstOrDefault() ?? "")
+                                  : "",
+                              ActivityMeetingTypeName = a.ActivityMeetingTypeId.HasValue
+                                  ? (_unitOfWork.Repository<ActivityMeetingType>().Query(false, false)
+                                      .Where(x => x.Id == a.ActivityMeetingTypeId.Value && !x.IsDeleted)
+                                      .Select(x => x.Name)
+                                      .FirstOrDefault() ?? "")
+                                  : "",
+                              ActivityTopicPurposeName = a.ActivityTopicPurposeId.HasValue
+                                  ? (_unitOfWork.Repository<ActivityTopicPurpose>().Query(false, false)
+                                      .Where(x => x.Id == a.ActivityTopicPurposeId.Value && !x.IsDeleted)
+                                      .Select(x => x.Name)
+                                      .FirstOrDefault() ?? "")
+                                  : "",
+                              ActivityShippingName = a.ActivityShippingId.HasValue
+                                  ? (_unitOfWork.Repository<ActivityShipping>().Query(false, false)
+                                      .Where(x => x.Id == a.ActivityShippingId.Value && !x.IsDeleted)
+                                      .Select(x => x.Name)
+                                      .FirstOrDefault() ?? "")
+                                  : "",
+                              a.StartDateTime,
+                              a.EndDateTime,
+                              a.IsAllDay,
+                              Status = a.Status.ToString(),
+                              Priority = a.Priority.ToString(),
+                              AssignedUserName = _unitOfWork.Users.Query(false, false)
+                                  .Where(x => x.Id == a.AssignedUserId && !x.IsDeleted)
+                                  .Select(x => x.FullName)
+                                  .FirstOrDefault() ?? "",
+                              AssignedUserEmail = _unitOfWork.Users.Query(false, false)
+                                  .Where(x => x.Id == a.AssignedUserId && !x.IsDeleted)
+                                  .Select(x => x.Email)
+                                  .FirstOrDefault() ?? "",
+                              ContactName = a.ContactId.HasValue
+                                  ? (_unitOfWork.Repository<Contact>().Query(false, false)
+                                      .Where(x => x.Id == a.ContactId.Value && !x.IsDeleted)
+                                      .Select(x => x.FullName)
+                                      .FirstOrDefault() ?? "")
+                                  : "",
+                              ContactEmail = a.ContactId.HasValue
+                                  ? ((_unitOfWork.Repository<Contact>().Query(false, false)
+                                          .Where(x => x.Id == a.ContactId.Value && !x.IsDeleted)
+                                          .Select(x => x.Email)
+                                          .FirstOrDefault())
+                                      ?? (_unitOfWork.Customers.Query(false, false)
+                                          .Where(x => a.PotentialCustomerId.HasValue && x.Id == a.PotentialCustomerId.Value && !x.IsDeleted)
+                                          .Select(x => x.Email)
+                                          .FirstOrDefault() ?? ""))
+                                  : (_unitOfWork.Customers.Query(false, false)
+                                      .Where(x => a.PotentialCustomerId.HasValue && x.Id == a.PotentialCustomerId.Value && !x.IsDeleted)
+                                      .Select(x => x.Email)
+                                      .FirstOrDefault() ?? ""),
+                              ContactPhone = a.ContactId.HasValue
+                                  ? ((_unitOfWork.Repository<Contact>().Query(false, false)
+                                          .Where(x => x.Id == a.ContactId.Value && !x.IsDeleted)
+                                          .Select(x => !string.IsNullOrWhiteSpace(x.Mobile) ? x.Mobile : x.Phone)
+                                          .FirstOrDefault())
+                                      ?? (_unitOfWork.Customers.Query(false, false)
+                                          .Where(x => a.PotentialCustomerId.HasValue && x.Id == a.PotentialCustomerId.Value && !x.IsDeleted)
+                                          .Select(x => !string.IsNullOrWhiteSpace(x.Phone1) ? x.Phone1 : x.Phone2)
+                                          .FirstOrDefault() ?? ""))
+                                  : (_unitOfWork.Customers.Query(false, false)
+                                      .Where(x => a.PotentialCustomerId.HasValue && x.Id == a.PotentialCustomerId.Value && !x.IsDeleted)
+                                      .Select(x => !string.IsNullOrWhiteSpace(x.Phone1) ? x.Phone1 : x.Phone2)
+                                      .FirstOrDefault() ?? ""),
+                              CustomerName = a.PotentialCustomerId.HasValue
+                                  ? (_unitOfWork.Customers.Query(false, false)
+                                      .Where(x => x.Id == a.PotentialCustomerId.Value && !x.IsDeleted)
+                                      .Select(x => x.CustomerName)
+                                      .FirstOrDefault() ?? "")
+                                  : "",
+                              CustomerAddress = a.PotentialCustomerId.HasValue
+                                  ? ((_unitOfWork.Customers.Query(false, false)
+                                          .Where(x => x.Id == a.PotentialCustomerId.Value && !x.IsDeleted)
+                                          .Select(x => x.DefaultShippingAddress != null ? x.DefaultShippingAddress.Address : x.Address)
+                                          .FirstOrDefault())
+                                      ?? "")
+                                  : "",
+                              a.ErpCustomerCode,
+                              CreatedBy = a.CreatedBy.HasValue
+                                  ? _unitOfWork.Users.Query(false, false)
+                                      .Where(u => u.Id == a.CreatedBy.Value && !u.IsDeleted)
+                                      .Select(u => u.FullName)
+                                      .FirstOrDefault() ?? ""
+                                  : "",
+                              UpdatedBy = a.UpdatedBy.HasValue
+                                  ? _unitOfWork.Users.Query(false, false)
+                                      .Where(u => u.Id == a.UpdatedBy.Value && !u.IsDeleted)
+                                      .Select(u => u.FullName)
+                                      .FirstOrDefault() ?? ""
+                                  : "",
+                              a.CreatedDate,
+                              a.UpdatedDate,
+                              PrimaryImageUrl = _unitOfWork.ActivityImages.Query(false, false)
+                                  .Where(img => img.ActivityId == a.Id && !img.IsDeleted)
+                                  .OrderBy(img => img.Id)
+                                  .Select(img => img.ResimUrl)
+                                  .FirstOrDefault() ?? "",
+                              Images = _unitOfWork.ActivityImages.Query(false, false)
+                                  .Where(img => img.ActivityId == a.Id && !img.IsDeleted)
+                                  .OrderBy(img => img.Id)
+                                  .Select(img => new
+                                  {
+                                      img.ResimAciklama,
+                                      img.ResimUrl
+                                  }).ToList(),
+                              Reminders = _unitOfWork.Repository<ActivityReminder>().Query(false, false)
+                                  .Where(reminder => reminder.ActivityId == a.Id && !reminder.IsDeleted)
+                                  .OrderBy(reminder => reminder.OffsetMinutes)
+                                  .Select(reminder => new
+                                  {
+                                      reminder.OffsetMinutes,
+                                      Channel = reminder.Channel.ToString(),
+                                      Status = reminder.Status.ToString(),
+                                      reminder.SentAt
+                                  }).ToList()
+                          }).FirstOrDefaultAsync().ConfigureAwait(false);
+        }
+
         private static object? ResolvePropertyPathStatic(object obj, string path)
         {
             if (obj == null || string.IsNullOrWhiteSpace(path))
@@ -2396,6 +2532,8 @@ namespace crm_api.Services
                     }).FirstOrDefaultAsync().ConfigureAwait(false),
 
                 DocumentRuleType.FastQuotation => await FetchFastQuotationEntityDataAsync(entityId).ConfigureAwait(false),
+
+                DocumentRuleType.Activity => await FetchActivityEntityDataAsync(entityId).ConfigureAwait(false),
 
                 DocumentRuleType.Order => await (from o in _unitOfWork.Orders.Query(false, false)
                     where o.Id == entityId && !o.IsDeleted
