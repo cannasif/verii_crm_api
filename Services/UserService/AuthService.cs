@@ -127,7 +127,9 @@ namespace crm_api.Services
                     Password = request.Password
                 };
                 // Email veya username ile kullanıcı arama
-                var user = await _unitOfWork.Users.Query().FirstOrDefaultAsync(u => u.Username == loginDto.Username || u.Email == loginDto.Username).ConfigureAwait(false);
+                var user = await _unitOfWork.Users.Query(tracking: true)
+                    .FirstOrDefaultAsync(u => u.Username == loginDto.Username || u.Email == loginDto.Username)
+                    .ConfigureAwait(false);
                 
                 if (user == null)
                 {
@@ -165,7 +167,8 @@ namespace crm_api.Services
                             await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
                         }
 
-                        var existingTokenResult = _jwtService.GenerateToken(user, activeSession.SessionId, activeSession.CreatedAt);
+                        var refreshedIssuedAtUtc = DateTimeProvider.UtcNow;
+                        var existingTokenResult = _jwtService.GenerateToken(user, activeSession.SessionId, refreshedIssuedAtUtc);
                         if (!existingTokenResult.Success || string.IsNullOrWhiteSpace(existingTokenResult.Data))
                         {
                             return ApiResponse<string>.ErrorResult(
@@ -174,10 +177,15 @@ namespace crm_api.Services
                                 500);
                         }
 
+                        activeSession.CreatedAt = refreshedIssuedAtUtc;
+                        activeSession.Token = ComputeSha256Hash(existingTokenResult.Data);
+                        activeSession.UpdatedDate = refreshedIssuedAtUtc;
+                        await _unitOfWork.SaveChangesAsync().ConfigureAwait(false);
+
                         _userSessionCacheService.SetActiveSession(
                             activeSession.SessionId,
                             activeSession.UserId,
-                            GetSessionExpiryUtc(activeSession.CreatedAt));
+                            GetSessionExpiryUtc(refreshedIssuedAtUtc));
 
                         return ApiResponse<string>.SuccessResult(
                             existingTokenResult.Data,
@@ -193,7 +201,7 @@ namespace crm_api.Services
                 EnsureRefreshToken(user);
 
                 var sessionId = Guid.NewGuid();
-                var issuedAtUtc = DateTime.UtcNow;
+                var issuedAtUtc = DateTimeProvider.UtcNow;
                 var tokenResponse = _jwtService.GenerateToken(user, sessionId, issuedAtUtc);
                 if (!tokenResponse.Success)
                 {
@@ -272,7 +280,11 @@ namespace crm_api.Services
                     return ApiResponse<LoginWithSessionResponseDto>.ErrorResult(_localizationService.GetLocalizedString("AuthUserNotFound"), null, 404);
                 }
 
-                var session = await _unitOfWork.UserSessions.Query().FirstOrDefaultAsync(s => s.UserId == user.Id && s.RevokedAt == null).ConfigureAwait(false);
+                var session = await _unitOfWork.UserSessions.Query()
+                    .Where(s => s.UserId == user.Id && s.RevokedAt == null)
+                    .OrderByDescending(s => s.CreatedAt)
+                    .FirstOrDefaultAsync()
+                    .ConfigureAwait(false);
                 if (session == null)
                 {
                     return ApiResponse<LoginWithSessionResponseDto>.ErrorResult(_localizationService.GetLocalizedString("AuthSessionNotFound"), null, 404);
@@ -309,7 +321,7 @@ namespace crm_api.Services
                     return ApiResponse<LoginWithSessionResponseDto>.ErrorResult(validationMessage, validationMessage, 400);
                 }
 
-                var now = DateTime.UtcNow;
+                var now = DateTimeProvider.UtcNow;
                 var user = await _unitOfWork.Users.Query(tracking: true)
                     .FirstOrDefaultAsync(u =>
                         u.RefreshToken == request.RefreshToken &&
@@ -344,7 +356,7 @@ namespace crm_api.Services
                 var accessToken = tokenResponse.Data!;
                 if (session == null)
                 {
-                    session = new UserSession
+                        session = new UserSession
                     {
                         UserId = user.Id,
                         SessionId = sessionId,
@@ -477,7 +489,7 @@ namespace crm_api.Services
             try
             {
                 var tokenHash = ComputeSha256Hash(request.Token);
-                var now = DateTime.UtcNow;
+                var now = DateTimeProvider.UtcNow;
 
                 var reset = await _unitOfWork.Repository<PasswordResetRequest>().Query(tracking: true)
                     .Include(r => r.User)
@@ -553,7 +565,7 @@ namespace crm_api.Services
                 await InvalidateUserSessionsAsync(user.Id).ConfigureAwait(false);
 
                 var sessionId = Guid.NewGuid();
-                var issuedAtUtc = DateTime.UtcNow;
+                var issuedAtUtc = DateTimeProvider.UtcNow;
                 var tokenResponse = _jwtService.GenerateToken(user, sessionId, issuedAtUtc);
                 if (!tokenResponse.Success || string.IsNullOrWhiteSpace(tokenResponse.Data))
                 {
@@ -607,7 +619,7 @@ namespace crm_api.Services
 
         private bool IsSessionTokenReusable(UserSession session)
         {
-            return session.RevokedAt == null && GetSessionExpiryUtc(session.CreatedAt) > DateTime.UtcNow;
+            return session.RevokedAt == null && GetSessionExpiryUtc(session.CreatedAt) > DateTimeProvider.UtcNow;
         }
 
         private DateTime GetSessionExpiryUtc(DateTime createdAtUtc)
@@ -625,7 +637,7 @@ namespace crm_api.Services
             }
 
             user.RefreshToken = GenerateRefreshToken();
-            user.RefreshTokenExpiryTime = DateTime.UtcNow.Add(RefreshTokenLifetime);
+            user.RefreshTokenExpiryTime = DateTimeProvider.UtcNow.Add(RefreshTokenLifetime);
             user.UpdatedDate = DateTimeProvider.Now;
         }
 
@@ -654,7 +666,7 @@ namespace crm_api.Services
 
             if (sessions.Count > 0)
             {
-                var now = DateTime.UtcNow;
+                var now = DateTimeProvider.Now;
                 foreach (var s in sessions)
                 {
                     s.RevokedAt = now;

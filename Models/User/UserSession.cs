@@ -9,7 +9,7 @@ namespace crm_api.Models
 
         public string Token { get; set; } = string.Empty;
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; set; } = DateTimeProvider.UtcNow;
 
         public DateTime? RevokedAt { get; set; }
 
@@ -19,6 +19,6 @@ namespace crm_api.Models
 
         public string? DeviceInfo { get; set; }
 
-        public bool IsActive => RevokedAt == null && CreatedAt.AddDays(30) > DateTime.UtcNow;
+        public bool IsActive => RevokedAt == null && CreatedAt.AddDays(30) > DateTimeProvider.UtcNow;
     }
 }

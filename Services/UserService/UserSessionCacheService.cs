@@ -25,10 +25,10 @@ namespace crm_api.Services
 
         public void SetActiveSession(Guid sessionId, long userId, DateTime? absoluteExpirationUtc = null)
         {
-            var expiration = absoluteExpirationUtc.GetValueOrDefault(DateTime.UtcNow.AddMinutes(_jwtExpiryMinutes));
-            if (expiration <= DateTime.UtcNow)
+            var expiration = absoluteExpirationUtc.GetValueOrDefault(DateTimeProvider.UtcNow.AddMinutes(_jwtExpiryMinutes));
+            if (expiration <= DateTimeProvider.UtcNow)
             {
-                expiration = DateTime.UtcNow.AddMinutes(1);
+                expiration = DateTimeProvider.UtcNow.AddMinutes(1);
             }
 
             _memoryCache.Set(GetCacheKey(sessionId), userId, expiration);
@@ -50,13 +50,13 @@ namespace crm_api.Services
                     cancellationToken)
                 .ConfigureAwait(false);
 
-            if (session == null || !session.IsActive)
+            if (session == null || session.RevokedAt != null)
             {
                 return false;
             }
 
             var expiresAtUtc = session.CreatedAt.AddMinutes(_jwtExpiryMinutes);
-            if (expiresAtUtc <= DateTime.UtcNow)
+            if (expiresAtUtc <= DateTimeProvider.UtcNow)
             {
                 return false;
             }
