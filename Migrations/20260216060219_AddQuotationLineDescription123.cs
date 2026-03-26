@@ -10,6 +10,9 @@ namespace crm_api.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropIndex(
+                name: "IX_Country_Name",
+                table: "RII_COUNTRY");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Country_Name",
@@ -42,6 +45,10 @@ namespace crm_api.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropIndex(
+                name: "IX_Country_Name",
+                table: "RII_COUNTRY");
+
             migrationBuilder.DropColumn(
                 name: "Description1",
                 table: "RII_QUOTATION_LINE");
@@ -53,6 +60,11 @@ namespace crm_api.Migrations
             migrationBuilder.DropColumn(
                 name: "Description3",
                 table: "RII_QUOTATION_LINE");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Country_Name",
+                table: "RII_COUNTRY",
+                column: "Name");
         }
     }
 }
