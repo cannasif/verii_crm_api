@@ -1818,11 +1818,33 @@ namespace crm_api.Services
                                   : "",
                               a.CreatedDate,
                               a.UpdatedDate,
-                              PrimaryImageUrl = _unitOfWork.ActivityImages.Query(false, false)
-                                  .Where(img => img.ActivityId == a.Id && !img.IsDeleted)
-                                  .OrderBy(img => img.Id)
-                                  .Select(img => img.ResimUrl)
-                                  .FirstOrDefault() ?? "",
+                              CustomerLatestImageUrl = a.PotentialCustomerId.HasValue
+                                  ? (_unitOfWork.CustomerImages.Query(false, false)
+                                      .Where(img => img.CustomerId == a.PotentialCustomerId.Value && !img.IsDeleted)
+                                      .OrderByDescending(img => img.CreatedDate)
+                                      .ThenByDescending(img => img.Id)
+                                      .Select(img => img.ImageUrl)
+                                      .FirstOrDefault() ?? "")
+                                  : "",
+                              PrimaryImageUrl = a.PotentialCustomerId.HasValue
+                                  ? ((_unitOfWork.CustomerImages.Query(false, false)
+                                          .Where(img => img.CustomerId == a.PotentialCustomerId.Value && !img.IsDeleted)
+                                          .OrderByDescending(img => img.CreatedDate)
+                                          .ThenByDescending(img => img.Id)
+                                          .Select(img => img.ImageUrl)
+                                          .FirstOrDefault())
+                                      ?? (_unitOfWork.ActivityImages.Query(false, false)
+                                          .Where(img => img.ActivityId == a.Id && !img.IsDeleted)
+                                          .OrderByDescending(img => img.CreatedDate)
+                                          .ThenByDescending(img => img.Id)
+                                          .Select(img => img.ResimUrl)
+                                          .FirstOrDefault() ?? ""))
+                                  : (_unitOfWork.ActivityImages.Query(false, false)
+                                      .Where(img => img.ActivityId == a.Id && !img.IsDeleted)
+                                      .OrderByDescending(img => img.CreatedDate)
+                                      .ThenByDescending(img => img.Id)
+                                      .Select(img => img.ResimUrl)
+                                      .FirstOrDefault() ?? ""),
                               Images = _unitOfWork.ActivityImages.Query(false, false)
                                   .Where(img => img.ActivityId == a.Id && !img.IsDeleted)
                                   .OrderBy(img => img.Id)
